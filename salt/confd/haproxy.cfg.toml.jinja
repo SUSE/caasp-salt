@@ -1,0 +1,56 @@
+{% set kube_minions = [] -%}
+{% for server, ipaddr in salt['mine.get']('roles:kube-minion', 'network.ip_addrs', expr_form='grain').items() -%}
+  {% do kube_minions.append(ipaddr[0]) -%}
+{% endfor -%}
+global
+    daemon
+    maxconn 4096
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+
+frontend http-in
+    bind 0.0.0.0:443 ssl crt /etc/haproxy/certs.d/portus.crt crt /etc/haproxy/certs.d/registry.crt no-sslv3
+
+    acl is_portus hdr_end(host) -i portus-k8s.in.da.office
+    acl is_registry hdr_end(host) -i registry-k8s.in.da.office
+
+    use_backend portus if is_portus
+    use_backend registry if is_registry
+
+backend portus
+    balance roundrobin
+    option httpclose
+    option forwardfor
+
+{{ '{{' }}with getv "/registry/services/specs/default/portus"{{ '}}' }}
+  {{ '{{' }}range $i, $port := index (index (json .) "spec") "ports"{{ '}}' }}
+    {{ '{{' }} if (eq $port.port 443.0){{ '}}' }}
+    {% for server in kube_minions -%}
+    server {{server}}:{{ '{{' }}$port.nodePort{{ '}}' }} ssl verify none
+    {% endfor -%}
+    {{ '{{' }}end{{ '}}' }}
+  {{ '{{' }}end{{ '}}' }}
+{{ '{{' }}end{{ '}}' }}
+
+backend registry
+    balance roundrobin
+    option httpclose
+    option forwardfor
+
+{{ '{{' }}with getv "/registry/services/specs/default/registry"{{ '}}' }}
+  {{ '{{' }}range $i, $port := index (index (json .) "spec") "ports"{{ '}}' }}
+    {{ '{{' }} if (eq $port.port 443.0){{ '}}' }}
+    {% for server in kube_minions -%}
+    server {{server}}:{{ '{{' }}$port.nodePort{{ '}}' }} ssl verify none
+    {% endfor -%}
+    {{ '{{' }}end{{ '}}' }}
+  {{ '{{' }}end{{ '}}' }}
+{{ '{{' }}end{{ '}}' }}
+
+listen admin
+    bind 127.0.0.1:8080
+    stats enable

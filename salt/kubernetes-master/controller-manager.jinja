@@ -1,0 +1,13 @@
+###
+# The following values are used to configure the kubernetes controller-manager
+
+# defaults from config and apiserver should be adequate
+
+# Add your own!
+KUBE_CONTROLLER_MANAGER_ARGS="\
+    --leader-elect=true \
+    --cluster-name=kubernetes \
+    --cluster-cidr={{ pillar['cluster_cidr'] }} \
+    --service-account-private-key-file={{ apiserver_key }} \
+    --root-ca-file={{ ca_crt }} \
+    --v=2"

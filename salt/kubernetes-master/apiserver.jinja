@@ -1,0 +1,36 @@
+{% set etcd_servers = [] -%}
+{% for server, ipaddr in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
+  {% do etcd_servers.append('http://' + ipaddr[0] + ':2379') -%}
+{% endfor -%}
+###
+# kubernetes system config
+#
+# The following values are used to configure the kube-apiserver
+#
+
+# The address on the local server to listen to.
+KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
+
+# The port on the local server to listen on.
+KUBE_API_PORT="--insecure-port=8080 --secure-port={{ pillar['ssl_port'] }}"
+
+# Port minions listen on
+# KUBELET_PORT="--kubelet-port=10250"
+
+# Comma separated list of nodes in the etcd cluster
+KUBE_ETCD_SERVERS="--etcd-servers={{ ",".join(etcd_servers) }}"
+
+# Address range to use for services
+# [alvaro] should not be in the same range as the flannel network (https://github.com/coreos/flannel/issues/232)
+KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}"
+
+# default admission control policies
+# KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota"
+
+# Add your own!
+KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
+               --v=2 \
+               --runtime-config=extensions/v1beta1/daemonsets=true \
+               --tls-cert-file={{ apiserver_crt }} \
+               --tls-private-key-file={{ apiserver_key }} \
+               --client-ca-file={{ ca_crt }}"

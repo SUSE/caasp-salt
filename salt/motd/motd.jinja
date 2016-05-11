@@ -1,0 +1,5 @@
+Welcome to {{salt['grains.get']('nodename', 'ERROR')}}.
+The roles of this node are:
+{%- for role in salt['grains.get']('roles', []) %}
+  - {{role}}
+{%- endfor -%}
