@@ -10,7 +10,7 @@
 {% set apiserver_crt = ca_path + '/certs/kube-apiserver.crt' %}
 {% set apiserver_csr = ca_path + '/certs/kube-apiserver.csr' %}
 
-{% set ssl_port = salt['pillar.get']('ssl_port', '6443') %}
+{% set api_ssl_port = salt['pillar.get']('api_ssl_port', '6443') %}
 
 {{ apiserver_csr }}:
   module.run:
@@ -143,7 +143,7 @@ apiserver-iptables:
     - match: state
     - connstate: NEW
     - dports:
-        - {{ ssl_port }}
+        - {{ api_ssl_port }}
     - proto: tcp
 
 #######################
@@ -229,7 +229,7 @@ apiserver-iptables:
 
 kubectl_set_cluster:
   cmd.run:
-    - name: kubectl config set-cluster default-cluster --server=https://{{ grains['ip4_interfaces']['eth0'][0] }}:{{ pillar ['ssl_port'] }} --certificate-authority={{ ca_crt }}
+    - name: kubectl config set-cluster default-cluster --server=https://{{ grains['ip4_interfaces']['eth0'][0] }}:{{ pillar ['api_ssl_port'] }} --certificate-authority={{ ca_crt }}
     - cwd: /etc/kubernetes/ssl
     - watch:
       - file:    {{ ca_crt }}

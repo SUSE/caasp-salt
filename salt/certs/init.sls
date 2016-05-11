@@ -24,7 +24,7 @@
     - source:    salt://certs/{{ pillar['ca_name'] }}.key
     - user:      root
     - group:     root
-    - mode:      644       # probably we can restrict this... 
+    - mode:      644       # TODO: probably we can restrict this... 
     - replace:   False
     - require:
       - file: {{ ca_path }}
