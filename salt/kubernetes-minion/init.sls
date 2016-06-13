@@ -3,47 +3,25 @@
 #######################
 
 {% set ca_path  = '/etc/kubernetes/ssl/' + pillar['ca_name'] %}
-{% set ca_key   = ca_path + '/' + pillar['ca_name'] + '.key' %}
-{% set ca_crt   = ca_path + '/' + pillar['ca_name'] + '.crt' %}
-{% set node_key = ca_path + '/certs/' + grains['id'] + '.key' %}
-{% set node_crt = ca_path + '/certs/' + grains['id'] + '.crt' %}
-{% set node_csr = ca_path + '/certs/' + grains['id'] + '.csr' %}
+{% set ca_crt   = ca_path + '/ca.crt' %}
+{% set node_key = ca_path + '/minion.key' %}
+{% set node_crt = ca_path + '/minion.crt' %}
 
-{{ node_csr }}:
-  module.run:
-    - name:           tls.create_csr
-    - cacert_path:    /etc/kubernetes/ssl
-    - ca_name:        '{{ pillar['ca_name'] }}'
-    - ca_filename:    {{ pillar['ca_name'] }}
-    - cert_filename:  {{ grains['id'] }}
-    - CN:             '{{ grains['id'] }}'
-    - C:              'DE'
-    - ST:             'Bavaria'
-    - L:              'Nuremberg'
-    - O:              '{{ pillar['ca_org'] }}'
-    - emailAddress:   '{{ pillar['admin_email'] }}'
-    - subjectAltName: [ 
-      'DNS:{{ grains['id'] }}',
-      'DNS:{{ grains['fqdn'] }}',
-      'DNS:{{ grains['ip4_interfaces']['eth0'][0] }}',
-      'IP:{{ grains['ip4_interfaces']['eth0'][0] }}'
-    ]
-    - cert_type:      'client'
-    - require:
-      - file:         {{ ca_crt }}
-      - file:         {{ ca_key }}
+{{ node_key }}:
+  file.managed:
+    - user:            root
+    - group:           root
+    - mode:            600
+    - contents_pillar: cert:minion.key
+    - makedirs:        True
 
 {{ node_crt }}:
-  module.run:
-    - name:           tls.create_ca_signed_cert
-    - cacert_path:    /etc/kubernetes/ssl
-    - cert_filename:  {{ grains['id'] }}
-    - ca_name:        '{{ pillar['ca_name'] }}'
-    - ca_filename:    {{ pillar['ca_name'] }}
-    - CN:             '{{ grains['id'] }}'
-    - cert_type:      'client'
-    - require:
-      - module:       {{ node_csr }}
+  file.managed:
+    - user:            root
+    - group:           root
+    - mode:            600
+    - contents_pillar: cert:minion.crt
+    - makedirs:        True
 
 #######################
 # k8s components
@@ -57,7 +35,7 @@ kubernetes-node:
     - require_in:
       - service: kube-proxy
       - service: kubelet
-      - module:  {{ node_crt }}
+      - file:   {{ node_crt }}
 
 kube-proxy:
   service.running:
@@ -101,8 +79,7 @@ br_netfilter:
     - template:       jinja
     - require:
       - file:         {{ ca_crt }}
-      - file:         {{ ca_key }}
-      - module:       {{ node_crt }}
+      - file:         {{ node_crt }}
     - context: {
       ca_crt:   '{{ ca_crt }}',
       node_key: '{{ node_key }}',
