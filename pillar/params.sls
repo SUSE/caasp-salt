@@ -8,7 +8,7 @@ services_cidr:    '172.21.0.0/16'
 api_cluster_ip:   '172.21.0.1'
 
 # port for listening for SSL connections
-ssl_port:         '6443'
+api_ssl_port:     '6443'
 
 # certificates
 # some of these values MUST match the values ussed when generating the kube-ca.*
