@@ -24,6 +24,10 @@ flannel:
 ######################
 # iptables
 ######################
+iptables:
+  pkg:
+    - installed
+
 flannel-iptables:
   iptables.append:
     - table: filter
@@ -36,3 +40,5 @@ flannel-iptables:
         - 8285
         - 8472
     - proto: udp
+    - require:
+      - pkg: iptables
