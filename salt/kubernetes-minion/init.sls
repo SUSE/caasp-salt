@@ -45,7 +45,8 @@ kube-proxy:
       - file: /etc/kubernetes/proxy
       - file: /var/lib/kubelet/kubeconfig
     - require:
-      - pkg:  kubernetes-node
+      - pkg: kubernetes-node
+      - pkg: iptables
 
 kubelet:
   service.running:

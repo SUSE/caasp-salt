@@ -104,6 +104,11 @@ load_flannel_cfg:
 ######################
 # iptables
 ######################
+
+iptables:
+  pkg:
+    - installed
+
 apiserver-iptables:
   iptables.append:
     - table: filter
@@ -115,6 +120,8 @@ apiserver-iptables:
     - dports:
         - {{ api_ssl_port }}
     - proto: tcp
+    - require:
+      - pkg: iptables
 
 #######################
 # config files

@@ -7,6 +7,10 @@ etcd:
     - require:
       - file: /etc/zypp/repos.d/obs_virtualization_containers.repo
 
+iptables:
+  pkg:
+    - installed
+
 etcdctl:
   pkg:
     - installed
@@ -59,3 +63,5 @@ etcd-iptables:
         - 2380
         - 4001
     - proto: tcp
+    - require:
+      - pkg: iptables
