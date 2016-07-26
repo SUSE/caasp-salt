@@ -23,7 +23,7 @@ etcd-service:
       - pkg:      etcd
       - iptables: etcd-iptables
     - watch:
-      - file: /etc/etcd/etcd.conf
+      - file: /etc/sysconfig/etcd
       - file: /var/lib/etcd
 
 /var/lib/etcd:
@@ -39,7 +39,7 @@ etcd-service:
 ######################
 # config files
 ######################
-/etc/etcd/etcd.conf:
+/etc/sysconfig/etcd:
   file.managed:
     - source: salt://etcd/etcd.conf.jinja
     - template: jinja
