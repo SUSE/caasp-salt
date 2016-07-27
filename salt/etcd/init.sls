@@ -1,6 +1,6 @@
 etcd:
   pkg:
-    - installed
+    - latest
     - require_in:
       - pkg:     etcdctl
       - service: etcd-service
