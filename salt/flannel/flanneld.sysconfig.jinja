@@ -5,7 +5,7 @@
 # Flanneld configuration options
 
 # etcd url location.  Point this to the server where etcd runs
-FLANNEL_ETCD="{{ ",".join(etcd_servers) }}"
+FLANNEL_ETCD_ENDPOINTS="{{ ",".join(etcd_servers) }}"
 
 # etcd config key.  This is the configuration key that flannel queries
 # For address range assignment
@@ -14,4 +14,3 @@ FLANNEL_ETCD_KEY="/flannel/network"
 # Any additional options that you want to pass
 # [alvaro] use the private network for the communication
 FLANNEL_OPTIONS="-iface eth0 --ip-masq"
-
