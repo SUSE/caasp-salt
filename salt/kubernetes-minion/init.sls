@@ -9,27 +9,30 @@
 
 {{ node_key }}:
   file.managed:
-    - user:            root
-    - group:           root
+    - user:            '{{ pillar['kube_user']  }}'
+    - group:           '{{ pillar['kube_group'] }}'
     - mode:            600
     - contents_pillar: cert:minion.key
     - makedirs:        True
+    - require:
+        - user:        kube_user
 
 {{ node_crt }}:
   file.managed:
-    - user:            root
-    - group:           root
+    - user:            '{{ pillar['kube_user']  }}'
+    - group:           '{{ pillar['kube_group'] }}'
     - mode:            600
     - contents_pillar: cert:minion.crt
     - makedirs:        True
+    - require:
+        - user:        kube_user
 
 #######################
 # k8s components
 #######################
 
 kubernetes-node:
-  pkg:
-    - installed
+  pkg.latest:
     - require:
       - file: /etc/zypp/repos.d/obs_virtualization_containers.repo
     - require_in:
@@ -57,11 +60,15 @@ kubelet:
       - file: /var/lib/kubelet/kubeconfig
     - require:
       - pkg:  kubernetes-node
-      - kmod: br_netfilter
       - file: /etc/kubernetes/manifests
-
-br_netfilter:
-  kmod.present
+#
+# note: br_netfilter is not available in some kernels
+#       not sure we really need it...
+#
+#      - kmod: br_netfilter
+#
+#br_netfilter:
+#  kmod.present
 
 #######################
 # config files

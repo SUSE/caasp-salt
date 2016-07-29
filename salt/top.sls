@@ -3,6 +3,7 @@ base:
     - repositories
     - motd
     - hosts
+    - users
   '*salt*':
     - salt-master
   'roles:etcd':

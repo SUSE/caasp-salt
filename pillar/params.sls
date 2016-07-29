@@ -15,3 +15,7 @@ api_ssl_port:     '6443'
 ca_name:          'kube-ca'
 ca_org:           'SUSE'
 admin_email:      'admin@kubernetes'
+
+# user and group for running services and some other stuff...
+kube_user:        'kube'
+kube_group:       'kube'

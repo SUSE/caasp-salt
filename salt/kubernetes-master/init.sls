@@ -11,26 +11,30 @@
 
 {{ apiserver_key }}:
   file.managed:
-    - user:            root
-    - group:           root
+    - user:            '{{ pillar['kube_user']  }}'
+    - group:           '{{ pillar['kube_group'] }}'
     - mode:            600
     - contents_pillar: cert:apiserver.key
     - makedirs:        True
+    - require:
+        - user:        kube_user
 
 {{ apiserver_crt }}:
   file.managed:
-    - user:            root
-    - group:           root
+    - user:            '{{ pillar['kube_user']  }}'
+    - group:           '{{ pillar['kube_group'] }}'
     - mode:            600
     - contents_pillar: cert:apiserver.crt
     - makedirs:        True
-    
+    - require:
+        - user:        kube_user
+
 #######################
 # components
 #######################
 
 kubernetes-master:
-  pkg.installed:
+  pkg.latest:
     - require:
       - file: /etc/zypp/repos.d/obs_virtualization_containers.repo
     - require_in:
@@ -106,8 +110,7 @@ load_flannel_cfg:
 ######################
 
 iptables:
-  pkg:
-    - installed
+  pkg.installed
 
 apiserver-iptables:
   iptables.append:
