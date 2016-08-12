@@ -1,6 +1,7 @@
 base:
   '*':
     - repositories
+    - avahi
     - motd
     - hosts
     - users
