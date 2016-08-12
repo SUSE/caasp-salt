@@ -19,3 +19,17 @@ kube_minion_setup:
     - highstate: True
     - require:
       - salt: kube_master_setup
+
+kube_haproxy_setup:
+  salt.state:
+    - tgt: 'roles:haproxy'
+    - tgt_type: grain
+    - highstate: True
+    - require:
+      - salt: kube_master_setup
+
+kube_nfs_setup:
+  salt.state:
+    - tgt: 'roles:nfs'
+    - tgt_type: grain
+    - highstate: True
