@@ -3,8 +3,10 @@ base:
     - repositories
     - avahi
     - motd
-    - hosts
     - users
+{% if salt['pillar.get']('infrastructure', 'libvirt') == 'cloud' %}
+    - hosts
+{% endif %}
   '*salt*':
     - salt-master
   'roles:etcd':
