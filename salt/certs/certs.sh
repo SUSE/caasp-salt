@@ -159,6 +159,8 @@ IP.1 = $API_SRV_IP
 IP.2 = $IP
 EOF
 
+[ -n "$EXTRA_API_SRV_IP" ] && echo "IP.3 = $EXTRA_API_SRV_IP" >> /tmp/openssl.conf
+
     openssl genrsa -out $d/apiserver.key 2048
     openssl req -new \
         -key $d/apiserver.key \
