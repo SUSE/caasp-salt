@@ -1,14 +1,6 @@
-# rename/move the public/private keys
-if [ -f /root/.ssh/id_docker ] ; then
-    mv /root/.ssh/id_docker /root/.ssh/id_rsa
-    chmod 600 /root/.ssh/id_rsa
-fi
-
-if [ -f /root/.ssh/id_docker.pub ] ; then
-    mv /root/.ssh/id_docker.pub /root/.ssh/id_rsa.pub
-    cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
-    chmod 600 /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
-fi
+# fix the ssh keys permissions and set the authorized keys
+chmod 600 /root/.ssh/*
+cp -f /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 
 # install the salt-master and update it's config
 zypper -n --no-gpg-checks in --force-resolution --no-recommends salt-master
