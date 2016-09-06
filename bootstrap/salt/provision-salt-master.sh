@@ -128,5 +128,5 @@ EOF
     log "* KUBECONFIG=kubeconfig kubectl get nodes"
     log ""
     log "note: we assumed the API server is at https://${API_SERVER_IP}:${API_SERVER_PORT},"
-    log "      so check `kubeconfig` configuration before using it..."
+    log "      so check 'kubeconfig' configuration before using it..."
 fi
