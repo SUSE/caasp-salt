@@ -84,8 +84,13 @@ else
     # needed for the "host" utility
     zypper -n --no-gpg-checks in --force-resolution --no-recommends bind-utils
 
-    API_SERVER_IP=$(host $API_SERVER_DNS_NAME | grep "has address" | awk '{print $NF}')
-    [ -n "$API_SERVER_IP" ] || abort "could not determine the IP of the API server with DNS"
+    if [ -n "$EXTRA_API_SRV_IP" ] ; then
+        API_SERVER_IP=$EXTRA_API_SRV_IP
+    else
+        API_SERVER_IP=$(host $API_SERVER_DNS_NAME | grep "has address" | awk '{print $NF}')
+        [ -n "$API_SERVER_IP" ] || abort "could not determine the IP of the API server with DNS"
+    fi
+
     [ -f $CA_DIR/ca.crt ]   || abort "CA file does not exist"
 
     log "Generating certificates for 'kubectl' in the Salt master"
