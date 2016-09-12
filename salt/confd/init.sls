@@ -1,13 +1,6 @@
 confd:
   pkg:
     - installed
-  service.running:
-    - enable: True
-    - require:
-      - pkg: haproxy
-      - file: /etc/confd/conf.d/haproxy.toml
-      - file: /etc/confd/templates/haproxy.cfg.toml
-      - file: /etc/confd/confd.toml
 
 /etc/confd/conf.d/haproxy.toml:
   file.managed:

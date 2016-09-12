@@ -1,13 +1,3 @@
-# !! note: nothing to overwrite now
-#/etc/sysconfig/docker:
-#  file.managed:
-#    - source: salt://docker/sysconfig_docker
-#    - user: root
-#    - owner: root
-#    - mode: 644
-#    - require:
-#      - pkg: docker
-
 docker:
   pkg.installed:
     - install_recommends: False
@@ -16,7 +6,6 @@ docker:
   service.running:
     - enable: True
     - watch:
-#      - file:    /etc/sysconfig/docker
       - service: flannel
     - require:
       - pkg: docker
