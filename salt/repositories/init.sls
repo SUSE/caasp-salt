@@ -5,7 +5,7 @@
     - template: jinja
 
 # Our SLE repositories don't trust the repositories added by IBS
-# fro some reason...
+# for some reason...
 /etc/zypp/zypp.conf:
   file.append:
     - text: "gpgcheck = off"
