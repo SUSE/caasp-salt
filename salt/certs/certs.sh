@@ -56,6 +56,10 @@ while [[ $# > 0 ]] ; do
             -f|--force)
                 FORCE="yes"
             ;;
+            -D|--dir)
+                OUT_DIR=$2
+                shift
+            ;;
             -v|--verbose)
                 VERBOSE="yes"
             ;;
