@@ -70,6 +70,23 @@ kubelet:
 #br_netfilter:
 #  kmod.present
 
+{% if pillar.get('e2e', '').lower() == 'true' %}
+/etc/kubernetes/manifests/e2e-image-puller.manifest:
+  file.managed:
+    - source:    salt://kubernetes-minion/e2e-image-puller.manifest
+    - template:  jinja
+    - user:      root
+    - group:     root
+    - mode:      644
+    - makedirs:  true
+    - dir_mode:  755
+    - require:
+      - service: docker
+      - file:    /etc/kubernetes/manifests
+    - require_in:
+      - service: kubelet
+{% endif %}
+
 #######################
 # config files
 #######################

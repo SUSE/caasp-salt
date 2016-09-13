@@ -5,7 +5,13 @@ abort() { echo ">>> FATAL: $1" ; exit 1 ; }
 
 HOSTNAME=
 FINISH=
+E2E=
 DELETE_SALT_KEYS=
+INFRA=cloud
+
+
+ROOT=/srv
+OUT_DIR=/root
 
 # the hostname and port where the API server will be listening at
 API_SERVER_DNS_NAME="kube-master"
@@ -19,11 +25,22 @@ while [[ $# > 0 ]] ; do
     -F|--finish)
       FINISH=1
       ;;
+    --e2e)
+      E2E=1
+      ;;
     -D|--delete-keys)
       DELETE_SALT_KEYS=1
       ;;
+    -r|--root)
+      ROOT=$2
+      shift
+      ;;
     -h|--hostname)
       HOSTNAME=$2
+      shift
+      ;;
+    -i|--infra)
+      INFRA=$2
       shift
       ;;
     --extra-api-ip)
@@ -43,18 +60,23 @@ done
 
 ###################################################################
 
-if [ "$FINISH" != "1" ] ; then
+add_pillar() {
+    log "Pillar: setting $1=\"$2\""
+    echo "$1: \"$2\"" >> $ROOT/salt/pillar/params.sls
+}
+
+if [ -z "$FINISH" ] ; then
     log "Fix the ssh keys permissions and set the authorized keys"
     chmod 600 /root/.ssh/*
     cp -f /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 
-    log "Upgrading the Salt master"
-    zypper -n --no-gpg-checks in --force-resolution --no-recommends salt-master
-    cp -v /tmp/salt/master.d/* /etc/salt/master.d
+    add_pillar infrastructure $INFRA
+    [ -n "$E2E" ] && add_pillar e2e true
 
-    log "Fixing some permissions"
-    [ -f /srv/salt/certs/certs.sh ] && chmod 755 /srv/salt/certs/certs.sh
-    [ -d /srv/files ] || mkdir -p /srv/files
+    log "Upgrading the Salt master"
+    zypper -n --no-gpg-checks in \
+        --force-resolution --no-recommends salt-master bind-utils
+    cp -v /tmp/salt/master.d/* /etc/salt/master.d
 
     if [ -n "$HOSTNAME" ] ; then
         log "Setting hostname $HOSTNAME"
@@ -71,18 +93,18 @@ if [ "$FINISH" != "1" ] ; then
         /usr/bin/salt-key --delete-all --yes || /bin/true
     fi
 else
+    log "Fixing some permissions"
+    [ -f $ROOT/salt/certs/certs.sh ] && chmod 755 $ROOT/salt/certs/certs.sh
+    [ -d $ROOT/files ] || mkdir -p $ROOT/files
+
     log "Running certs.sh in the Salt master"
-    /srv/salt/certs/certs.sh
+    $ROOT/salt/certs/certs.sh
 
     log "Running the orchestration in the Salt master"
     salt-run state.orchestrate orch.kubernetes
 
     # dirs in the salt master
-    CA_DIR=/srv/files
-    OUT_DIR=/root
-
-    # needed for the "host" utility
-    zypper -n --no-gpg-checks in --force-resolution --no-recommends bind-utils
+    CA_DIR=$ROOT/files
 
     if [ -n "$EXTRA_API_SRV_IP" ] ; then
         API_SERVER_IP=$EXTRA_API_SRV_IP
