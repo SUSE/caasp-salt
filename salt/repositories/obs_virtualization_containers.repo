@@ -4,4 +4,12 @@ type=rpm-md
 gpgcheck=0
 enabled=1
 autorefresh=1
+{% if grains['lsb_distrib_codename'] == "openSUSE Leap 42.1 (x86_64)" %}
 baseurl=http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_42.1/
+{% elif grains['lsb_distrib_codename'] == "SUSE Linux Enterprise Server 12" %}
+baseurl=http://download.opensuse.org/repositories/Virtualization:/containers/SLE_12/
+{% elif grains['lsb_distrib_codename'] == "SUSE Linux Enterprise Server 12 SP1" %}
+baseurl=http://download.opensuse.org/repositories/Virtualization:/containers/SLE_12_SP1/
+{% elif grains['lsb_distrib_codename'] == "SUSE Linux Enterprise Server 12 SP2" %}
+baseurl=http://download.opensuse.org/repositories/Virtualization:/containers/SLE_12_SP2/
+{% endif %}
