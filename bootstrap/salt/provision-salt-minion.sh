@@ -10,6 +10,10 @@ while [[ $# > 0 ]] ; do
     --debug)
       set -x
       ;;
+    -m|--salt-master)
+      SALT_MASTER=$2
+      shift
+      ;;
     -h|--hostname)
       HOSTNAME=$2
       shift
@@ -23,6 +27,11 @@ done
 
 ###################################################################
 
+if [ -n "$HOSTNAME" ] ; then
+    log "Setting hostname $HOSTNAME"
+    hostname $HOSTNAME
+fi
+
 log "Fixing the ssh keys permissions and setting the authorized keys"
 chmod 600 /root/.ssh/*
 cp -f /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
@@ -34,9 +43,9 @@ log "Copying the Salt config"
 cp -v /tmp/salt/minion.d/* /etc/salt/minion.d
 cp -v /tmp/salt/grains /etc/salt/
 
-if [ -n "$HOSTNAME" ] ; then
-    log "Setting hostname $HOSTNAME"
-    hostname $HOSTNAME
+if [ -n "$SALT_MASTER" ] ; then
+    log "Setting salt master: $SALT_MASTER"
+    echo "master: $SALT_MASTER" > /tmp/salt/minion.d/minion.conf
 fi
 
 log "Enabling & starting the Salt minion"
