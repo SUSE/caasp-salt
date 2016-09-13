@@ -9,9 +9,9 @@ E2E=
 DELETE_SALT_KEYS=
 INFRA=cloud
 
-
-ROOT=/srv
-OUT_DIR=/root
+SALT_ROOT=/srv
+PILLAR_PARAMS_FILE=$SALT_ROOT/pillar/params.sls
+CERTS_OUT_DIR=/root
 
 # the hostname and port where the API server will be listening at
 API_SERVER_DNS_NAME="kube-master"
@@ -32,7 +32,7 @@ while [[ $# > 0 ]] ; do
       DELETE_SALT_KEYS=1
       ;;
     -r|--root)
-      ROOT=$2
+      SALT_ROOT=$2
       shift
       ;;
     -h|--hostname)
@@ -62,26 +62,27 @@ done
 
 add_pillar() {
     log "Pillar: setting $1=\"$2\""
-    echo "$1: \"$2\"" >> $ROOT/salt/pillar/params.sls
+    echo "$1: \"$2\"" >> $PILLAR_PARAMS_FILE
 }
 
 if [ -z "$FINISH" ] ; then
+    if [ -n "$HOSTNAME" ] ; then
+        log "Setting hostname $HOSTNAME"
+        hostname $HOSTNAME
+    fi
+
     log "Fix the ssh keys permissions and set the authorized keys"
     chmod 600 /root/.ssh/*
     cp -f /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
-
-    add_pillar infrastructure $INFRA
-    [ -n "$E2E" ] && add_pillar e2e true
 
     log "Upgrading the Salt master"
     zypper -n --no-gpg-checks in \
         --force-resolution --no-recommends salt-master bind-utils
     cp -v /tmp/salt/master.d/* /etc/salt/master.d
 
-    if [ -n "$HOSTNAME" ] ; then
-        log "Setting hostname $HOSTNAME"
-        hostname $HOSTNAME
-    fi
+    [ -f $PILLAR_PARAMS_FILE ] || abort "could not find $PILLAR_PARAMS_FILE"
+    add_pillar infrastructure $INFRA
+    [ -n "$E2E" ] && add_pillar e2e true
 
     log "Enabling & starting the Salt master"
     systemctl enable salt-master
@@ -94,17 +95,17 @@ if [ -z "$FINISH" ] ; then
     fi
 else
     log "Fixing some permissions"
-    [ -f $ROOT/salt/certs/certs.sh ] && chmod 755 $ROOT/salt/certs/certs.sh
-    [ -d $ROOT/files ] || mkdir -p $ROOT/files
+    [ -f $SALT_ROOT/certs/certs.sh ] && chmod 755 $SALT_ROOT/certs/certs.sh
+    [ -d $SALT_ROOT/files ] || mkdir -p $SALT_ROOT/files
 
     log "Running certs.sh in the Salt master"
-    $ROOT/salt/certs/certs.sh
+    $SALT_ROOT/certs/certs.sh --dir $SALT_ROOT/files
 
     log "Running the orchestration in the Salt master"
     salt-run state.orchestrate orch.kubernetes
 
     # dirs in the salt master
-    CA_DIR=$ROOT/files
+    CA_DIR=$SALT_ROOT/files
 
     if [ -n "$EXTRA_API_SRV_IP" ] ; then
         API_SERVER_IP=$EXTRA_API_SRV_IP
@@ -116,17 +117,17 @@ else
     [ -f $CA_DIR/ca.crt ]   || abort "CA file does not exist"
 
     log "Generating certificates for 'kubectl' in the Salt master"
-    [ -f $OUT_DIR/ca.crt ]    || cp $CA_DIR/ca.crt $OUT_DIR/ca.crt
-    [ -f $OUT_DIR/admin.key ] || openssl genrsa -out $OUT_DIR/admin.key 2048
-    [ -f $OUT_DIR/admin.csr ] || openssl req -new -key $OUT_DIR/admin.key \
-        -out $OUT_DIR/admin.csr -subj "/CN=kube-admin"
-    [ -f $OUT_DIR/admin.crt ] || openssl x509 -req \
-        -in $OUT_DIR/admin.csr -CA $CA_DIR/ca.crt \
+    [ -f $CERTS_OUT_DIR/ca.crt ]    || cp $CA_DIR/ca.crt $CERTS_OUT_DIR/ca.crt
+    [ -f $CERTS_OUT_DIR/admin.key ] || openssl genrsa -out $CERTS_OUT_DIR/admin.key 2048
+    [ -f $CERTS_OUT_DIR/admin.csr ] || openssl req -new -key $CERTS_OUT_DIR/admin.key \
+        -out $CERTS_OUT_DIR/admin.csr -subj "/CN=kube-admin"
+    [ -f $CERTS_OUT_DIR/admin.crt ] || openssl x509 -req \
+        -in $CERTS_OUT_DIR/admin.csr -CA $CA_DIR/ca.crt \
         -CAkey $CA_DIR/ca.key -CAcreateserial \
-        -out $OUT_DIR/admin.crt -days 365
+        -out $CERTS_OUT_DIR/admin.crt -days 365
 
     log "Generating a 'kubeconfig' file"
-    cat <<EOF > $OUT_DIR/kubeconfig
+    cat <<EOF > $CERTS_OUT_DIR/kubeconfig
 apiVersion: v1
 clusters:
 - cluster:
@@ -148,7 +149,7 @@ users:
     client-key: admin.key
 EOF
 
-    log "'kubeconfig' file (as well as certificates) left at salt-master:$OUT_DIR"
+    log "'kubeconfig' file (as well as certificates) left at salt-master:$CERTS_OUT_DIR"
     log "creating admin.tar with all the config files"
     tar cvpf admin.tar admin.crt admin.key ca.crt kubeconfig
 
