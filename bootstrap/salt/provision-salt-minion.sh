@@ -1,9 +1,11 @@
 #!/bin/sh
 
 log()   { echo ">>> $1" ; }
-abort() { echo ">>> FATAL: $1" ; exit 1 ; }
+warn()  { log "WARNING: $1" ; }
+abort() { log "FATAL: $1" ; exit 1 ; }
 
 HOSTNAME=
+TMP_SALT_ROOT=/tmp/salt
 
 while [[ $# > 0 ]] ; do
   case $1 in
@@ -12,6 +14,10 @@ while [[ $# > 0 ]] ; do
       ;;
     -m|--salt-master)
       SALT_MASTER=$2
+      shift
+      ;;
+    --tmp-salt-root)
+      TMP_SALT_ROOT=$2
       shift
       ;;
     -h|--hostname)
@@ -39,14 +45,18 @@ cp -f /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 log "Installing the Salt minion"
 zypper -n --no-gpg-checks in --force-resolution --no-recommends salt-minion
 
-log "Copying the Salt config"
-cp -v /tmp/salt/minion.d/* /etc/salt/minion.d
-cp -v /tmp/salt/grains /etc/salt/
-
 if [ -n "$SALT_MASTER" ] ; then
     log "Setting salt master: $SALT_MASTER"
-    echo "master: $SALT_MASTER" > /tmp/salt/minion.d/minion.conf
+    log "master: $SALT_MASTER" > $TMP_SALT_ROOT/minion.d/minion.conf
+else
+    warn "no salt master set!"
 fi
+
+[ -f $TMP_SALT_ROOT/minion.d/minion.conf ] || warn "no minon.conf file!"
+
+log "Copying the Salt config"
+cp -v $TMP_SALT_ROOT/minion.d/* /etc/salt/minion.d
+cp -v $TMP_SALT_ROOT/grains /etc/salt/
 
 log "Enabling & starting the Salt minion"
 systemctl enable salt-minion

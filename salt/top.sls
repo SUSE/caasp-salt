@@ -1,7 +1,9 @@
 base:
   '*':
     - repositories
+{% if pillar.get('avahi', '').lower() == 'true' %}
     - avahi
+{% endif %}
     - motd
     - users
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'cloud' %}
