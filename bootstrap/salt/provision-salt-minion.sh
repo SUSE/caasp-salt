@@ -64,7 +64,7 @@ systemctl start salt-minion
 
 sleep 2
 log "Salt minion status:"
-systemctl status salt-minion
+systemctl status -l salt-minion
 
 #TIMEOUT=90
 #COUNT=0
