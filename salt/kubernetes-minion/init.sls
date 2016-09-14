@@ -84,7 +84,6 @@ c/etc/kubernetes/manifests/e2e-image-puller.manifest:
       - file:    /etc/kubernetes/manifests
     - require_in:
       - service: kubelet
-{% endif %}
 
 #######################
 # config files
