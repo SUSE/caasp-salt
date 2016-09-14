@@ -38,6 +38,10 @@ while [[ $# > 0 ]] ; do
       SALT_ROOT=$2
       shift
       ;;
+    --admin-certs-dir)
+      CERTS_OUT_DIR=$2
+      shift
+      ;;
     -h|--hostname)
       HOSTNAME=$2
       shift
@@ -63,8 +67,10 @@ done
 
 ###################################################################
 
+# some dirs and files in the salt master
 PILLAR_PARAMS_FILE=$SALT_ROOT/pillar/params.sls
 CERTS_SH=$SALT_ROOT/salt/certs/certs.sh
+CERTS_DIR=$SALT_ROOT/files
 
 add_pillar() {
     log "Pillar: setting $1=\"$2\""
@@ -113,33 +119,29 @@ if [ -z "$FINISH" ] ; then
         /usr/bin/salt-key --delete-all --yes || /bin/true
     fi
 else
-    log "Fixing some permissions"
-    [ -d $SALT_ROOT/files ] || mkdir -p $SALT_ROOT/files
+    log "Fixing some permissions and missing dirs"
+    [ -d $CERTS_DIR ] || mkdir -p $CERTS_DIR
 
     log "Generating certificates at the Salt master"
-    [ -f $CERTS_SH ] || abort "no certificates script found at $CERTS_SH"
+    [ -f $CERTS_SH ] || abort "certificates script not found at $CERTS_SH"
     chmod 755 $CERTS_SH
-    $CERTS_SH --dir $SALT_ROOT/files
-    [ $? -eq 0 ] || abort "certificates generation failed"
+    $CERTS_SH --dir $CERTS_DIR
+    [ $? -eq 0 ]             || abort "certificates generation failed"
+    [ -f $CERTS_DIR/ca.crt ] || abort "CA file does not exist at $CERTS_DIR/ca.crt"
 
     log "Running the orchestration in the Salt master"
     salt-run state.orchestrate orch.kubernetes
     [ $? -eq 0 ] || abort "Salt orchestration failed"
 
-    # dirs in the salt master
-    CA_DIR=$SALT_ROOT/files
-
     if [ -n "$EXTRA_API_SRV_IP" ] ; then
         API_SERVER_IP=$EXTRA_API_SRV_IP
     else
         API_SERVER_IP=$(host $API_SERVER_DNS_NAME | grep "has address" | awk '{print $NF}')
-        [ -n "$API_SERVER_IP" ] || abort "could not determine the IP of the API server with DNS"
+        [ -n "$API_SERVER_IP" ] || abort "could not determine the IP of the API server by resolving $API_SERVER_DNS_NAME: you must provide it with --extra-api-ip"
     fi
 
-    [ -f $CA_DIR/ca.crt ] || abort "CA file does not exist"
-
     log "Generating certificates for 'kubectl' in the Salt master"
-    [ -f $CERTS_OUT_DIR/ca.crt ]    || cp $CA_DIR/ca.crt $CERTS_OUT_DIR/ca.crt
+    [ -f $CERTS_OUT_DIR/ca.crt ]    || cp $CERTS_DIR/ca.crt $CERTS_OUT_DIR/ca.crt
     [ -f $CERTS_OUT_DIR/ca.crt ]    || abort "ca.crt not generated"
     [ -f $CERTS_OUT_DIR/admin.key ] || openssl genrsa -out $CERTS_OUT_DIR/admin.key 2048
     [ -f $CERTS_OUT_DIR/admin.key ] || abort "admin.key not generated"
@@ -149,8 +151,8 @@ else
                                        -subj "/CN=kube-admin"
     [ -f $CERTS_OUT_DIR/admin.csr ] || abort "admin.csr not generated"
     [ -f $CERTS_OUT_DIR/admin.crt ] || openssl x509 -req \
-        -in $CERTS_OUT_DIR/admin.csr -CA $CA_DIR/ca.crt \
-        -CAkey $CA_DIR/ca.key -CAcreateserial \
+        -in $CERTS_OUT_DIR/admin.csr -CA $CERTS_DIR/ca.crt \
+        -CAkey $CERTS_DIR/ca.key -CAcreateserial \
         -out $CERTS_OUT_DIR/admin.crt -days 365
     [ -f $CERTS_OUT_DIR/admin.crt ] || abort "admin.crt not generated"
 
@@ -177,13 +179,13 @@ users:
     client-key: admin.key
 EOF
 
-    log "'kubeconfig' file (as well as certificates) left at salt-master:$CERTS_OUT_DIR"
-    log "creating admin.tar with all the config files"
-    tar cvpf admin.tar admin.crt admin.key ca.crt kubeconfig
+    log "Creating admin.tar with config files and certificates"
+    cd $CERTS_OUT_DIR && tar cvpf admin.tar admin.crt admin.key ca.crt kubeconfig
     [ -f admin.tar ] || abort "admin.tar not generated"
 
+    log "'kubeconfig' file with certificates left at salt-master:$CERTS_OUT_DIR/admin.tar"
     log "Now you can"
-    log "* copy admin.tar to your machine"
+    log "* copy $CERTS_OUT_DIR/admin.tar to your machine"
     log "* tar -xvpf admin.tar"
     log "* KUBECONFIG=kubeconfig kubectl get nodes"
     log ""
