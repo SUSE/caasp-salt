@@ -62,6 +62,10 @@ log "Enabling & starting the Salt minion"
 systemctl enable salt-minion
 systemctl start salt-minion
 
+sleep 2
+log "Salt minion status:"
+systemctl status salt-minion
+
 #TIMEOUT=90
 #COUNT=0
 #while [ ! -f /etc/salt/pki/minion/minion_master.pub ]; do

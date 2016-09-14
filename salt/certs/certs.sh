@@ -47,6 +47,7 @@ USAGE
 
 log()         { echo ">>> $@" ; }
 error()       { log "ERROR: $@" ; }
+warn()        { log "WARNING: $@" ; }
 abort()       { log "FATAL: $@" ; exit 1 ; }
 usage()       { echo "$USAGE" ; }
 abort_usage() { usage ; abort $@ ; }
@@ -108,8 +109,8 @@ get_salt_pillar_data() {
 CA_NAME=$(get_salt_pillar_data $PILLAR_CA_NAME)
 CA_ORG=$(get_salt_pillar_data $PILLAR_CA_ORG)
 
-[ -n "$CA_NAME" ]    || abort "could not obtain the CA name"
-[ -n "$CA_ORG" ]     || abort "could not obtain the CA org"
+[ -n "$CA_NAME" ] || abort "could not obtain the CA name from Salt. Please verify Salt is up and running."
+[ -n "$CA_ORG" ]  || abort "could not obtain the CA org from Salt. Please verify Salt is up and running."
 
 gen_ca() {
     d=$OUT_DIR
@@ -244,6 +245,11 @@ intersect() {
 
 MASTERS=$(get_kube_masters)
 MINIONS=$(get_kube_minions)
+NUM_MASTERS=$(echo $MASTERS | wc -w)
+NUM_MINIONS=$(echo $MINIONS | wc -w)
+
+[ $NUM_MASTERS -eq 0 ] && warn "number of Kubernetes masters connected: 0"
+[ $NUM_MINIONS -eq 0 ] && warn "number of Kubernetes nodes connected: 0"
 
 if [ -n "$NODES" ] ; then
     MASTER=$(intersect "$MASTERS" "$NODES")

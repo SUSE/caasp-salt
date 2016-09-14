@@ -91,6 +91,10 @@ if [ -z "$FINISH" ] ; then
     systemctl enable salt-master
     systemctl start salt-master
 
+    sleep 2
+    log "Salt master status:"
+    systemctl status salt-master
+
     if [ "$DELETE_SALT_KEYS" = "1" ] ; then
         sleep 5
         log "Removing all previous Salt keys..."
