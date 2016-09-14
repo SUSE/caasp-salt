@@ -85,6 +85,7 @@ kubelet:
       - file:    /etc/kubernetes/manifests
     - require_in:
       - service: kubelet
+{% endif %}
 
 #######################
 # config files
