@@ -50,7 +50,7 @@ zypper $ZYPPER_GLOBAL_ARGS in --force-resolution --no-recommends salt-minion
 
 if [ -n "$SALT_MASTER" ] ; then
     log "Setting salt master: $SALT_MASTER"
-    log "master: $SALT_MASTER" > $TMP_SALT_ROOT/minion.d/minion.conf
+    echo "master: $SALT_MASTER" > $TMP_SALT_ROOT/minion.d/minion.conf
 else
     warn "no salt master set!"
 fi
