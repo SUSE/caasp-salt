@@ -7,6 +7,9 @@ abort() { log "FATAL: $1" ; exit 1 ; }
 HOSTNAME=
 TMP_SALT_ROOT=/tmp/salt
 
+# global args for running zypper
+ZYPPER_GLOBAL_ARGS="-n --no-gpg-checks --quiet --no-color"
+
 while [[ $# > 0 ]] ; do
   case $1 in
     --debug)
@@ -43,7 +46,7 @@ chmod 600 /root/.ssh/*
 cp -f /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 
 log "Installing the Salt minion"
-zypper -n --no-gpg-checks in --force-resolution --no-recommends salt-minion
+zypper $ZYPPER_GLOBAL_ARGS in --force-resolution --no-recommends salt-minion
 
 if [ -n "$SALT_MASTER" ] ; then
     log "Setting salt master: $SALT_MASTER"

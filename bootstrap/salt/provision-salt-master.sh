@@ -13,6 +13,9 @@ INFRA=cloud
 SALT_ROOT=/srv
 CERTS_OUT_DIR=/root
 
+# global args for running zypper
+ZYPPER_GLOBAL_ARGS="-n --no-gpg-checks --quiet --no-color"
+
 # the hostname and port where the API server will be listening at
 API_SERVER_DNS_NAME="kube-master"
 API_SERVER_PORT=6443
@@ -65,7 +68,12 @@ CERTS_SH=$SALT_ROOT/salt/certs/certs.sh
 
 add_pillar() {
     log "Pillar: setting $1=\"$2\""
-    echo "$1: \"$2\"" >> $PILLAR_PARAMS_FILE
+    cat <<-PARAM_SETTING >> $PILLAR_PARAMS_FILE
+
+# parameter set by $0
+$1: '$2'
+
+PARAM_SETTING
 }
 
 if [ -z "$FINISH" ] ; then
@@ -79,13 +87,15 @@ if [ -z "$FINISH" ] ; then
     cp -f /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys || warn "setting authorized_keys failed"
 
     log "Upgrading the Salt master"
-    zypper -n --no-gpg-checks in \
+    zypper $ZYPPER_GLOBAL_ARGS in \
         --force-resolution --no-recommends salt-master bind-utils
-    cp -v /tmp/salt/master.d/* /etc/salt/master.d
 
     [ -f $PILLAR_PARAMS_FILE ] || abort "could not find $PILLAR_PARAMS_FILE"
     add_pillar infrastructure $INFRA
     [ -n "$E2E" ] && add_pillar e2e true
+
+    log "Copying the Salt config"
+    cp -v /tmp/salt/master.d/* /etc/salt/master.d
 
     log "Enabling & starting the Salt master"
     systemctl enable salt-master
