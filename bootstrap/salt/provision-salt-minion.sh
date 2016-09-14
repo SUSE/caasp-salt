@@ -62,9 +62,16 @@ log "Enabling & starting the Salt minion"
 systemctl enable salt-minion
 systemctl start salt-minion
 
+log "Salt minion config file:"
+log "------------------------------"
+cat /etc/s/salt/minion.d/minion.conf
+log "------------------------------"
+
 sleep 2
 log "Salt minion status:"
+log "------------------------------"
 systemctl status -l salt-minion
+log "------------------------------"
 
 #TIMEOUT=90
 #COUNT=0

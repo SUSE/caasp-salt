@@ -245,11 +245,10 @@ intersect() {
 
 MASTERS=$(get_kube_masters)
 MINIONS=$(get_kube_minions)
-NUM_MASTERS=$(echo $MASTERS | wc -w)
-NUM_MINIONS=$(echo $MINIONS | wc -w)
 
-[ $NUM_MASTERS -eq 0 ] && warn "number of Kubernetes masters connected: 0"
-[ $NUM_MINIONS -eq 0 ] && warn "number of Kubernetes nodes connected: 0"
+log "Kubernetes nodes connected:"
+log "- masters: $MASTERS"
+log "- minions: $MINIONS"
 
 if [ -n "$NODES" ] ; then
     MASTER=$(intersect "$MASTERS" "$NODES")

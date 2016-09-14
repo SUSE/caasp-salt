@@ -93,7 +93,9 @@ if [ -z "$FINISH" ] ; then
 
     sleep 2
     log "Salt master status:"
+    log "------------------------------"
     systemctl status -l salt-master
+    log "------------------------------"
 
     if [ "$DELETE_SALT_KEYS" = "1" ] ; then
         sleep 5
