@@ -70,7 +70,8 @@ kubelet:
 #br_netfilter:
 #  kmod.present
 
-c/etc/kubernetes/manifests/e2e-image-puller.manifest:
+{% if pillar.get('e2e', '').lower() == 'true' %}
+/etc/kubernetes/manifests/e2e-image-puller.manifest:
   file.managed:
     - source:    salt://kubernetes-minion/e2e-image-puller.manifest
     - template:  jinja
