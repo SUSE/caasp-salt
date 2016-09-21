@@ -8,6 +8,7 @@
 {% set apiserver_crt = ca_path + '/apiserver.crt' %}
 
 {% set api_ssl_port = salt['pillar.get']('api_ssl_port', '6443') %}
+{% set pv_recycler_pod_template = '/etc/kubernetes/pv-recycler-pod-template.yml' %}
 
 {{ apiserver_key }}:
   file.managed:
@@ -75,6 +76,7 @@ kube-controller-manager:
       - service: kube-apiserver
       - file:    /etc/kubernetes/config
       - file:    /etc/kubernetes/controller-manager
+      - file:    {{ pv_recycler_pod_template }}
     - watch:
       - file:    /etc/kubernetes/config
       - file:    /etc/kubernetes/controller-manager
@@ -156,8 +158,9 @@ apiserver-iptables:
     - require:
       - pkg:     kubernetes-master
     - context: {
-      ca_crt:        '{{ ca_crt }}',
-      apiserver_key: '{{ apiserver_key }}'
+      pv_recycler_pod_template: '{{ pv_recycler_pod_template }}',
+      ca_crt:                   '{{ ca_crt }}',
+      apiserver_key:            '{{ apiserver_key }}'
     }
 
 /etc/kubernetes/scheduler:
@@ -165,3 +168,9 @@ apiserver-iptables:
     - source:    salt://kubernetes-master/scheduler.jinja
     - require:
       - pkg:     kubernetes-master
+
+{{ pv_recycler_pod_template }}:
+   file.managed:
+    - source: salt://kubernetes-master/pv-recycler-pod-template.yml
+    - require:
+      - pkg: kubernetes-master

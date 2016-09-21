@@ -67,7 +67,7 @@ systemctl start salt-minion
 
 log "Salt minion config file:"
 log "------------------------------"
-cat /etc/s/salt/minion.d/minion.conf
+cat /etc/salt/minion.d/minion.conf
 log "------------------------------"
 
 sleep 2
