@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  generateName: "pv-recycler-"
+  namespace: ""
+spec:
+  activeDeadlineSeconds: 60
+  restartPolicy: Never
+  volumes:
+  - name: "vol"
+  containers:
+  - name: "pv-recycler"
+    image: "suse/sles12sp2:latest"
+    command: ["/bin/sh"]
+    args: ["-c", "test -e /scrub && rm -rf /scrub/..?* /scrub/.[!.]* /scrub/*  && test -z \"$(ls -A /scrub)\" || exit 1"]
+    # The image is already present in the minion. If we don't explicitely set
+    # "Never", then Kubernetes will try to perform docker pull always, and in this
+    # case it will fail.
+    imagePullPolicy: Never
+    volumeMounts:
+    - name: "vol"
+      mountPath: "/scrub"

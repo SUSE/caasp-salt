@@ -10,4 +10,7 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
     --cluster-cidr={{ pillar['cluster_cidr'] }} \
     --service-account-private-key-file={{ apiserver_key }} \
     --root-ca-file={{ ca_crt }} \
+{% if grains['lsb_distrib_codename'].startswith("SUSE Linux Enterprise Server 12") %}
+    --pv-recycler-pod-template-filepath-nfs={{ pv_recycler_pod_template }} \
+{% endif %}
     --v=2"
