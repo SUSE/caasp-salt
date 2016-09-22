@@ -1,3 +1,0 @@
-{% for server, ipaddr in salt['mine.get']('*', 'network.ip_addrs').items() -%}
-{{ipaddr[0]}} {{ server }} {{ server.split(".")[0] }}
-{% endfor -%}
