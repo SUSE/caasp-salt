@@ -8,7 +8,6 @@
 {% set apiserver_crt = ca_path + '/apiserver.crt' %}
 
 {% set api_ssl_port = salt['pillar.get']('api_ssl_port', '6443') %}
-{% set pv_recycler_pod_template = '/etc/kubernetes/pv-recycler-pod-template.yml' %}
 
 {{ apiserver_key }}:
   file.managed:
@@ -37,7 +36,7 @@
 kubernetes-master:
   pkg.latest:
     - require:
-      - file: /etc/zypp/repos.d/obs_virtualization_containers.repo
+      - file: /etc/zypp/repos.d/containers.repo
     - require_in:
       - service: kube-controller-manager
       - service: kube-apiserver
@@ -76,7 +75,7 @@ kube-controller-manager:
       - service: kube-apiserver
       - file:    /etc/kubernetes/config
       - file:    /etc/kubernetes/controller-manager
-      - file:    {{ pv_recycler_pod_template }}
+      - file:    /etc/kubernetes/pv-recycler-pod-template.yml
     - watch:
       - file:    /etc/kubernetes/config
       - file:    /etc/kubernetes/controller-manager
@@ -92,7 +91,7 @@ kube-controller-manager:
 etcdctl:
   pkg.installed:
     - require:
-      - file: /etc/zypp/repos.d/obs_virtualization_containers.repo
+      - file: /etc/zypp/repos.d/containers.repo
 
 /root/flannel-config.json:
   file.managed:
@@ -158,7 +157,6 @@ apiserver-iptables:
     - require:
       - pkg:     kubernetes-master
     - context: {
-      pv_recycler_pod_template: '{{ pv_recycler_pod_template }}',
       ca_crt:                   '{{ ca_crt }}',
       apiserver_key:            '{{ apiserver_key }}'
     }
@@ -169,7 +167,7 @@ apiserver-iptables:
     - require:
       - pkg:     kubernetes-master
 
-{{ pv_recycler_pod_template }}:
+/etc/kubernetes/pv-recycler-pod-template.yml:
    file.managed:
     - source: salt://kubernetes-master/pv-recycler-pod-template.yml
     - require:

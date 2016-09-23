@@ -1,7 +1,7 @@
 flannel:
   pkg.installed:
     - require:
-      - file: /etc/zypp/repos.d/obs_virtualization_containers.repo
+      - file: /etc/zypp/repos.d/containers.repo
   service.running:
     - name: flanneld
     - enable: True

@@ -19,6 +19,3 @@ admin_email:      'admin@kubernetes'
 # user and group for running services and some other stuff...
 kube_user:        'kube'
 kube_group:       'kube'
-
-# image for the pause container
-pod_infra_container_image: "suse/pause:latest"
