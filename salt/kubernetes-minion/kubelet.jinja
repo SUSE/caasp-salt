@@ -22,7 +22,7 @@ KUBELET_API_SERVER="--api-servers={{ ','.join(kube_servers) }}"
 KUBELET_ARGS="\
     --node-ip={{ grains['ip4_interfaces']['eth0'][0] }} \
     --config=/etc/kubernetes/manifests \
-{% if grains['lsb_distrib_codename'].startswith("SUSE Linux Enterprise Server 12") %}
-    --pod-infra-container-image={{pillar['pod_infra_container_image']}}
-{% endif %}
+{% if pillar['pod_infra_container_image'] -%}
+    --pod-infra-container-image={{pillar['pod_infra_container_image']}} \
+{% endif -%}
     --kubeconfig=/var/lib/kubelet/kubeconfig"

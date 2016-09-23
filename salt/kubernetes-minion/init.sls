@@ -34,7 +34,7 @@
 kubernetes-node:
   pkg.latest:
     - require:
-      - file: /etc/zypp/repos.d/obs_virtualization_containers.repo
+      - file: /etc/zypp/repos.d/containers.repo
     - require_in:
       - service: kube-proxy
       - service: kubelet

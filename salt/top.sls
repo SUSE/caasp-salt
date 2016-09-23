@@ -24,6 +24,7 @@ base:
     - kubernetes-minion
     - docker
     - flannel
+    - sle
   'roles:nfs':
     - match: grain
     - nfs-server

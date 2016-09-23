@@ -5,7 +5,7 @@ etcd:
       - pkg:     etcdctl
       - service: etcd-service
     - require:
-      - file: /etc/zypp/repos.d/obs_virtualization_containers.repo
+      - file: /etc/zypp/repos.d/containers.repo
 
 iptables:
   pkg:
