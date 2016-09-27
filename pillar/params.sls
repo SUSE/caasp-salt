@@ -19,3 +19,6 @@ admin_email:      'admin@kubernetes'
 # user and group for running services and some other stuff...
 kube_user:        'kube'
 kube_group:       'kube'
+
+# use a docker registry mirror (it must be a http service)
+# docker_registry_mirror: 'mymirror.com:5000'
