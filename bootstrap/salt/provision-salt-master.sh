@@ -20,6 +20,9 @@ ZYPPER_GLOBAL_ARGS="-n --no-gpg-checks --quiet --no-color"
 API_SERVER_DNS_NAME="kube-master"
 API_SERVER_PORT=6443
 
+# docker regsitry mirror
+DOCKER_REG_MIRROR=
+
 while [[ $# > 0 ]] ; do
   case $1 in
     --debug)
@@ -40,6 +43,10 @@ while [[ $# > 0 ]] ; do
       ;;
     --admin-certs-dir)
       CERTS_OUT_DIR=$2
+      shift
+      ;;
+    --docker-reg-mirror)
+      DOCKER_REG_MIRROR=$2
       shift
       ;;
     -h|--hostname)
@@ -99,6 +106,7 @@ if [ -z "$FINISH" ] ; then
     [ -f $PILLAR_PARAMS_FILE ] || abort "could not find $PILLAR_PARAMS_FILE"
     add_pillar infrastructure $INFRA
     [ -n "$E2E" ] && add_pillar e2e true
+    [ -n "$DOCKER_REG_MIRROR" ] && add_pillar docker_registry_mirror $DOCKER_REG_MIRROR
 
     log "Copying the Salt config"
     cp -v /tmp/salt/master.d/* /etc/salt/master.d
