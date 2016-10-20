@@ -21,7 +21,7 @@ docker-config-mirror:
     - flags: ['IGNORECASE', 'MULTILINE']
     - append_if_not_found: True
     - require:
-      - package: docker
+      - pkg: docker
     - require_in:
       - service: docker
 {% endif %}
