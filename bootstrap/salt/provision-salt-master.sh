@@ -128,7 +128,7 @@ if [ -z "$FINISH" ] ; then
     fi
 else
     log "Fixing some permissions and missing dirs"
-    [ -d $CERTS_DIR ] || mkdir -p $CERTS_DIR
+    mkdir -p $CERTS_DIR
 
     log "Generating certificates at the Salt master"
     [ -f $CERTS_SH ] || abort "certificates script not found at $CERTS_SH"

@@ -14,7 +14,7 @@ spec:
         cpu: 100m
       limits:
         cpu: 100m
-    image: opensuse/amd64:leap
+    image: docker:1.12
     ##########################################################################
     # generate this list with:
     #
@@ -28,7 +28,6 @@ spec:
     - /bin/sh
     - -c
     - "
-      zypper -n in --no-recommends docker;
       for i in
       gcr.io/google_containers/busybox:1.24
       gcr.io/google_containers/busybox:latest
@@ -43,31 +42,31 @@ spec:
       gcr.io/google_containers/jessie-dnsutils:e2e
       gcr.io/google_containers/kube-nethealth-amd64:1.0
       gcr.io/google_containers/liveness:e2e
+      gcr.io/google_containers/mounttest-user:0.3
       gcr.io/google_containers/mounttest:0.2
       gcr.io/google_containers/mounttest:0.5
       gcr.io/google_containers/mounttest:0.6
       gcr.io/google_containers/mounttest:0.7
-      gcr.io/google_containers/mounttest-user:0.3
       gcr.io/google_containers/mysql-galera:e2e
       gcr.io/google_containers/mysql-healthz:1.0
+      gcr.io/google_containers/n-way-http:1.0
       gcr.io/google_containers/netexec:1.4
       gcr.io/google_containers/netexec:1.5
       gcr.io/google_containers/nettest:1.7
       gcr.io/google_containers/nettest:1.8
       gcr.io/google_containers/nettest:1.9
-      gcr.io/google_containers/nginx:1.7.9
       gcr.io/google_containers/nginx-slim:0.5
+      gcr.io/google_containers/nginx:1.7.9
       gcr.io/google_containers/node-problem-detector:v0.1
-      gcr.io/google_containers/n-way-http:1.0
       gcr.io/google_containers/pause
-      gcr.io/google_containers/pause:2.0
       gcr.io/google_containers/pause-amd64:3.0
+      gcr.io/google_containers/pause:2.0
       gcr.io/google_containers/porter:cd5cb5791ebaa8641955f0e8c2a9bed669b1eaab
       gcr.io/google_containers/portforwardtester:1.0
-      gcr.io/google_containers/redis:e2e
       gcr.io/google_containers/redis-install-3.2.0:e2e
-      gcr.io/google_containers/resource_consumer:beta4
+      gcr.io/google_containers/redis:e2e
       gcr.io/google_containers/resource_consumer/controller:beta4
+      gcr.io/google_containers/resource_consumer:beta4
       gcr.io/google_containers/serve_hostname:v1.4
       gcr.io/google_containers/servicelb:0.1
       gcr.io/google_containers/test-webserver:e2e
