@@ -13,4 +13,7 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
 {% if pillar['pv_recycler_pod_template'] -%}
     --pv-recycler-pod-template-filepath-nfs={{ pillar['pv_recycler_pod_template'] }} \
 {% endif -%}
+{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' %}
+    --cloud-provider=aws \
+{% endif -%}
     --v=2"
