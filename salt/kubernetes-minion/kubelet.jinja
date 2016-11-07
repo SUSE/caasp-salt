@@ -25,7 +25,7 @@ KUBELET_ARGS="\
 {% if pillar['pod_infra_container_image'] -%}
     --pod-infra-container-image={{pillar['pod_infra_container_image']}} \
 {% endif -%}
-{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' %}
+{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
     --cloud-provider=aws \
 {% endif -%}
     --kubeconfig=/var/lib/kubelet/kubeconfig"

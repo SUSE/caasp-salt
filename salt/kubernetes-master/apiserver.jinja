@@ -28,7 +28,7 @@ KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}
 KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
                --v=2 \
                --runtime-config=extensions/v1beta1/daemonsets=true \
-{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' %}
+{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
                --cloud-provider=aws \
 {% endif -%}
                --tls-cert-file={{ apiserver_crt }} \
