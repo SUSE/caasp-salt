@@ -10,7 +10,7 @@ TMP_SALT_ROOT=/tmp/salt
 # global args for running zypper
 ZYPPER_GLOBAL_ARGS="-n --no-gpg-checks --quiet --no-color"
 
-while [[ $# > 0 ]] ; do
+while [ $# -gt 0 ] ; do
   case $1 in
     --debug)
       set -x
@@ -38,7 +38,7 @@ done
 
 if [ -n "$HOSTNAME" ] ; then
     log "Setting hostname $HOSTNAME"
-    hostname $HOSTNAME
+    hostname "$HOSTNAME"
 fi
 
 log "Fixing the ssh keys permissions and setting the authorized keys"
@@ -50,16 +50,17 @@ zypper $ZYPPER_GLOBAL_ARGS in --force-resolution --no-recommends salt-minion
 
 if [ -n "$SALT_MASTER" ] ; then
     log "Setting salt master: $SALT_MASTER"
-    echo "master: $SALT_MASTER" > $TMP_SALT_ROOT/minion.d/minion.conf
+    echo "master: $SALT_MASTER" > "$TMP_SALT_ROOT/minion.d/minion.conf"
 else
     warn "no salt master set!"
 fi
 
-[ -f $TMP_SALT_ROOT/minion.d/minion.conf ] || warn "no minon.conf file!"
+[ -f "$TMP_SALT_ROOT/minion.d/minion.conf" ] || warn "no minon.conf file!"
 
 log "Copying the Salt config"
-cp -v $TMP_SALT_ROOT/minion.d/* /etc/salt/minion.d
-cp -v $TMP_SALT_ROOT/grains /etc/salt/
+mkdir -p /etc/salt/minion.d
+cp -v $TMP_SALT_ROOT/minion.d/*  /etc/salt/minion.d
+cp -v $TMP_SALT_ROOT/grains      /etc/salt/
 
 log "Enabling & starting the Salt minion"
 systemctl enable salt-minion
@@ -67,13 +68,13 @@ systemctl start salt-minion
 
 log "Salt minion config file:"
 log "------------------------------"
-cat /etc/salt/minion.d/minion.conf
+cat /etc/salt/minion.d/minion.conf || abort "no salt minion configuration"
 log "------------------------------"
 
 sleep 2
 log "Salt minion status:"
 log "------------------------------"
-systemctl status -l salt-minion
+systemctl status -l salt-minion || abort "salt minion is not running"
 log "------------------------------"
 
 #TIMEOUT=90
