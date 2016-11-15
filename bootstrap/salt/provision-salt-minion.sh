@@ -39,6 +39,10 @@ done
 if [ -n "$HOSTNAME" ] ; then
     log "Setting hostname $HOSTNAME"
     hostname "$HOSTNAME"
+
+    # survive reboots
+    [ -f /etc/hostname ] && echo "$HOSTNAME" > /etc/hostname
+    [ -f /etc/HOSTNAME ] && echo "$HOSTNAME" > /etc/HOSTNAME
 fi
 
 log "Fixing the ssh keys permissions and setting the authorized keys"

@@ -10,6 +10,11 @@ api_cluster_ip:   '172.21.0.1'
 # port for listening for SSL connections
 api_ssl_port:     '6443'
 
+# DNS service IP and some other stuff (must be inside the 'services_cidr')
+dns_cluster_ip:   '172.21.0.2'
+dns_domain:       'cluster.local'
+dns_replicas:     '1'
+
 # certificates
 # some of these values MUST match the values ussed when generating the kube-ca.*
 ca_name:          'kube-ca'
