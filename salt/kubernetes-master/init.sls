@@ -33,6 +33,9 @@
 # components
 #######################
 
+kubernetes-client:
+  pkg.latest
+
 kubernetes-master:
   pkg.latest:
     - require:
@@ -151,6 +154,7 @@ deploy_addons.sh:
   cmd.script:
     - source:      salt://kubernetes-master/deploy_addons.sh
     - require:
+      - pkg:       kubernetes-client
       - file:      /root/namespace.yaml
       - file:      /root/skydns-svc.yaml
       - file:      /root/skydns-rc.yaml
