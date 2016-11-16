@@ -22,7 +22,7 @@ KUBE_ETCD_SERVERS="--etcd-servers={{ ",".join(etcd_servers) }}"
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}"
 
 # default admission control policies
-# KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota"
+KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota"
 
 # Add your own!
 KUBE_API_ARGS="--service-account-key-file=/var/lib/kubernetes/serviceaccount.key \
