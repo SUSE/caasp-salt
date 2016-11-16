@@ -151,8 +151,6 @@ deploy_addons.sh:
   cmd.script:
     - source:      salt://kubernetes-master/deploy_addons.sh
     - require:
-      - file:      /root/dashboard-controller.yaml
-      - file:      /root/dashboard-service.yaml
       - file:      /root/namespace.yaml
       - file:      /root/skydns-svc.yaml
       - file:      /root/skydns-rc.yaml
