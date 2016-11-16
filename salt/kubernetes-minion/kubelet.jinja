@@ -20,6 +20,8 @@ KUBELET_API_SERVER="--api-servers={{ ','.join(kube_servers) }}"
 
 # Add your own!
 KUBELET_ARGS="\
+    --cluster-dns={{ pillar['dns_cluster_ip'] }} \
+    --cluster-domain={{ pillar['dns_domain'] }} \
     --node-ip={{ grains['ip4_interfaces']['eth0'][0] }} \
     --config=/etc/kubernetes/manifests \
 {% if pillar['pod_infra_container_image'] -%}

@@ -41,6 +41,7 @@ kubernetes-master:
       - service: kube-controller-manager
       - service: kube-apiserver
       - service: kube-scheduler
+      - file:    deploy_addons.sh
 
 kube-scheduler:
   service.running:
@@ -126,6 +127,36 @@ apiserver-iptables:
     - proto: tcp
     - require:
       - pkg: iptables
+
+###################################
+# addons
+###################################
+
+/root/namespace.yaml:
+  file.managed:
+    - source:      salt://kubernetes-master/addons/namespace.yaml.jinja
+    - template:    jinja
+
+/root/skydns-rc.yaml:
+  file.managed:
+    - source:      salt://kubernetes-master/addons/skydns-rc.yaml.jinja
+    - template:    jinja
+
+/root/skydns-svc.yaml:
+  file.managed:
+    - source:      salt://kubernetes-master/addons/skydns-svc.yaml.jinja
+    - template:    jinja
+
+deploy_addons.sh:
+  cmd.script:
+    - source:      salt://kubernetes-master/deploy_addons.sh
+    - require:
+      - file:      /root/dashboard-controller.yaml
+      - file:      /root/dashboard-service.yaml
+      - file:      /root/namespace.yaml
+      - file:      /root/skydns-svc.yaml
+      - file:      /root/skydns-rc.yaml
+      - cmd:       kubectl_context
 
 #######################
 # config files

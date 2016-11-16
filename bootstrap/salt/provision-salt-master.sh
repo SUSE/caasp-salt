@@ -93,6 +93,10 @@ if [ -z "$FINISH" ] ; then
     if [ -n "$HOSTNAME" ] ; then
         log "Setting hostname $HOSTNAME"
         hostname "$HOSTNAME" || warn "could not set hostname $HOSTNAME"
+
+        # survive reboots
+        [ -f /etc/hostname ] && echo "$HOSTNAME" > /etc/hostname
+        [ -f /etc/HOSTNAME ] && echo "$HOSTNAME" > /etc/HOSTNAME
     fi
 
     log "Fix the ssh keys permissions and set the authorized keys"
