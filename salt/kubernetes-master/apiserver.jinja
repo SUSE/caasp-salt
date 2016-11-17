@@ -25,12 +25,12 @@ KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}
 KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota"
 
 # Add your own!
-KUBE_API_ARGS="--service-account-key-file=/var/lib/kubernetes/serviceaccount.key \
-               --advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
+KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
                --runtime-config=extensions/v1beta1/daemonsets=true \
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
                --cloud-provider=aws \
 {% endif -%}
+               --service-account-key-file={{ apiserver_key }} \
                --tls-cert-file={{ apiserver_crt }} \
                --tls-private-key-file={{ apiserver_key }} \
                --client-ca-file={{ ca_crt }}"

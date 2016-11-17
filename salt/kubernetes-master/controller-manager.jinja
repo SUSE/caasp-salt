@@ -5,7 +5,6 @@
 
 # Add your own!
 KUBE_CONTROLLER_MANAGER_ARGS="\
-    --service-account-private-key-file=/var/lib/kubernetes/serviceaccount.key \
     --leader-elect=true \
     --cluster-name=kubernetes \
     --cluster-cidr={{ pillar['cluster_cidr'] }} \
