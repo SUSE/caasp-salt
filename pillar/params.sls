@@ -1,3 +1,6 @@
+# the flannel backend ('udp', 'vxlan', 'host-gw', etc)
+flannel_backend:  'host-gw'
+
 # the CIDR for cluster IPs (internal IPs for Pods)
 cluster_cidr:     '172.20.0.0/16'
 
