@@ -92,8 +92,9 @@ kube-controller-manager:
   {% do etcd_servers.append('http://' + ipaddr[0] + ':2379') -%}
 {% endfor -%}
 
-etcdctl:
+etcdctl-kube-master:
   pkg.installed:
+    - name: etcdctl
     - require:
       - file: /etc/zypp/repos.d/containers.repo
 
@@ -114,8 +115,9 @@ load_flannel_cfg:
 # iptables
 ######################
 
-iptables:
-  pkg.installed
+iptables-kube-master:
+  pkg.installed:
+    - name: iptables
 
 apiserver-iptables:
   iptables.append:
