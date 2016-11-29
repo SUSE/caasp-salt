@@ -17,7 +17,7 @@ CERTS_OUT_DIR=/root
 ZYPPER_GLOBAL_ARGS="-n --no-gpg-checks --quiet --no-color"
 
 # the hostname and port where the API server will be listening at
-API_SERVER_DNS_NAME="kube-master"
+API_SERVER_DNS_NAME="master"
 API_SERVER_PORT=6443
 
 # docker regsitry mirror
