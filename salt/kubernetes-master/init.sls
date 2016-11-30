@@ -88,8 +88,8 @@ kube-controller-manager:
 # load flannel config in etcd
 ###################################
 {% set etcd_servers = [] -%}
-{% for server, ipaddr in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do etcd_servers.append('http://' + ipaddr[0] + ':2379') -%}
+{% for fqdn in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
+  {% do etcd_servers.append('http://' + fqdn[0] + ':2379') -%}
 {% endfor -%}
 
 etcdctl-kube-master:
