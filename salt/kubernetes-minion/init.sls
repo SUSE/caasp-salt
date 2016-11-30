@@ -31,6 +31,9 @@
 # k8s components
 #######################
 
+conntrack-tools:
+  pkg.installed
+
 kubernetes-node:
   pkg.latest:
     - require:
@@ -50,6 +53,7 @@ kube-proxy:
     - require:
       - pkg: kubernetes-node
       - pkg: iptables
+      - pkg: conntrack-tools
 
 kubelet:
   service.running:
