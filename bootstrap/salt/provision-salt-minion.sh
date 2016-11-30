@@ -4,7 +4,6 @@ log()   { echo ">>> $1" ; }
 warn()  { log "WARNING: $1" ; }
 abort() { log "FATAL: $1" ; exit 1 ; }
 
-HOSTNAME=
 TMP_SALT_ROOT=/tmp/salt
 
 # global args for running zypper
@@ -23,10 +22,6 @@ while [ $# -gt 0 ] ; do
       TMP_SALT_ROOT=$2
       shift
       ;;
-    -h|--hostname)
-      HOSTNAME=$2
-      shift
-      ;;
     *)
       abort "Unknown argument $1"
       ;;
@@ -35,15 +30,6 @@ while [ $# -gt 0 ] ; do
 done
 
 ###################################################################
-
-if [ -n "$HOSTNAME" ] ; then
-    log "Setting hostname $HOSTNAME"
-    hostname "$HOSTNAME"
-
-    # survive reboots
-    [ -f /etc/hostname ] && echo "$HOSTNAME" > /etc/hostname
-    [ -f /etc/HOSTNAME ] && echo "$HOSTNAME" > /etc/HOSTNAME
-fi
 
 log "Fixing the ssh keys permissions and setting the authorized keys"
 chmod 600 /root/.ssh/*
