@@ -4,7 +4,6 @@ log()   { echo ">>> $1" ; }
 warn()  { log "WARNING: $1" ; }
 abort() { log "FATAL: $1" ; exit 1 ; }
 
-HOSTNAME=
 FINISH=
 E2E=
 DELETE_SALT_KEYS=
@@ -49,10 +48,6 @@ while [ $# -gt 0 ] ; do
       DOCKER_REG_MIRROR=$2
       shift
       ;;
-    -h|--hostname)
-      HOSTNAME=$2
-      shift
-      ;;
     -i|--infra)
       INFRA=$2
       shift
@@ -90,15 +85,6 @@ PARAM_SETTING
 }
 
 if [ -z "$FINISH" ] ; then
-    if [ -n "$HOSTNAME" ] ; then
-        log "Setting hostname $HOSTNAME"
-        hostname "$HOSTNAME" || warn "could not set hostname $HOSTNAME"
-
-        # survive reboots
-        [ -f /etc/hostname ] && echo "$HOSTNAME" > /etc/hostname
-        [ -f /etc/HOSTNAME ] && echo "$HOSTNAME" > /etc/HOSTNAME
-    fi
-
     log "Fix the ssh keys permissions and set the authorized keys"
     chmod 600 /root/.ssh/*
     [ -f /root/.ssh/id_rsa.pub ] || warn "no ssh key found at /root/.ssh"
