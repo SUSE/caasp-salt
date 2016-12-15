@@ -1,3 +1,6 @@
+include:
+  - cert
+
 etcd:
   pkg:
     - latest
@@ -25,6 +28,7 @@ etcd-service:
     - watch:
       - file: /etc/sysconfig/etcd
       - file: /var/lib/etcd
+      - sls:  cert
 
 /var/lib/etcd:
   file.directory:

@@ -1,0 +1,20 @@
+x509_signing_policies:
+  minion:
+    - minions: '*'
+    - signing_private_key: /etc/pki/ca.key
+    - signing_cert: /etc/pki/ca.crt
+    - C: {{ pillar['certificate_information']['subject_properties']['C'] }}
+    - Email: {{ pillar['certificate_information']['subject_properties']['Email'] }}
+    - GN: {{ pillar['certificate_information']['subject_properties']['GN'] }}
+    - L: {{ pillar['certificate_information']['subject_properties']['L'] }}
+    - O: {{ pillar['certificate_information']['subject_properties']['O'] }}
+    - OU: {{ pillar['certificate_information']['subject_properties']['OU'] }}
+    - SN: {{ pillar['certificate_information']['subject_properties']['SN'] }}
+    - ST: {{ pillar['certificate_information']['subject_properties']['ST'] }}
+    - basicConstraints: "critical CA:false"
+    - keyUsage: "critical keyEncipherment"
+    - subjectKeyIdentifier: hash
+    - authorityKeyIdentifier: keyid,issuer:always
+    - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
+    - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
+    - copypath: /etc/pki/issued_certs/

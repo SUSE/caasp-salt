@@ -18,12 +18,6 @@ dns_cluster_ip:   '172.21.0.2'
 dns_domain:       'cluster.local'
 dns_replicas:     '1'
 
-# certificates
-# some of these values MUST match the values ussed when generating the kube-ca.*
-ca_name:          'kube-ca'
-ca_org:           'SUSE'
-admin_email:      'admin@kubernetes'
-
 # user and group for running services and some other stuff...
 kube_user:        'kube'
 kube_group:       'kube'

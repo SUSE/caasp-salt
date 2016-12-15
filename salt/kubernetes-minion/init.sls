@@ -1,33 +1,4 @@
 #######################
-# certificates
-#######################
-
-{% set ca_path  = '/etc/kubernetes/ssl/' + pillar['ca_name'] %}
-{% set ca_crt   = ca_path + '/ca.crt' %}
-{% set node_key = ca_path + '/minion.key' %}
-{% set node_crt = ca_path + '/minion.crt' %}
-
-{{ node_key }}:
-  file.managed:
-    - user:            '{{ pillar['kube_user']  }}'
-    - group:           '{{ pillar['kube_group'] }}'
-    - mode:            600
-    - contents_pillar: cert:minion.key
-    - makedirs:        True
-    - require:
-        - user:        kube_user
-
-{{ node_crt }}:
-  file.managed:
-    - user:            '{{ pillar['kube_user']  }}'
-    - group:           '{{ pillar['kube_group'] }}'
-    - mode:            600
-    - contents_pillar: cert:minion.crt
-    - makedirs:        True
-    - require:
-        - user:        kube_user
-
-#######################
 # k8s components
 #######################
 
@@ -41,7 +12,6 @@ kubernetes-node:
     - require_in:
       - service: kube-proxy
       - service: kubelet
-      - file:   {{ node_crt }}
 
 kube-proxy:
   service.running:
@@ -106,14 +76,6 @@ kubelet:
   file.managed:
     - source:         salt://kubernetes-minion/kubeconfig.jinja
     - template:       jinja
-    - require:
-      - file:         {{ ca_crt }}
-      - file:         {{ node_crt }}
-    - context: {
-      ca_crt:   '{{ ca_crt }}',
-      node_key: '{{ node_key }}',
-      node_crt: '{{ node_crt }}',
-    }
 
 /etc/kubernetes/config:
   file.managed:
@@ -128,10 +90,6 @@ kubelet:
     - template: jinja
     - require:
       - pkg:    kubernetes-node
-    - context: {
-      node_key: '{{ node_key }}',
-      node_crt: '{{ node_crt }}',
-    }
 
 /etc/kubernetes/proxy:
   file.managed:

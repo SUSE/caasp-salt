@@ -1,6 +1,7 @@
 base:
   '*':
     - params
+    - certificates
   'G@roles:etcd':
     - etcd
   'G@roles:kube-master':
