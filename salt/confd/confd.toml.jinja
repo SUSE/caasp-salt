@@ -1,6 +1,6 @@
 {% set etcd_servers = [] -%}
 {% for fqdn in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do etcd_servers.append('\"http://' + fqdn[0] + ':2379\"') -%}
+  {% do etcd_servers.append('\"https://' + fqdn[0] + ':2379\"') -%}
 {% endfor -%}
 backend = "etcd"
 log-level = "debug"

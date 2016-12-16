@@ -1,33 +1,25 @@
-#######################
-# certificates
-#######################
+include:
+  - cert
 
-{% set ca_path       = '/etc/kubernetes/ssl/' + pillar['ca_name'] %}
-{% set ca_crt        = ca_path + '/ca.crt' %}
-{% set apiserver_key = ca_path + '/apiserver.key' %}
-{% set apiserver_crt = ca_path + '/apiserver.crt' %}
+{% from 'cert/init.sls' import ip_addresses %}
+
+{% for extra_ip in pillar['api_server']['extra_ips'] %}
+  {% do ip_addresses.append("IP: " + extra_ip) %}
+{% endfor %}
+
+{% set extra_names = ["DNS: " + grains['fqdn']] %}
+{% for extra_name in pillar['api_server']['extra_names'] %}
+  {% do extra_names.append("DNS: " + extra_name) %}
+{% endfor %}
+
+{% if salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain')|length > 0 %}
+extend:
+  /etc/pki/minion.crt:
+    x509.certificate_managed:
+      - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
+{% endif %}
 
 {% set api_ssl_port = salt['pillar.get']('api_ssl_port', '6443') %}
-
-{{ apiserver_key }}:
-  file.managed:
-    - user:            '{{ pillar['kube_user']  }}'
-    - group:           '{{ pillar['kube_group'] }}'
-    - mode:            600
-    - contents_pillar: cert:apiserver.key
-    - makedirs:        True
-    - require:
-        - user:        kube_user
-
-{{ apiserver_crt }}:
-  file.managed:
-    - user:            '{{ pillar['kube_user']  }}'
-    - group:           '{{ pillar['kube_group'] }}'
-    - mode:            600
-    - contents_pillar: cert:apiserver.crt
-    - makedirs:        True
-    - require:
-        - user:        kube_user
 
 #######################
 # components
@@ -66,10 +58,11 @@ kube-apiserver:
       - iptables: apiserver-iptables
       - file:     /etc/kubernetes/config
       - file:     /etc/kubernetes/apiserver
+      - sls:      cert
     - watch:
       - file:     /etc/kubernetes/config
       - file:     /etc/kubernetes/apiserver
-      - file:     {{ apiserver_crt }}
+      - sls:      cert
 
 kube-controller-manager:
   service.running:
@@ -89,7 +82,7 @@ kube-controller-manager:
 ###################################
 {% set etcd_servers = [] -%}
 {% for fqdn in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do etcd_servers.append('http://' + fqdn[0] + ':2379') -%}
+  {% do etcd_servers.append('https://' + fqdn[0] + ':2379') -%}
 {% endfor -%}
 
 etcdctl-kube-master:
@@ -105,11 +98,18 @@ etcdctl-kube-master:
 
 load_flannel_cfg:
   cmd.run:
-    - name: /usr/bin/etcdctl --endpoints {{ ",".join(etcd_servers) }} --no-sync set /flannel/network/config < /root/flannel-config.json
+    - name: /usr/bin/etcdctl --endpoints {{ ",".join(etcd_servers) }}
+                             --cert-file /etc/pki/minion.crt
+                             --key-file /etc/pki/minion.key
+                             --ca-file /var/lib/k8s-ca-certificates/cluster_ca.crt
+                             --no-sync
+                             set /flannel/network/config < /root/flannel-config.json
     - require:
       - pkg: etcdctl
+      - sls: cert
     - watch:
       - file: /root/flannel-config.json
+      - sls:  cert
 
 ######################
 # iptables
@@ -178,11 +178,6 @@ deploy_addons.sh:
     - template:  jinja
     - require:
       - pkg:     kubernetes-master
-    - context: {
-      ca_crt:        '{{ ca_crt }}',
-      apiserver_key: '{{ apiserver_key }}',
-      apiserver_crt: '{{ apiserver_crt }}'
-    }
 
 /etc/kubernetes/controller-manager:
    file.managed:
@@ -190,10 +185,6 @@ deploy_addons.sh:
     - template:  jinja
     - require:
       - pkg:     kubernetes-master
-    - context: {
-      ca_crt:                   '{{ ca_crt }}',
-      apiserver_key:            '{{ apiserver_key }}'
-    }
 
 /etc/kubernetes/scheduler:
    file.managed:

@@ -1,6 +1,6 @@
 {% set etcd_servers = [] -%}
 {% for fqdn in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do etcd_servers.append('http://' + fqdn[0] + ':2379') -%}
+  {% do etcd_servers.append('https://' + fqdn[0] + ':2379') -%}
 {% endfor -%}
 # Flanneld configuration options
 
@@ -13,4 +13,8 @@ FLANNEL_ETCD_KEY="/flannel/network"
 
 # Any additional options that you want to pass
 # [alvaro] use the private network for the communication
-FLANNEL_OPTIONS="-iface eth0 --ip-masq"
+FLANNEL_OPTIONS="-iface eth0 \
+                 -ip-masq \
+                 -etcd-cafile /var/lib/k8s-ca-certificates/cluster_ca.crt \
+                 -etcd-certfile /etc/pki/minion.crt \
+                 -etcd-keyfile /etc/pki/minion.key"

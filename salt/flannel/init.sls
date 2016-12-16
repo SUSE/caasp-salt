@@ -1,3 +1,6 @@
+include:
+  - cert
+
 flannel:
   pkg.installed:
     - require:
@@ -5,11 +8,13 @@ flannel:
   service.running:
     - name: flanneld
     - enable: True
-    - watch:
-      - file: /etc/sysconfig/flanneld
     - require:
       - pkg:      flannel
       - iptables: flannel-iptables
+      - sls:      cert
+    - watch:
+      - file: /etc/sysconfig/flanneld
+      - sls:  cert
 
 /etc/sysconfig/flanneld:
   file.managed:

@@ -1,6 +1,6 @@
 {% set etcd_servers = [] -%}
 {% for fqdn, ipaddr in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do etcd_servers.append('http://' + ipaddr[0] + ':2379') -%}
+  {% do etcd_servers.append('https://' + ipaddr[0] + ':2379') -%}
 {% endfor -%}
 ###
 # kubernetes system config
@@ -15,7 +15,10 @@ KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 KUBE_API_PORT="--insecure-port=8080 --secure-port={{ pillar['api_ssl_port'] }}"
 
 # Comma separated list of nodes in the etcd cluster
-KUBE_ETCD_SERVERS="--etcd-servers={{ ",".join(etcd_servers) }}"
+KUBE_ETCD_SERVERS="--etcd-servers={{ ",".join(etcd_servers) }} \
+                   --etcd-cafile=/var/lib/k8s-ca-certificates/cluster_ca.crt \
+                   --etcd-certfile=/etc/pki/minion.crt \
+                   --etcd-keyfile=/etc/pki/minion.key"
 
 # Address range to use for services
 # [alvaro] should not be in the same range as the flannel network (https://github.com/coreos/flannel/issues/232)
@@ -30,7 +33,6 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
                --cloud-provider=aws \
 {% endif -%}
-               --service-account-key-file={{ apiserver_key }} \
-               --tls-cert-file={{ apiserver_crt }} \
-               --tls-private-key-file={{ apiserver_key }} \
-               --client-ca-file={{ ca_crt }}"
+               --tls-cert-file=/etc/pki/minion.crt \
+               --tls-private-key-file=/etc/pki/minion.key \
+               --client-ca-file=/var/lib/k8s-ca-certificates/cluster_ca.crt"

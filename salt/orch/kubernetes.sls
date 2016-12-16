@@ -1,8 +1,24 @@
+ca_setup:
+  salt.state:
+    - tgt: 'roles:ca'
+    - tgt_type: grain
+    - highstate: True
+
+etcd_nodes_setup:
+  salt.state:
+    - tgt: 'roles:etcd'
+    - tgt_type: grain
+    - highstate: True
+    - require:
+      - salt: ca_setup
+
 kube_master_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
+    - require:
+      - salt: ca_setup
 
 kube_minion_setup:
   salt.state:

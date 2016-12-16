@@ -10,7 +10,7 @@ DELETE_SALT_KEYS=
 INFRA=cloud
 
 SALT_ROOT=/srv
-CERTS_OUT_DIR=/root
+CONFIG_OUT_DIR=/root
 
 # global args for running zypper
 ZYPPER_GLOBAL_ARGS="-n --no-gpg-checks --quiet --no-color"
@@ -40,8 +40,8 @@ while [ $# -gt 0 ] ; do
       SALT_ROOT=$2
       shift
       ;;
-    --admin-certs-dir)
-      CERTS_OUT_DIR=$2
+    --config-out-dir)
+      CONFIG_OUT_DIR=$2
       shift
       ;;
     --docker-reg-mirror)
@@ -71,8 +71,6 @@ done
 
 # some dirs and files in the salt master
 PILLAR_PARAMS_FILE=$SALT_ROOT/pillar/params.sls
-CERTS_SH=$SALT_ROOT/salt/certs/certs.sh
-CERTS_DIR=$SALT_ROOT/files
 
 add_pillar() {
     log "Pillar: setting $1=\"$2\""
@@ -90,7 +88,7 @@ if [ -z "$FINISH" ] ; then
     [ -f /root/.ssh/id_rsa.pub ] || warn "no ssh key found at /root/.ssh"
     cp -f /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys || warn "setting authorized_keys failed"
 
-    log "Upgrading the Salt master"
+    log "Installing the Salt master"
     zypper $ZYPPER_GLOBAL_ARGS in \
         --force-resolution --no-recommends salt-master bind-utils
 
@@ -117,17 +115,8 @@ if [ -z "$FINISH" ] ; then
         log "Removing all previous Salt keys..."
         /usr/bin/salt-key --delete-all --yes || /bin/true
     fi
+
 else
-    log "Fixing some permissions and missing dirs"
-    mkdir -p "$CERTS_DIR"
-
-    log "Generating certificates at the Salt master"
-    [ -f "$CERTS_SH" ] || abort "certificates script not found at $CERTS_SH"
-    chmod 755 "$CERTS_SH"
-    $CERTS_SH --dir "$CERTS_DIR"
-    [ $? -eq 0 ]               || abort "certificates generation failed"
-    [ -f "$CERTS_DIR/ca.crt" ] || abort "CA file does not exist at $CERTS_DIR/ca.crt"
-
     log "Running the orchestration in the Salt master"
     salt-run state.orchestrate orch.kubernetes
     [ $? -eq 0 ] || abort "Salt orchestration failed"
@@ -139,24 +128,8 @@ else
         [ -n "$API_SERVER_IP" ] || abort "could not determine the IP of the API server by resolving $API_SERVER_DNS_NAME: you must provide it with --extra-api-ip"
     fi
 
-    log "Generating certificates for 'kubectl' in the Salt master"
-    [ -f "$CERTS_OUT_DIR/ca.crt" ]    || cp "$CERTS_DIR/ca.crt" "$CERTS_OUT_DIR/ca.crt"
-    [ -f "$CERTS_OUT_DIR/ca.crt" ]    || abort "ca.crt not generated"
-    [ -f "$CERTS_OUT_DIR/admin.key" ] || openssl genrsa -out "$CERTS_OUT_DIR/admin.key" 2048
-    [ -f "$CERTS_OUT_DIR/admin.key" ] || abort "admin.key not generated"
-    [ -f "$CERTS_OUT_DIR/admin.csr" ] || openssl req -new \
-                                       -key "$CERTS_OUT_DIR/admin.key" \
-                                       -out "$CERTS_OUT_DIR/admin.csr" \
-                                       -subj "/CN=kube-admin"
-    [ -f "$CERTS_OUT_DIR/admin.csr" ] || abort "admin.csr not generated"
-    [ -f "$CERTS_OUT_DIR/admin.crt" ] || openssl x509 -req \
-        -in "$CERTS_OUT_DIR/admin.csr" -CA "$CERTS_DIR/ca.crt" \
-        -CAkey "$CERTS_DIR/ca.key" -CAcreateserial \
-        -out "$CERTS_OUT_DIR/admin.crt" -days 365
-    [ -f "$CERTS_OUT_DIR/admin.crt" ] || abort "admin.crt not generated"
-
     log "Generating a 'kubeconfig' file"
-    cat <<EOF > "$CERTS_OUT_DIR/kubeconfig"
+    cat <<EOF > "$CONFIG_OUT_DIR/kubeconfig"
 apiVersion: v1
 clusters:
 - cluster:
@@ -179,12 +152,18 @@ users:
 EOF
 
     log "Creating admin.tar with config files and certificates"
-    cd "$CERTS_OUT_DIR" && tar cvpf admin.tar admin.crt admin.key ca.crt kubeconfig
+    {
+        scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null master:/etc/pki/minion.{crt,key} $CONFIG_OUT_DIR
+        mv $CONFIG_OUT_DIR/minion.crt $CONFIG_OUT_DIR/admin.crt
+        mv $CONFIG_OUT_DIR/minion.key $CONFIG_OUT_DIR/admin.key
+        cp /etc/pki/ca.crt $CONFIG_OUT_DIR
+    }
+    cd "$CONFIG_OUT_DIR" && tar cvpf admin.tar admin.crt admin.key ca.crt kubeconfig
     [ -f admin.tar ] || abort "admin.tar not generated"
 
-    log "'kubeconfig' file with certificates left at salt-master:$CERTS_OUT_DIR/admin.tar"
+    log "'kubeconfig' file with certificates left at salt-master:$CONFIG_OUT_DIR/admin.tar"
     log "Now you can"
-    log "* copy $CERTS_OUT_DIR/admin.tar to your machine"
+    log "* copy $CONFIG_OUT_DIR/admin.tar to your machine"
     log "* tar -xvpf admin.tar"
     log "* KUBECONFIG=kubeconfig kubectl get nodes"
     log ""

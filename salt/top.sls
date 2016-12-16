@@ -9,18 +9,22 @@ base:
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'cloud' %}
     - hosts
 {% endif %}
+  'roles:ca':
+    - match: grain
+    - ca
   '*salt*':
     - salt-master
   'roles:etcd':
     - match: grain
+    - cert
     - etcd
   'roles:kube-master':
     - match: grain
-    - certs
+    - cert
     - kubernetes-master
   'roles:kube-minion':
     - match: grain
-    - certs
+    - cert
     - kubernetes-minion
     - docker
     - flannel
