@@ -116,6 +116,18 @@ if [ -z "$FINISH" ] ; then
         /usr/bin/salt-key --delete-all --yes || /bin/true
     fi
 
+    {
+        log "Adding containers repository"
+        zypper ar -Gf http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_42.2 containers
+
+        zypper $ZYPPER_GLOBAL_ARGS in -y kubernetes-client
+
+        mkdir -p /etc/kubernetes/manifests
+
+        systemctl start {docker,kubelet}.service
+        systemctl enable {docker,kubelet}.service
+    }
+
 else
     log "Running the orchestration in the Salt master"
     salt-run state.orchestrate orch.kubernetes
