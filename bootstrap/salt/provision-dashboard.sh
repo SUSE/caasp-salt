@@ -11,6 +11,7 @@ INFRA=cloud
 
 SALT_ROOT=/srv
 CONFIG_OUT_DIR=/root
+K8S_MANIFESTS=/etc/kubernetes/manifests
 
 # global args for running zypper
 ZYPPER_GLOBAL_ARGS="-n --no-gpg-checks --quiet --no-color"
@@ -21,6 +22,10 @@ API_SERVER_PORT=6443
 
 # docker regsitry mirror
 DOCKER_REG_MIRROR=
+
+# repository information
+source /etc/os-release
+CONTAINERS_REPO=http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_$VERSION_ID
 
 while [ $# -gt 0 ] ; do
   case $1 in
@@ -118,11 +123,16 @@ if [ -z "$FINISH" ] ; then
 
     {
         log "Adding containers repository"
-        zypper $ZYPPER_GLOBAL_ARGS ar -Gf http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_42.2 containers
+        zypper $ZYPPER_GLOBAL_ARGS ar -Gf $CONTAINERS_REPO containers
 
         zypper $ZYPPER_GLOBAL_ARGS in -y kubernetes-node
 
-        mkdir -p /etc/kubernetes/manifests
+        mkdir -p $K8S_MANIFESTS
+
+        sed -i s/KUBELET_ARGS=\"\"/KUBELET_ARGS=\"--config=$K8S_MANIFESTS\"/ /etc/kubernetes/kubelet
+
+        cat <<EOF > "$K8S_MANIFESTS/salt-master.yaml"
+EOF
 
         systemctl start {docker,kubelet}.service
         systemctl enable {docker,kubelet}.service
