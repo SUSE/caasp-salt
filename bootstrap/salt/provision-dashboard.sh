@@ -129,7 +129,7 @@ if [ -z "$FINISH" ] ; then
 
         mkdir -p $K8S_MANIFESTS
 
-        sed -i s/KUBELET_ARGS=\"\"/KUBELET_ARGS=\"--config=$K8S_MANIFESTS\"/ /etc/kubernetes/kubelet
+        sed -i s@KUBELET_ARGS=\"\"@KUBELET_ARGS=\"--config=$K8S_MANIFESTS\"@ /etc/kubernetes/kubelet
 
         cat <<EOF > "$K8S_MANIFESTS/salt-master.yaml"
 EOF
