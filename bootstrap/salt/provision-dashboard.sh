@@ -118,9 +118,9 @@ if [ -z "$FINISH" ] ; then
 
     {
         log "Adding containers repository"
-        zypper ar -Gf http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_42.2 containers
+        zypper $ZYPPER_GLOBAL_ARGS ar -Gf http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_42.2 containers
 
-        zypper $ZYPPER_GLOBAL_ARGS in -y kubernetes-client
+        zypper $ZYPPER_GLOBAL_ARGS in -y kubernetes-node
 
         mkdir -p /etc/kubernetes/manifests
 
