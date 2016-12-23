@@ -1,6 +1,23 @@
 include:
   - crypto
 
+# If we are in a docker container, `service.running` fails with error:
+#
+# "No service execution module loaded: check support for service management on Leap-42"
+#
+# Anyway, no need to check for the service on the docker container, since it is the PID 1,
+# so if it's not running, the container is gone.
+#
+# Additionally, virtual grains report `kvm` virtualization, so we just need to check if
+# /.dockerenv file exists to detect if we are running inside a docker container.
+#
+# Bug report: https://github.com/saltstack/salt/issues/22467
+#
+# Outside a container salt-minion service will listen for signing_policies file changes and
+# restart the service. Inside a container we mount this file, so when the salt minion starts
+# signing policies are already on filesystem and there is no need to restart the minion
+# service.
+{% if not salt['file.file_exists']('/.dockerenv') %}
 salt-minion:
   service.running:
     - enable: True
@@ -9,11 +26,11 @@ salt-minion:
 
 /etc/salt/minion.d/signing_policies.conf:
   file.managed:
-    - source: salt://ca/signing_policies.conf.jinja
-    - template: jinja
+    - source: salt://ca/signing_policies.conf
     - user: root
     - group: root
     - mode: 644
+{% endif %}
 
 /etc/pki/issued_certs:
   file.directory:

@@ -12,8 +12,6 @@ base:
   'roles:ca':
     - match: grain
     - ca
-  '*salt*':
-    - salt-master
   'roles:etcd':
     - match: grain
     - cert
