@@ -19,10 +19,12 @@ base:
   'roles:kube-master':
     - match: grain
     - cert
+    - etcd-proxy
     - kubernetes-master
   'roles:kube-minion':
     - match: grain
     - cert
+    - etcd-proxy
     - kubernetes-minion
     - docker
     - flannel
