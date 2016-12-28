@@ -46,6 +46,7 @@ salt-minion:
       - sls:  crypto
       - file: /etc/pki
   file.managed:
+    - replace: false
     - user: root
     - group: root
     - mode: 600
@@ -73,6 +74,7 @@ salt-minion:
       - sls:  crypto
       - x509: /etc/pki/ca.key
   file.managed:
+    - replace: false
     - user: root
     - group: root
     - mode: 644

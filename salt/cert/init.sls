@@ -21,6 +21,7 @@ include:
     - require:
       - file: /var/lib/k8s-ca-certificates
   file.managed:
+    - replace: false
     - user: root
     - group: root
     - mode: 644
