@@ -2,36 +2,18 @@ include:
   - cert
 
 etcd:
-  pkg:
-    - latest
-    - require_in:
-      - pkg:     etcdctl
-      - service: etcd-service
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
-
-iptables:
-  pkg:
-    - installed
-
-etcdctl:
-  pkg:
-    - installed
-
-etcd-service:
-  service.running:
+  group.present:
     - name: etcd
-    - enable: True
+    - system: True
+  user.present:
+    - name: etcd
+    - createhome: False
+    - groups:
+      - etcd
     - require:
-      - pkg:      etcd
-      - iptables: etcd-iptables
-    - watch:
-      - file: /etc/sysconfig/etcd
-      - file: /var/lib/etcd
-      - sls:  cert
-
-/var/lib/etcd:
+      - group: etcd
   file.directory:
+    - name: /var/lib/etcd
     - user: etcd
     - group: etcd
     - dir_mode: 700
@@ -39,22 +21,20 @@ etcd-service:
       - user
       - group
       - mode
-
-######################
-# config files
-######################
-/etc/sysconfig/etcd:
-  file.managed:
-    - source: salt://etcd/etcd.conf.jinja
-    - template: jinja
-    - user: etcd
-    - group: etcd
-    - mode: 644
-
-######################
-# iptables
-######################
-etcd-iptables:
+    - require:
+      - user: etcd
+      - group: etcd
+  pkg.latest:
+    - pkgs:
+      - iptables
+      - etcdctl
+      - etcd
+    - require:
+      - file: /etc/zypp/repos.d/containers.repo
+  cmd.run:
+    - name: rm -rf /var/lib/etcd/*
+    - prereq:
+      - service: etcd
   iptables.append:
     - table: filter
     - family: ipv4
@@ -62,10 +42,32 @@ etcd-iptables:
     - jump: ACCEPT
     - match: state
     - connstate: NEW
+    # TODO: add "- source: <local-subnet>"
     - dports:
         - 2379
         - 2380
         - 4001
     - proto: tcp
+  service.running:
+    - name: etcd
+    - enable: True
     - require:
-      - pkg: iptables
+      - sls: cert
+      - pkg: etcd
+      - iptables: etcd
+      - file: /var/lib/etcd
+    - watch:
+      - file: /etc/sysconfig/etcd
+
+# note: this id will be inherited/overwritten by the etcd-proxy
+/etc/sysconfig/etcd:
+  file.managed:
+    - source: salt://etcd/etcd.conf.jinja
+    - template: jinja
+    - user: etcd
+    - group: etcd
+    - mode: 644
+    - require:
+      - pkg: etcd
+      - user: etcd
+      - group: etcd

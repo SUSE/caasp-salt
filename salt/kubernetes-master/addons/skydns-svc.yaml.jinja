@@ -10,7 +10,7 @@ metadata:
 spec:
   selector:
     k8s-app: kube-dns
-  clusterIP: {{ pillar['dns_cluster_ip'] }}
+  clusterIP: {{ pillar['dns']['cluster_ip'] }}
   ports:
   - name: dns
     port: 53

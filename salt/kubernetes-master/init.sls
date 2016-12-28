@@ -23,72 +23,86 @@ extend:
 # components
 #######################
 
-kubernetes-client:
-  pkg.latest
-
 kubernetes-master:
   pkg.latest:
+    - pkgs:
+      - iptables
+      - etcdctl
+      - kubernetes-client
+      - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-    - require_in:
-      - service: kube-controller-manager
-      - service: kube-apiserver
-      - service: kube-scheduler
-      - file:    deploy_addons.sh
 
-kube-scheduler:
-  service.running:
-    - enable:    True
+/etc/kubernetes/config:
+  file.managed:
+    - source:     salt://kubernetes-master/config.jinja
+    - template:   jinja
     - require:
-      - pkg:     kubernetes-master
-      - service: kube-apiserver
-      - file:    /etc/kubernetes/config
-      - file:    /etc/kubernetes/scheduler
-    - watch:
-      - file:    /etc/kubernetes/config
-      - file:    /etc/kubernetes/scheduler
+      - pkg:      kubernetes-master
 
 kube-apiserver:
+  iptables.append:
+    - table:      filter
+    - family:     ipv4
+    - chain:      INPUT
+    - jump:       ACCEPT
+    - match:      state
+    - connstate:  NEW
+    - dports:
+        - {{ api_ssl_port }}
+    - proto:      tcp
+    - require:
+      - pkg:      kubernetes-master
+  file.managed:
+    - name:       /etc/kubernetes/apiserver
+    - source:     salt://kubernetes-master/apiserver.jinja
+    - template:   jinja
+    - require:
+      - pkg:      kubernetes-master
   service.running:
     - enable:     True
     - require:
       - pkg:      kubernetes-master
-      - iptables: apiserver-iptables
-      - file:     /etc/kubernetes/config
-      - file:     /etc/kubernetes/apiserver
+      - iptables: kube-apiserver
       - sls:      cert
     - watch:
       - file:     /etc/kubernetes/config
-      - file:     /etc/kubernetes/apiserver
+      - file:     kube-apiserver
       - sls:      cert
 
-kube-controller-manager:
-  service.running:
-    - enable:    True
+kube-scheduler:
+  file.managed:
+    - name:       /etc/kubernetes/scheduler
+    - source:     salt://kubernetes-master/scheduler.jinja
     - require:
-      - pkg:     kubernetes-master
-      - service: kube-apiserver
-      - file:    /etc/kubernetes/config
-      - file:    /etc/kubernetes/controller-manager
-      - file:    /etc/kubernetes/pv-recycler-pod-template.yml
+      - pkg:      kubernetes-master
+  service.running:
+    - enable:     True
+    - require:
+      - service:  kube-apiserver
     - watch:
-      - file:    /etc/kubernetes/config
-      - file:    /etc/kubernetes/controller-manager
+      - file:     /etc/kubernetes/config
+      - file:     kube-scheduler
+
+kube-controller-manager:
+  file.managed:
+    - name:       /etc/kubernetes/controller-manager
+    - source:     salt://kubernetes-master/controller-manager.jinja
+    - template:   jinja
+    - require:
+      - pkg:      kubernetes-master
+  service.running:
+    - enable:     True
+    - require:
+      - service:  kube-apiserver
+    - watch:
+      - file:     /etc/kubernetes/config
+      - file:     kube-controller-manager
+      - file:     /etc/kubernetes/pv-recycler-pod-template.yml
 
 ###################################
 # load flannel config in etcd
 ###################################
-{% set etcd_servers = [] -%}
-{% for fqdn in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do etcd_servers.append('https://' + fqdn[0] + ':2379') -%}
-{% endfor -%}
-
-etcdctl-kube-master:
-  pkg.installed:
-    - name: etcdctl
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
-
 /root/flannel-config.json:
   file.managed:
     - source:   salt://kubernetes-master/flannel-config.json.jinja
@@ -96,44 +110,24 @@ etcdctl-kube-master:
 
 load_flannel_cfg:
   cmd.run:
-    - name: /usr/bin/etcdctl --endpoints {{ ",".join(etcd_servers) }}
+    - name: /usr/bin/etcdctl --endpoints https://127.0.0.1:2379
                              --cert-file /etc/pki/minion.crt
                              --key-file /etc/pki/minion.key
                              --ca-file /var/lib/k8s-ca-certificates/cluster_ca.crt
                              --no-sync
-                             set /flannel/network/config < /root/flannel-config.json
+                             set {{ pillar['flannel']['etcd_key'] }}/config < /root/flannel-config.json
     - require:
-      - pkg: etcdctl
       - sls: cert
+      - pkg: kubernetes-master
     - watch:
-      - file: /root/flannel-config.json
       - sls:  cert
-
-######################
-# iptables
-######################
-
-iptables-kube-master:
-  pkg.installed:
-    - name: iptables
-
-apiserver-iptables:
-  iptables.append:
-    - table: filter
-    - family: ipv4
-    - chain: INPUT
-    - jump: ACCEPT
-    - match: state
-    - connstate: NEW
-    - dports:
-        - {{ api_ssl_port }}
-    - proto: tcp
-    - require:
-      - pkg: iptables
+      - file: /root/flannel-config.json
 
 ###################################
 # addons
 ###################################
+
+{% if pillar.get('addons', '').lower() == 'true' %}
 
 /root/namespace.yaml:
   file.managed:
@@ -154,44 +148,20 @@ deploy_addons.sh:
   cmd.script:
     - source:      salt://kubernetes-master/deploy_addons.sh
     - require:
-      - pkg:       kubernetes-client
+      - pkg:       kubernetes-master
+      - service:   kube-apiserver
       - file:      /root/namespace.yaml
       - file:      /root/skydns-svc.yaml
       - file:      /root/skydns-rc.yaml
+
+{% endif %}
 
 #######################
 # config files
 #######################
 
-/etc/kubernetes/config:
-  file.managed:
-    - source:    salt://kubernetes-master/config.jinja
-    - template:  jinja
-    - require:
-      - pkg:     kubernetes-master
-
-/etc/kubernetes/apiserver:
-  file.managed:
-    - source:    salt://kubernetes-master/apiserver.jinja
-    - template:  jinja
-    - require:
-      - pkg:     kubernetes-master
-
-/etc/kubernetes/controller-manager:
-   file.managed:
-    - source:    salt://kubernetes-master/controller-manager.jinja
-    - template:  jinja
-    - require:
-      - pkg:     kubernetes-master
-
-/etc/kubernetes/scheduler:
-   file.managed:
-    - source:    salt://kubernetes-master/scheduler.jinja
-    - require:
-      - pkg:     kubernetes-master
-
 /etc/kubernetes/pv-recycler-pod-template.yml:
-   file.managed:
-    - source: salt://kubernetes-master/pv-recycler-pod-template.yml
+  file.managed:
+    - source:    salt://kubernetes-master/pv-recycler-pod-template.yml
     - require:
-      - pkg: kubernetes-master
+      - pkg:     kubernetes-master

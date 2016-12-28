@@ -20,12 +20,14 @@ KUBELET_API_SERVER="--api-servers={{ ','.join(kube_servers) }}"
 
 # Add your own!
 KUBELET_ARGS="\
-    --cluster-dns={{ pillar['dns_cluster_ip'] }} \
-    --cluster-domain={{ pillar['dns_domain'] }} \
+{% if pillar.get('addons', '').lower() == 'true' -%}
+    --cluster-dns={{ pillar['dns']['cluster_ip'] }} \
+    --cluster-domain={{ pillar['dns']['domain'] }} \
+{% endif -%}
     --node-ip={{ grains['ip4_interfaces']['eth0'][0] }} \
     --config=/etc/kubernetes/manifests \
 {% if pillar['pod_infra_container_image'] -%}
-    --pod-infra-container-image={{pillar['pod_infra_container_image']}} \
+    --pod-infra-container-image={{ pillar['pod_infra_container_image'] }} \
 {% endif -%}
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
     --cloud-provider=aws \

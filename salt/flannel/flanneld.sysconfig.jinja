@@ -1,19 +1,15 @@
-{% set etcd_servers = [] -%}
-{% for fqdn in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do etcd_servers.append('https://' + fqdn[0] + ':2379') -%}
-{% endfor -%}
 # Flanneld configuration options
 
 # etcd url location.  Point this to the server where etcd runs
-FLANNEL_ETCD_ENDPOINTS="{{ ",".join(etcd_servers) }}"
+FLANNEL_ETCD_ENDPOINTS="https://127.0.0.1:2379"
 
 # etcd config key.  This is the configuration key that flannel queries
 # For address range assignment
-FLANNEL_ETCD_KEY="/flannel/network"
+FLANNEL_ETCD_KEY="{{ pillar['flannel']['etcd_key'] }}"
 
 # Any additional options that you want to pass
 # [alvaro] use the private network for the communication
-FLANNEL_OPTIONS="-iface eth0 \
+FLANNEL_OPTIONS="-iface {{ pillar['flannel']['iface'] }} \
                  -ip-masq \
                  -etcd-cafile /var/lib/k8s-ca-certificates/cluster_ca.crt \
                  -etcd-certfile /etc/pki/minion.crt \

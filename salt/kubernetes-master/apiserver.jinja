@@ -1,7 +1,3 @@
-{% set etcd_servers = [] -%}
-{% for fqdn, ipaddr in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do etcd_servers.append('https://' + ipaddr[0] + ':2379') -%}
-{% endfor -%}
 ###
 # kubernetes system config
 #
@@ -15,7 +11,7 @@ KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 KUBE_API_PORT="--insecure-port=8080 --secure-port={{ pillar['api_ssl_port'] }}"
 
 # Comma separated list of nodes in the etcd cluster
-KUBE_ETCD_SERVERS="--etcd-servers={{ ",".join(etcd_servers) }} \
+KUBE_ETCD_SERVERS="--etcd-servers=https://127.0.0.1:2379 \
                    --etcd-cafile=/var/lib/k8s-ca-certificates/cluster_ca.crt \
                    --etcd-certfile=/etc/pki/minion.crt \
                    --etcd-keyfile=/etc/pki/minion.key"

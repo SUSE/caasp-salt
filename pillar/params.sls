@@ -1,6 +1,3 @@
-# the flannel backend ('udp', 'vxlan', 'host-gw', etc)
-flannel_backend:  'host-gw'
-
 # the CIDR for cluster IPs (internal IPs for Pods)
 cluster_cidr:     '172.20.0.0/16'
 
@@ -14,9 +11,10 @@ api_cluster_ip:   '172.21.0.1'
 api_ssl_port:     '6443'
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
-dns_cluster_ip:   '172.21.0.2'
-dns_domain:       'cluster.local'
-dns_replicas:     '1'
+dns:
+  cluster_ip:     '172.21.0.2'
+  domain:         'cluster.local'
+  replicas:       '1'
 
 # user and group for running services and some other stuff...
 kube_user:        'kube'
@@ -24,3 +22,21 @@ kube_group:       'kube'
 
 # use a docker registry mirror (it must be a http service)
 # docker_registry_mirror: 'mymirror.com:5000'
+
+# install the addons (ie, DNS)
+addons:           'false'
+
+# etcd discovery details
+# note: the path MUST 1) start with slash 2) end without slash
+#       ie: /v2/keys/_etcd/registry/some-id
+etcd:
+  token:          'k8s'
+  disco:
+    port:         '2379'
+    id:           'k8s'
+
+# the flannel backend ('udp', 'vxlan', 'host-gw', etc)
+flannel:
+  backend:        'host-gw'
+  etcd_key:       '/flannel/network'
+  iface:          'eth0'
