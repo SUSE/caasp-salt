@@ -34,6 +34,7 @@ include:
       - sls:  crypto
       - file: /etc/pki
   file.managed:
+    - replace: false
     - user: root
     - group: root
     - mode: 644
