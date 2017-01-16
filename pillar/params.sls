@@ -26,10 +26,13 @@ kube_group:       'kube'
 # install the addons (ie, DNS)
 addons:           'false'
 
-# etcd discovery details
-# note: the path MUST 1) start with slash 2) end without slash
-#       ie: /v2/keys/_etcd/registry/some-id
+# etcd details
+# notes:
+# - the token must be shared between all the machines in the cluster
+# - the discovery id is also unique for all the machines in the
+#   cluster (in fact, it can be the same as the token)
 etcd:
+  masters:        '3'
   token:          'k8s'
   disco:
     port:         '2379'
