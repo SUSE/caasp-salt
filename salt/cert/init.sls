@@ -14,7 +14,6 @@ include:
     - group: root
     - mode: 755
 
-{% if salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain')|length > 0 %}
 /var/lib/k8s-ca-certificates/cluster_ca.crt:
   x509.pem_managed:
     - text: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').values()[0]['/etc/pki/ca.crt']|replace('\n', '') }}
@@ -25,7 +24,6 @@ include:
     - user: root
     - group: root
     - mode: 644
-{% endif %}
 
 /etc/pki/minion.key:
   x509.private_key_managed:
@@ -39,7 +37,6 @@ include:
     - group: root
     - mode: 644
 
-{% if salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain')|length > 0 %}
 /etc/pki/minion.crt:
   x509.certificate_managed:
     - ca_server: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').keys()[0] }}
@@ -68,4 +65,3 @@ include:
     - user: root
     - group: root
     - mode: 644
-{% endif %}

@@ -12,12 +12,10 @@ include:
   {% do extra_names.append("DNS: " + extra_name) %}
 {% endfor %}
 
-{% if salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain')|length > 0 %}
 extend:
   /etc/pki/minion.crt:
     x509.certificate_managed:
       - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
-{% endif %}
 
 {% set api_ssl_port = salt['pillar.get']('api_ssl_port', '6443') %}
 
