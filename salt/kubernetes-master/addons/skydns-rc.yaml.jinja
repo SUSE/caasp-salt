@@ -89,8 +89,11 @@ spec:
         - name: kubeconfig
           mountPath: /kubeconfig
           readOnly: True
-        - name: ssl
-          mountPath: /etc/kubernetes/ssl
+        - name: pki
+          mountPath: /etc/pki
+          readOnly: True
+        - name: ca
+          mountPath: /var/lib/k8s-ca-certificates/cluster_ca.crt
           readOnly: True
 
       ################
@@ -114,11 +117,11 @@ spec:
         - -ns-rotate=false
         - -domain={{ pillar['dns_domain'] }}.
         ports:
-        - containerPort: 53
-          name: dns
+        - name: dns
+          containerPort: 53
           protocol: UDP
-        - containerPort: 53
-          name: dns-tcp
+        - name: dns-tcp
+          containerPort: 53
           protocol: TCP
 
       ################
@@ -147,12 +150,15 @@ spec:
       # note: this is slightly hackish: we know there will be 1) a "kubeconfig"
       #       and 2) client certificates in the node where "kube2sky" will run,
       #       so we just mount them...
-      - hostPath:
+      - name: kubeconfig
+        hostPath:
           path: "/var/lib/kubelet/kubeconfig"
-        name: kubeconfig
-      - hostPath:
-          path: "/etc/kubernetes/ssl"
-        name: ssl
+      - name: pki
+        hostPath:
+          path: "/etc/pki"
+      - name: ca
+        hostPath:
+          path: "/var/lib/k8s-ca-certificates/cluster_ca.crt"
 
       dnsPolicy: Default  # Don't use cluster DNS.
 
