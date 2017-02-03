@@ -1,8 +1,15 @@
+mine_update:
+  salt.function:
+    - name: mine.update
+    - tgt: '*'
+
 ca_setup:
   salt.state:
     - tgt: 'roles:ca'
     - tgt_type: grain
     - highstate: True
+    - require:
+      - salt: mine_update
 
 etcd_nodes_setup:
   salt.state:
@@ -18,7 +25,7 @@ kube_master_setup:
     - tgt_type: grain
     - highstate: True
     - require:
-      - salt: ca_setup
+      - salt: etcd_nodes_setup
 
 kube_minion_setup:
   salt.state:
