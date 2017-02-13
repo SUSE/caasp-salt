@@ -3,4 +3,4 @@ mine_functions:
 
 api_server:
   extra_names: []
-  extra_ips: []
+  extra_ips:   []

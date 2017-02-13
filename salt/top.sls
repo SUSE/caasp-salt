@@ -16,17 +16,19 @@ base:
     - match: grain
     - cert
     - etcd
+  'roles:kube-(master|minion)':
+    - match: grain_pcre
+    - cert
+    - etcd-proxy
   'roles:kube-master':
     - match: grain
-    - cert
     - kubernetes-master
   'roles:kube-minion':
     - match: grain
-    - cert
-    - kubernetes-minion
-    - docker
     - flannel
+    - docker
     - sle
+    - kubernetes-minion
   'roles:nfs':
     - match: grain
     - nfs-server

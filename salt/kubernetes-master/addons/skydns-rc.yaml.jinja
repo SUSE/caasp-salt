@@ -8,7 +8,7 @@ metadata:
     version: v11
     kubernetes.io/cluster-service: "true"
 spec:
-  replicas: {{ pillar['dns_replicas'] }}
+  replicas: {{ pillar['dns']['replicas'] }}
   selector:
     k8s-app: kube-dns
     version: v11
@@ -83,7 +83,7 @@ spec:
           timeoutSeconds: 5
         args:
         # command = "/kube2sky"
-        - --domain={{ pillar['dns_domain'] }}
+        - --domain={{ pillar['dns']['domain'] }}
         - --kubecfg-file=/kubeconfig
         volumeMounts:
         - name: kubeconfig
@@ -115,7 +115,7 @@ spec:
         - -machines=http://127.0.0.1:4001
         - -addr=0.0.0.0:53
         - -ns-rotate=false
-        - -domain={{ pillar['dns_domain'] }}.
+        - -domain={{ pillar['dns']['domain'] }}.
         ports:
         - name: dns
           containerPort: 53
@@ -136,7 +136,7 @@ spec:
             cpu: 10m
             memory: 20Mi
         args:
-        - -cmd=nslookup kubernetes.default.svc.{{ pillar['dns_domain'] }} 127.0.0.1 >/dev/null
+        - -cmd=nslookup kubernetes.default.svc.{{ pillar['dns']['domain'] }} 127.0.0.1 >/dev/null
         - -port=8080
         ports:
         - containerPort: 8080
