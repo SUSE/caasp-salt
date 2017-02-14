@@ -3,7 +3,7 @@ include:
 
 {% from 'cert/init.sls' import ip_addresses %}
 
-{% ip_addresses.append("IP: " + pillar['api_cluster_ip']) %}
+{% do ip_addresses.append("IP: " + pillar['api_cluster_ip']) %}
 {% for extra_ip in pillar['api_server']['extra_ips'] %}
   {% do ip_addresses.append("IP: " + extra_ip) %}
 {% endfor %}
