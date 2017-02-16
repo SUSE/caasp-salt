@@ -32,7 +32,7 @@ addons:           'false'
 # - the discovery id is also unique for all the machines in the
 #   cluster (in fact, it can be the same as the token)
 etcd:
-  masters:        '3'
+  masters:        '1'
   token:          'k8s'
   disco:
     port:         '2379'
