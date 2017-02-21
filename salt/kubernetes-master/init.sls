@@ -37,7 +37,7 @@ extend:
 #######################
 
 kubernetes-master:
-  pkg.latest:
+  pkg.installed:
     - pkgs:
       - iptables
       - etcdctl

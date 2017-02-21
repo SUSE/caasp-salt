@@ -25,7 +25,7 @@ etcd:
     - require:
       - user: etcd
       - group: etcd
-  pkg.latest:
+  pkg.installed:
     - pkgs:
       - iptables
       - etcdctl

@@ -2,7 +2,7 @@ include:
   - repositories
 
 flannel:
-  pkg.latest:
+  pkg.installed:
     - pkgs:
       - iptables
       - flannel
