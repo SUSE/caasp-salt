@@ -9,7 +9,7 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
     --cluster-name=kubernetes \
     --cluster-cidr={{ pillar['cluster_cidr'] }} \
     --service-account-private-key-file=/etc/pki/minion.key \
-    --root-ca-file=/var/lib/k8s-ca-certificates/cluster_ca.crt \
+    --root-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }} \
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
     --cloud-provider=aws \
 {% endif -%}

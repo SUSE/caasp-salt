@@ -22,10 +22,9 @@ KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,Servi
 
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
-               --runtime-config=extensions/v1beta1/daemonsets=true \
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
                --cloud-provider=aws \
 {% endif -%}
                --tls-cert-file=/etc/pki/minion.crt \
                --tls-private-key-file=/etc/pki/minion.key \
-               --client-ca-file=/var/lib/k8s-ca-certificates/cluster_ca.crt"
+               --client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"

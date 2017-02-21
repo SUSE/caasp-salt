@@ -3,17 +3,17 @@ include:
 
 {% set ip_addresses = [] -%}
 
-/var/lib/k8s-ca-certificates:
+{{ pillar['paths']['ca_dir'] }}:
   file.directory:
     - user: root
     - group: root
     - mode: 755
 
-/var/lib/k8s-ca-certificates/cluster_ca.crt:
+{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}:
   x509.pem_managed:
     - text: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').values()[0]['/etc/pki/ca.crt']|replace('\n', '') }}
     - require:
-      - file: /var/lib/k8s-ca-certificates
+      - file: {{ pillar['paths']['ca_dir'] }}
   file.managed:
     - replace: false
     - user: root

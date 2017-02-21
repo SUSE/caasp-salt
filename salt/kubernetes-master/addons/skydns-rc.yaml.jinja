@@ -93,7 +93,7 @@ spec:
           mountPath: /etc/pki
           readOnly: True
         - name: ca
-          mountPath: /var/lib/k8s-ca-certificates/cluster_ca.crt
+          mountPath: {{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
           readOnly: True
 
       ################
@@ -152,13 +152,13 @@ spec:
       #       so we just mount them...
       - name: kubeconfig
         hostPath:
-          path: "/var/lib/kubelet/kubeconfig"
+          path: "{{ pillar['paths']['kubeconfig'] }}"
       - name: pki
         hostPath:
           path: "/etc/pki"
       - name: ca
         hostPath:
-          path: "/var/lib/k8s-ca-certificates/cluster_ca.crt"
+          path: "{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
 
       dnsPolicy: Default  # Don't use cluster DNS.
 

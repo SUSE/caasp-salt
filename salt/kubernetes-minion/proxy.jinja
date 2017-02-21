@@ -5,6 +5,6 @@
 
 # Add your own!
 KUBE_PROXY_ARGS="\
-    --kubeconfig=/var/lib/kubelet/kubeconfig \
+    --kubeconfig={{ pillar['paths']['kubeconfig'] }} \
     --proxy-mode=iptables \
     --v=2"
