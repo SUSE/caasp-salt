@@ -32,4 +32,4 @@ KUBELET_ARGS="\
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
     --cloud-provider=aws \
 {% endif -%}
-    --kubeconfig=/var/lib/kubelet/kubeconfig"
+    --kubeconfig={{ pillar['paths']['kubeconfig'] }}"

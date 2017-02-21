@@ -28,7 +28,7 @@ kube-proxy:
     - enable:   True
     - watch:
       - file:   /etc/kubernetes/config
-      - file:   /var/lib/kubelet/kubeconfig
+      - file:   {{ pillar['paths']['kubeconfig'] }}
       - file:   kube-proxy
     - require:
       - pkg:    kubernetes-minion
@@ -44,7 +44,7 @@ kubelet:
     - enable:   True
     - watch:
       - file:   /etc/kubernetes/config
-      - file:   /var/lib/kubelet/kubeconfig
+      - file:   {{ pillar['paths']['kubeconfig'] }}
       - file:   kubelet
     - require:
       - pkg:    kubernetes-minion
@@ -69,7 +69,7 @@ kubelet:
     - dir_mode: 755
     - makedirs: True
 
-/var/lib/kubelet/kubeconfig:
+{{ pillar['paths']['kubeconfig'] }}:
   file.managed:
     - source:         salt://kubernetes-minion/kubeconfig.jinja
     - template:       jinja
