@@ -4,6 +4,11 @@ include:
 {% from 'cert/init.sls' import ip_addresses %}
 
 {% do ip_addresses.append("IP: " + pillar['api_cluster_ip']) %}
+{% for _, interface_addresses in grains['ip4_interfaces'].items() %}
+  {% for interface_address in interface_addresses %}
+    {% do ip_addresses.append("IP: " + interface_address) %}
+  {% endfor %}
+{% endfor %}
 {% for extra_ip in pillar['api_server']['extra_ips'] %}
   {% do ip_addresses.append("IP: " + extra_ip) %}
 {% endfor %}
@@ -111,10 +116,7 @@ kube-controller-manager:
 
 load_flannel_cfg:
   cmd.run:
-    - name: /usr/bin/etcdctl --endpoints https://127.0.0.1:2379
-                             --cert-file /etc/pki/minion.crt
-                             --key-file /etc/pki/minion.key
-                             --ca-file /var/lib/k8s-ca-certificates/cluster_ca.crt
+    - name: /usr/bin/etcdctl --endpoints http://127.0.0.1:2379
                              --no-sync
                              set {{ pillar['flannel']['etcd_key'] }}/config < /root/flannel-config.json
     - require:
