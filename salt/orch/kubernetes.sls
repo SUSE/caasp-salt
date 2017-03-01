@@ -3,6 +3,11 @@ mine_update:
     - name: mine.update
     - tgt: '*'
 
+refresh_pillar:
+  salt.function:
+    - name: saltutil.refresh_pillar
+    - tgt: '*'
+
 ca_setup:
   salt.state:
     - tgt: 'roles:ca'
@@ -10,6 +15,7 @@ ca_setup:
     - highstate: True
     - require:
       - salt: mine_update
+      - salt: refresh_pillar
 
 etcd_discovery_setup:
   salt.state:
