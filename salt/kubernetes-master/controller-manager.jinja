@@ -10,9 +10,6 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
     --cluster-cidr={{ pillar['cluster_cidr'] }} \
     --service-account-private-key-file=/etc/pki/minion.key \
     --root-ca-file=/var/lib/k8s-ca-certificates/cluster_ca.crt \
-{% if pillar['pv_recycler_pod_template'] -%}
-    --pv-recycler-pod-template-filepath-nfs={{ pillar['pv_recycler_pod_template'] }} \
-{% endif -%}
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
     --cloud-provider=aws \
 {% endif -%}

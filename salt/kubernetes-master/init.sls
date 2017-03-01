@@ -99,7 +99,6 @@ kube-controller-manager:
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-controller-manager
-      - file:     /etc/kubernetes/pv-recycler-pod-template.yml
 
 ###################################
 # load flannel config in etcd
@@ -156,13 +155,3 @@ deploy_addons.sh:
       - file:      /root/skydns-rc.yaml
 
 {% endif %}
-
-#######################
-# config files
-#######################
-
-/etc/kubernetes/pv-recycler-pod-template.yml:
-  file.managed:
-    - source:    salt://kubernetes-master/pv-recycler-pod-template.yml
-    - require:
-      - pkg:     kubernetes-master
