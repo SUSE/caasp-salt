@@ -21,15 +21,6 @@ etcd_discovery_setup:
     - require:
       - salt: ca_setup
 
-etcd_nodes_setup:
-  salt.state:
-    - tgt: 'roles:etcd'
-    - tgt_type: grain
-    - highstate: True
-    - concurrent: True
-    - require:
-      - salt: etcd_discovery_setup
-
 etcd_proxy_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
