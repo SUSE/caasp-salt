@@ -11,10 +11,7 @@ KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 KUBE_API_PORT="--insecure-port=8080 --secure-port={{ pillar['api_ssl_port'] }}"
 
 # Comma separated list of nodes in the etcd cluster
-KUBE_ETCD_SERVERS="--etcd-servers=https://127.0.0.1:2379 \
-                   --etcd-cafile=/var/lib/k8s-ca-certificates/cluster_ca.crt \
-                   --etcd-certfile=/etc/pki/minion.crt \
-                   --etcd-keyfile=/etc/pki/minion.key"
+KUBE_ETCD_SERVERS="--etcd-servers=http://127.0.0.1:2379"
 
 # Address range to use for services
 # [alvaro] should not be in the same range as the flannel network (https://github.com/coreos/flannel/issues/232)

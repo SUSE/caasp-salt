@@ -2,11 +2,6 @@ include:
   - crypto
 
 {% set ip_addresses = [] -%}
-{% for _, interface_addresses in grains['ip4_interfaces'].items() %}
-  {% for interface_address in interface_addresses %}
-    {% do ip_addresses.append("IP: " + interface_address) %}
-  {% endfor %}
-{% endfor %}
 
 /var/lib/k8s-ca-certificates:
   file.directory:
@@ -53,7 +48,9 @@ include:
     - ST: {{ pillar['certificate_information']['subject_properties']['ST'] }}
     - basicConstraints: "critical CA:false"
     - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
+    {% if ip_addresses|length > 0 %}
     - subjectAltName: "{{ ", ".join(ip_addresses) }}"
+    {% endif %}
     - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
     - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
     - backup: True

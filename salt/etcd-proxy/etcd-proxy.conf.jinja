@@ -4,10 +4,10 @@
 ETCD_DATA_DIR="/var/lib/etcd/"
 ETCD_NAME="{{ grains['id'] }}"
 
-ETCD_LISTEN_CLIENT_URLS="https://0.0.0.0:2379,https://0.0.0.0:4001"
+ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:2379"
 ETCD_LISTEN_PEER_URLS="https://0.0.0.0:2380"
 
-ETCD_ADVERTISE_CLIENT_URLS="https://{{ grains['fqdn'] }}:2379,https://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
+ETCD_ADVERTISE_CLIENT_URLS="http://{{ grains['fqdn'] }}:2379,http://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
 
 ETCD_CA_FILE=/var/lib/k8s-ca-certificates/cluster_ca.crt
 ETCD_CERT_FILE=/etc/pki/minion.crt
