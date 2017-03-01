@@ -13,10 +13,16 @@ include:
   {% do ip_addresses.append("IP: " + extra_ip) %}
 {% endfor %}
 
+# add some extra names the API server could have
 {% set extra_names = ["DNS: " + grains['fqdn']] %}
 {% for extra_name in pillar['api_server']['extra_names'] %}
   {% do extra_names.append("DNS: " + extra_name) %}
 {% endfor %}
+
+# add some standard extra names from the DNS domain
+{% if salt['pillar.get']('dns:domain') %}
+  {% do extra_names.append("DNS: kubernetes.default.svc." + pillar['dns']['domain']) %}
+{% endif %}
 
 extend:
   /etc/pki/minion.crt:
