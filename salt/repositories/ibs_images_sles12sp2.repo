@@ -1,7 +1,0 @@
-[ibs-images-sles12sp2]
-name=ibs-images-sles12sp2
-type=rpm-md
-gpgcheck=0
-enabled=1
-autorefresh=1
-baseurl=http://download.suse.de/ibs/Devel:/Docker:/Images:/SLE12SP2/images/

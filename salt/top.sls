@@ -27,7 +27,6 @@ base:
     - match: grain
     - flannel
     - docker
-    - sle
     - kubernetes-minion
   'roles:nfs':
     - match: grain

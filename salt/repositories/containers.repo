@@ -4,12 +4,4 @@ type=rpm-md
 gpgcheck=0
 enabled=1
 autorefresh=1
-{% if grains['oscodename'].startswith("openSUSE Leap") %}
 baseurl=http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_{{ grains['osrelease'] }}/
-{% elif grains['lsb_distrib_codename'] == "SUSE Linux Enterprise Server 12" %}
-baseurl=http://download.suse.de/ibs/Devel:/Docker/SLE_12/
-{% elif grains['lsb_distrib_codename'] == "SUSE Linux Enterprise Server 12 SP1" %}
-baseurl=http://download.suse.de/ibs/Devel:/Docker/SUSE_SLE-12-SP1_GA_standard/
-{% elif grains['lsb_distrib_codename'] == "SUSE Linux Enterprise Server 12 SP2" %}
-baseurl=http://download.suse.de/ibs/Devel:/Docker/SUSE_SLE-12-SP2_GA_standard/
-{% endif %}
