@@ -71,3 +71,12 @@ kube_nfs_setup:
     - tgt: 'roles:nfs'
     - tgt_type: grain
     - highstate: True
+
+reboot_setup:
+  salt.state:
+    - tgt: 'roles:kube-master'
+    - tgt_type: grain
+    - highstate: True
+    - concurrent: True
+    - require:
+      - salt: etcd_proxy_setup
