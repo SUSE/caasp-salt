@@ -14,17 +14,20 @@ docker:
     - require:
       - pkg: docker
 
-{% set reg_mirror = pillar.get('docker_registry_mirror', '') %}
-{% if reg_mirror != '' %}
-docker-config-mirror:
+{% set docker_opt = "--iptables=false" %}
+{% set docker_reg = pillar.get('docker_registry_mirror', '') %}
+
+/etc/sysconfig/docker:
   file.replace:
-    - name: /etc/sysconfig/docker
     - pattern: '^DOCKER_OPTS.*$'
-    - repl: DOCKER_OPTS="--insecure-registry={{ reg_mirror }} --registry-mirror=http://{{ reg_mirror }}"
+{% if docker_reg == '' %}
+    - repl: DOCKER_OPTS="{{ docker_opt }}"
+{% else %}
+    - repl: DOCKER_OPTS="{{ docker_opt }} --insecure-registry={{ docker_reg }} --registry-mirror=http://{{ docker_reg }}"
+{% endif %}
     - flags: ['IGNORECASE', 'MULTILINE']
     - append_if_not_found: True
     - require:
       - pkg: docker
     - require_in:
       - service: docker
-{% endif %}
