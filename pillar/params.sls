@@ -43,3 +43,13 @@ flannel:
   backend:        'host-gw'
   etcd_key:       '/flannel/network'
   iface:          'eth0'
+
+# Configuration for the reboot manager (https://github.com/SUSE/rebootmgr).
+# notes:
+# - The default group for rebootmgr is "default", so we are simply taking
+#   rebootmgr's default here.
+# - `directory` contains the base directory of the configuration. In order to
+#   use it we have to append the name of the group as another directory.
+reboot:
+  group:          'default'
+  directory:      'opensuse.org/rebootmgr/locks'

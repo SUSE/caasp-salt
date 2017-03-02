@@ -24,5 +24,3 @@ set_size:
       - cmd: cleanup
 
 {% endif %}
-
-
