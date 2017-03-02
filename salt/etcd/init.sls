@@ -1,4 +1,5 @@
 include:
+  - repositories
   - cert
 
 etcd:

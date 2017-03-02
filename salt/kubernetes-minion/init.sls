@@ -1,6 +1,8 @@
 #######################
 # k8s components
 #######################
+include:
+  - repositories
 
 conntrack-tools:
   pkg.installed

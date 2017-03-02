@@ -1,3 +1,6 @@
+include:
+  - repositories
+  - flannel
 
 docker:
   pkg.installed:
