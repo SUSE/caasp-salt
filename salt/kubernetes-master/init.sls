@@ -1,4 +1,5 @@
 include:
+  - repositories
   - cert
 
 {% from 'cert/init.sls' import ip_addresses %}
