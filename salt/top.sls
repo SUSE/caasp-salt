@@ -12,10 +12,6 @@ base:
   'roles:ca':
     - match: grain
     - ca
-  'roles:etcd':
-    - match: grain
-    - cert
-    - etcd
   'roles:kube-(master|minion)':
     - match: grain_pcre
     - cert
