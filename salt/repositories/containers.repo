@@ -4,4 +4,5 @@ type=rpm-md
 gpgcheck=0
 enabled=1
 autorefresh=1
+# we only support Leap and CaaSP, and CaaSP will just not use this at all...
 baseurl=http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_{{ grains['osrelease'] }}/
