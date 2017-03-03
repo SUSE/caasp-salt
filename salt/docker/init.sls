@@ -11,6 +11,7 @@ docker:
     - enable: True
     - watch:
       - service: flannel
+      - file: /etc/sysconfig/docker
     - require:
       - pkg: docker
 
