@@ -43,8 +43,8 @@ BuildArch:      noarch
 Summary:        Production-Grade Container Scheduling and Management
 License:        Apache-2.0
 Group:          System/Management
-Url:            http://kubernetes.io
-Source:         %{name}-%{version}.tar.xz
+Url:            https://github.com/kubic-project/salt
+Source:         master.tar.gz
 BuildRequires:  systemd-rpm-macros
 Requires:       salt
 Requires:       python-m2crypto
