@@ -4,19 +4,19 @@ include:
 
 {% from 'cert/init.sls' import ip_addresses %}
 
-{% do ip_addresses.append("IP: " + pillar['api_cluster_ip']) %}
+{% do ip_addresses.append("IP: " + pillar['api']['cluster_ip']) %}
 {% for _, interface_addresses in grains['ip4_interfaces'].items() %}
   {% for interface_address in interface_addresses %}
     {% do ip_addresses.append("IP: " + interface_address) %}
   {% endfor %}
 {% endfor %}
-{% for extra_ip in pillar['api_server']['extra_ips'] %}
+{% for extra_ip in pillar['api']['server']['extra_ips'] %}
   {% do ip_addresses.append("IP: " + extra_ip) %}
 {% endfor %}
 
 # add some extra names the API server could have
 {% set extra_names = ["DNS: " + grains['fqdn']] %}
-{% for extra_name in pillar['api_server']['extra_names'] %}
+{% for extra_name in pillar['api']['server']['extra_names'] %}
   {% do extra_names.append("DNS: " + extra_name) %}
 {% endfor %}
 
@@ -30,7 +30,7 @@ extend:
     x509.certificate_managed:
       - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
 
-{% set api_ssl_port = salt['pillar.get']('api_ssl_port', '6443') %}
+{% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
 
 #######################
 # components
