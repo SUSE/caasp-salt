@@ -26,6 +26,9 @@ kube_group:       'kube'
 # install the addons (ie, DNS)
 addons:           'false'
 
+# a distinguishable name/IP for the dashboard
+dashboard:        'dashboard'
+
 paths:
   ca_dir:         '/etc/pki/trust/anchors'
   ca_filename:    'SUSE_CaaSP_CA.crt'
