@@ -15,6 +15,7 @@ VERSION=$(cat ../../VERSION)
 COMMIT_UNIX_TIME=$(git show -s --format=%ct)
 VERSION="${VERSION%+*}+$(date -d @$COMMIT_UNIX_TIME +%Y%m%d).$(git rev-parse --short HEAD)"
 NAME=$1
+GITREPONAME=$(basename `git rev-parse --show-toplevel`)
 
 cat <<EOF > ${NAME}.spec
 #
@@ -37,6 +38,7 @@ cat <<EOF > ${NAME}.spec
 %{!?tmpfiles_create:%global tmpfiles_create systemd-tmpfiles --create}
 
 Name:           $NAME
+%define gitrepo $GITREPONAME
 Version:        $VERSION
 Release:        0
 BuildArch:      noarch
@@ -53,14 +55,14 @@ Requires:       python-m2crypto
 Salt scripts for deploying a Kubernetes cluster
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -n %{gitrepo}-master
 
 %build
 
 %install
 rm -rf %{buildroot}%{_datadir}
 mkdir -p %{buildroot}%{_datadir}/salt/kubernetes
-cp -R %{_builddir}/%{name}-%{version}/*  %{buildroot}%{_datadir}/salt/kubernetes/
+cp -R %{_builddir}/%{gitrepo}-master/*  %{buildroot}%{_datadir}/salt/kubernetes/
 
 %files
 %defattr(-,root,root)
