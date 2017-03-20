@@ -26,9 +26,7 @@ KUBELET_ARGS="\
 {% endif -%}
     --node-ip={{ grains['ip4_interfaces']['eth0'][0] }} \
     --config=/etc/kubernetes/manifests \
-{% if salt['pillar.get']('pod_infra_container_image') -%}
     --pod-infra-container-image={{ pillar['pod_infra_container_image'] }} \
-{% endif -%}
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
     --cloud-provider=aws \
 {% endif -%}
