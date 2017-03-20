@@ -1,6 +1,7 @@
 base:
   '*':
     - params
+    - vars
     - certificates
   'G@roles:etcd':
     - etcd

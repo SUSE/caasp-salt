@@ -4,11 +4,11 @@ cluster_cidr:     '172.20.0.0/16'
 # the CIDR for services (virtual IPs for services)
 services_cidr:    '172.21.0.0/16'
 
-api:
-  # the API service IP (must be inside the 'services_cidr')
-  cluster_ip:   '172.21.0.1'
-  # port for listening for SSL connections
-  ssl_port:     '6443'
+# the API service IP (must be inside the 'services_cidr')
+api_cluster_ip:   '172.21.0.1'
+
+# port for listening for SSL connections
+api_ssl_port:     '6443'
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
 dns:
@@ -25,9 +25,6 @@ kube_group:       'kube'
 
 # install the addons (ie, DNS)
 addons:           'false'
-
-# a distinguishable name/IP for the dashboard
-dashboard:        'dashboard'
 
 paths:
   ca_dir:         '/etc/pki/trust/anchors'
