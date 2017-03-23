@@ -13,4 +13,5 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
     --cloud-provider=aws \
 {% endif -%}
+    {{ pillar['components']['controller-manager']['args'] }} \
     --v=2"
