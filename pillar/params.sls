@@ -20,9 +20,6 @@ dns:
 kube_user:        'kube'
 kube_group:       'kube'
 
-# use a docker registry mirror (it must be a http service)
-# docker_registry_mirror: 'mymirror.com:5000'
-
 # install the addons (ie, DNS)
 addons:           'false'
 
@@ -59,3 +56,29 @@ flannel:
 reboot:
   group:          'default'
   directory:      'opensuse.org/rebootmgr/locks'
+
+# Docker-specific parameters.
+docker:
+  # Extra arguments to be passed to the Docker daemon.
+  args: '--iptables=false'
+
+  # Use a docker registry mirror (it must be a http service)
+  registry_mirror: ''
+
+# Specific parameters for each Kubernetes component.
+components:
+  apiserver:
+    # Extra arguments to be passed to the API server.
+    args: ''
+  controller-manager:
+    # Extra arguments to be passed to the controller manager.
+    args: ''
+  scheduler:
+    # Extra arguments to be passed to the scheduler.
+    args: ''
+  kubelet:
+    # Extra arguments to be passed to the kubelet.
+    args: ''
+  proxy:
+    # Extra arguments to be passed to kube-proxy.
+    args: ''

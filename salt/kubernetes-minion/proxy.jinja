@@ -7,4 +7,5 @@
 KUBE_PROXY_ARGS="\
     --kubeconfig={{ pillar['paths']['kubeconfig'] }} \
     --proxy-mode=iptables \
+    {{ pillar['components']['proxy']['args'] }} \
     --v=2"
