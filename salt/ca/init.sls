@@ -54,7 +54,9 @@ salt-minion:
 /etc/pki/ca.crt:
   x509.certificate_managed:
     - signing_private_key: /etc/pki/ca.key
+{% if salt['grains.get']('domain', None) is not none %}
     - CN: {{ grains['domain'] }}
+{% endif %}
     - C: {{ pillar['certificate_information']['subject_properties']['C'] }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email'] }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN'] }}
