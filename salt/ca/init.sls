@@ -54,10 +54,12 @@ salt-minion:
 /etc/pki/ca.crt:
   x509.certificate_managed:
     - signing_private_key: /etc/pki/ca.key
-{% if salt['grains.get']('domain', None) is none %}
+{% if salt['grains.get']('domain', '')|length > 0 %}
+    - CN: {{ grains['domain'] }}
+{% elif salt['pillar.get']('dns:domain', '')|length > 0 %}
     - CN: {{ pillar['dns']['domain'] }}
 {% else %}
-    - CN: {{ grains['domain'] }}
+    - CN: kubernetes
 {% endif %}
     - C: {{ pillar['certificate_information']['subject_properties']['C'] }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email'] }}
