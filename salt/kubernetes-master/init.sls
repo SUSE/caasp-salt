@@ -1,6 +1,7 @@
 include:
   - repositories
   - cert
+  - etcd-proxy
 
 {% from 'cert/init.sls' import ip_addresses %}
 
@@ -128,6 +129,7 @@ load_flannel_cfg:
     - require:
       - sls: cert
       - pkg: kubernetes-master
+      - service: etcd
     - watch:
       - sls:  cert
       - file: /root/flannel-config.json
