@@ -22,12 +22,8 @@ base:
     - etcd-proxy
   'roles:kube-master':
     - match: grain
-    - kubernetes-master:
-      - require:
-        - sls: etcd-proxy
-    - reboot:
-      - require:
-        - sls: etcd-proxy
+    - kubernetes-master
+    - reboot
   'roles:kube-minion':
     - match: grain
     - flannel

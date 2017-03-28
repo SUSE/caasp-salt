@@ -2,6 +2,9 @@
 # Configuration for the reboot manager
 ##################################################
 
+include:
+  - etcd-proxy
+
 # `max_holders` contains the maximum number of lock holders for the cluster. It
 # must comply with the optimal cluster size as defined here:
 #   https://coreos.com/etcd/docs/latest/v2/admin_guide.html
@@ -33,6 +36,7 @@ set_max_holders_mutex:
             -d value="0"
     - require:
       - cmd: opensuseorg_cleanup
+      - service: etcd
 
 # Initialize the `data` key, which is JSON data with: the maximum number of
 # holders, and a list of current holders.
@@ -44,3 +48,4 @@ set_max_holders_data:
         curl -L -X PUT http://127.0.0.1:2379/v2/keys/{{ pillar['reboot']['directory'] }}/{{ pillar['reboot']['group'] }}/data?prevExist=false -d value='{ "max":"{{ max_holders }}", "holders":[] }'
     - require:
       - cmd: set_max_holders_mutex
+      - service: etcd
