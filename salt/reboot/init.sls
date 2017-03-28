@@ -29,7 +29,7 @@ set_max_holders_mutex:
     - name: curl
   cmd.run:
     - name: curl -L -X PUT
-            http://127.0.0.1:2379/v2/keys/{{ pillar['reboot']['directory'] }}/{{ pillar['reboot']['group'] }}/mutex?prevExist=false
+            http://{{ pillar['dashboard'] }}:{{ pillar['etcd']['disco']['port'] }}/v2/keys/{{ pillar['reboot']['directory'] }}/{{ pillar['reboot']['group'] }}/mutex?prevExist=false
             -d value="0"
     - require:
       - cmd: opensuseorg_cleanup
@@ -41,6 +41,6 @@ set_max_holders_data:
     - name: curl
   cmd.run:
     - name: >-
-        curl -L -X PUT http://127.0.0.1:2379/v2/keys/{{ pillar['reboot']['directory'] }}/{{ pillar['reboot']['group'] }}/data?prevExist=false -d value='{ "max":"{{ max_holders }}", "holders":[] }'
+        curl -L -X PUT http://{{ pillar['dashboard'] }}:{{ pillar['etcd']['disco']['port'] }}/v2/keys/{{ pillar['reboot']['directory'] }}/{{ pillar['reboot']['group'] }}/data?prevExist=false -d value='{ "max":"{{ max_holders }}", "holders":[] }'
     - require:
       - cmd: set_max_holders_mutex
