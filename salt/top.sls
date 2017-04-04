@@ -23,6 +23,8 @@ base:
   'roles:kube-master':
     - match: grain
     - kubernetes-master
+    - flannel
+    - docker
     - reboot
   'roles:kube-minion':
     - match: grain
