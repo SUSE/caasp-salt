@@ -1,7 +1,0 @@
-{% set etcd_servers = [] -%}
-{% for fqdn in salt['mine.get']('roles:etcd', 'fqdn', expr_form='grain').values() -%}
-  {% do etcd_servers.append('\"https://' + fqdn + ':2379\"') -%}
-{% endfor -%}
-backend = "etcd"
-log-level = "debug"
-nodes = [{{",".join(etcd_servers)}}]
