@@ -1,2 +1,0 @@
-/storage/mariadb  *(rw,no_root_squash,sync,no_subtree_check)
-/storage/distribution *(rw,no_root_squash,sync,no_subtree_check)
