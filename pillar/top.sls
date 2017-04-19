@@ -3,13 +3,9 @@ base:
     - params
     - vars
     - certificates
-  'G@roles:etcd':
-    - etcd
+    - ip_addrs
+    - fqdn
   'G@roles:kube-master':
-    - etcd-proxy
     - kube-master
   'G@roles:kube-minion':
-    - etcd-proxy
     - kube-minion
-  'G@roles:nfs':
-    - nfs

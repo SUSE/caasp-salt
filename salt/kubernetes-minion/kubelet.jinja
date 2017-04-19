@@ -1,7 +1,7 @@
 {% set kube_servers = [] -%}
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
-{% for fqdn in salt['mine.get']('roles:kube-master', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do kube_servers.append('https://' + fqdn[0] + ':' + api_ssl_port) -%}
+{% for fqdn in salt['mine.get']('roles:kube-master', 'fqdn', expr_form='grain').values() -%}
+  {% do kube_servers.append('https://' + fqdn + ':' + api_ssl_port) -%}
 {% endfor -%}
 ###
 # kubernetes kubelet (minion) config

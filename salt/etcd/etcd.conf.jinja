@@ -1,6 +1,6 @@
 {% set servers = [] -%}
-{% for fqdn in salt['mine.get']('roles:etcd', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do servers.append(fqdn[0] + '=https://' + fqdn[0] + ':2380') -%}
+{% for minion_id, fqdn in salt['mine.get']('roles:etcd', 'fqdn', expr_form='grain').items() -%}
+  {% do servers.append(minion_id + '=https://' + fqdn + ':2380') -%}
 {% endfor -%}
 
 ETCD_DATA_DIR="/var/lib/etcd/"
@@ -23,4 +23,3 @@ ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ grains['fqdn'] }}:2380"
 ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
 ETCD_INITIAL_CLUSTER="{{ ",".join(servers) }}"
 ETCD_INITIAL_CLUSTER_STATE="new"
-

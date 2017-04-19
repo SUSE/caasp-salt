@@ -1,6 +1,6 @@
 {% set kube_minions = [] -%}
-{% for fqdn in salt['mine.get']('roles:kube-minion', 'network.ip_addrs', expr_form='grain').items() -%}
-  {% do kube_minions.append(fqdn[0]) -%}
+{% for fqdn in salt['mine.get']('roles:kube-minion', 'fqdn', expr_form='grain').values() -%}
+  {% do kube_minions.append(fqdn) -%}
 {% endfor -%}
 global
     daemon
