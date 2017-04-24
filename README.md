@@ -7,7 +7,7 @@ in the context of CaaSP/MicroOS.
 
 The Salt state creates an architecture that depends on some (already existing) elements. This is the expected setup before running the orchestration:
 
-![](docs/k8s-before-orchestration.svg)
+![](docs/k8s-before-orchestration.png)
 
 The _salt master_ is installed in the _Admin Dashboard_ and is reponsible for
 orchestrating the deployment and controlling all the minions in the cluster,
@@ -19,7 +19,7 @@ set in the pillar.
 
 After running the orchestration, the architecture will look like this:
 
-![](docs/k8s-after-orchestration.svg)
+![](docs/k8s-after-orchestration.png)
 
 Some notes:
 
