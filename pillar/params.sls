@@ -1,6 +1,9 @@
 # the CIDR for cluster IPs (internal IPs for Pods)
 cluster_cidr:     '172.20.0.0/16'
 
+# the cluster domain name used for internal infrastructure host <-> host  communication
+internal_infra_domain: 'infra.caasp.local'
+
 # the CIDR for services (virtual IPs for services)
 services_cidr:    '172.21.0.0/16'
 
