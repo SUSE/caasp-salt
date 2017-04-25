@@ -16,7 +16,9 @@ include:
 {% endfor %}
 
 # add some extra names the API server could have
-{% set extra_names = ["DNS: " + grains['fqdn']] %}
+{% set extra_names = ["DNS: " + grains['fqdn'],
+                      "DNS: api",
+                      "DNS: api." + pillar['internal_infra_domain']] %}
 {% for extra_name in pillar['api']['server']['extra_names'] %}
   {% do extra_names.append("DNS: " + extra_name) %}
 {% endfor %}
