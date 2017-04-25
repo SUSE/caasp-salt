@@ -22,6 +22,7 @@ KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,Servi
 
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
+               --apiserver-count={{ salt['mine.get']('roles:kube-master', 'fqdn', expr_form='grain').values()|length }} \
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
                --cloud-provider=aws \
 {% endif -%}

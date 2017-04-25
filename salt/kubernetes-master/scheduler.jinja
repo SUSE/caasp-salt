@@ -4,4 +4,7 @@
 # default config should be adequate
 
 # Add your own!
-KUBE_SCHEDULER_ARGS="--v=2 {{ pillar['components']['scheduler']['args']}}"
+KUBE_SCHEDULER_ARGS="\
+    --leader-elect=true \
+    --v=2 \
+    {{ pillar['components']['scheduler']['args']}}"
