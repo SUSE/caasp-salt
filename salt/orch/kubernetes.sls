@@ -3,6 +3,13 @@ mine_update:
     - name: mine.update
     - tgt: '*'
 
+sync_modules:
+  salt.function:
+    - name: saltutil.sync_modules
+    - tgt: '*'
+    - kwarg:
+        refresh: True
+
 refresh_pillar:
   salt.function:
     - name: saltutil.refresh_pillar
@@ -26,6 +33,7 @@ etcd_discovery_setup:
       - etcd-discovery
     - require:
       - salt: ca_setup
+      - salt: sync_modules
 
 etcd_nodes_setup:
   salt.state:
