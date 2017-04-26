@@ -34,8 +34,16 @@ paths:
 # - the token must be shared between all the machines in the cluster
 # - the discovery id is also unique for all the machines in the
 #   cluster (in fact, it can be the same as the token)
+# - if masters is null, we will determine the number of etcd members
+#   based on the number of nodes with the kube-master role applied
+# - For an etcd cluster to be effective, the number of cluster members
+#   must be both odd and reasonably small, for example - 1,3,5 are
+#   valid while 2,4,6 are not. In addition, clusters larger than 5 are
+#   likely spending more time coordinating amongst themselves than they
+#   are serving clients. As such, it's not recommended to use a cluster
+#   of 7+ nodes.
 etcd:
-  masters:        '1'
+  masters:        null
   token:          'k8s'
   disco:
     port:         '2379'

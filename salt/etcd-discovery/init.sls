@@ -19,7 +19,7 @@ set_size:
   cmd.run:
     - name: curl -L -X PUT
             http://{{ pillar['dashboard'] }}:{{ pillar['etcd']['disco']['port'] }}/v2/keys/_etcd/registry/{{ pillar['etcd']['disco']['id'] }}/_config/size
-            -d value={{ pillar['etcd']['masters'] }}
+            -d value={{ salt['etcd_discovery_helpers.get_cluster_size']() }}
     - require:
       - cmd: cleanup
 
