@@ -1,4 +1,4 @@
-Welcome to {{salt['grains.get']('nodename', 'ERROR')}}.
+Welcome to {{salt['grains.get']('id', 'ERROR')}}.{{ pillar['internal_infra_domain']}}. 
 The roles of this node are:
 {%- for role in salt['grains.get']('roles', []) %}
   - {{role}}
