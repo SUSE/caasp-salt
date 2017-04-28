@@ -7,8 +7,13 @@
     - ip: {{ addrlist|first }}
 {% endif %}
     - names:
-      - api
-      - api.{{ pillar['internal_infra_domain'] }}
       - {{ minion_id }}
       - {{ minion_id }}.{{ pillar['internal_infra_domain'] }}
 {% endfor %}
+
+api-host-entry:
+  host.present:
+    - ip: 127.0.0.1
+    - names:
+      - api
+      - api.{{ pillar['internal_infra_domain'] }}

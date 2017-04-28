@@ -11,6 +11,9 @@ base:
     - hostname
     - cert
     - etcd-proxy
+    - haproxy
+    - kubelet
+    - kubeconfig
   'roles:kube-master':
     - match: grain
     - hosts-master
@@ -24,3 +27,4 @@ base:
     - flannel
     - docker
     - kubernetes-minion
+    

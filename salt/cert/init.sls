@@ -1,7 +1,7 @@
 include:
   - crypto
 
-{% set ip_addresses = [] -%}
+{% set subject_alt_names = [] -%}
 
 {{ pillar['paths']['ca_dir'] }}:
   file.directory:
@@ -48,8 +48,8 @@ include:
     - ST: {{ pillar['certificate_information']['subject_properties']['ST'] }}
     - basicConstraints: "critical CA:false"
     - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
-    {% if ip_addresses|length > 0 %}
-    - subjectAltName: "{{ ", ".join(ip_addresses) }}"
+    {% if subject_alt_names|length > 0 %}
+    - subjectAltName: "{{ ", ".join(subject_alt_names) }}"
     {% endif %}
     - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
     - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}

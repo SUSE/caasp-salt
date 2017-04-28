@@ -1,7 +1,3 @@
-{% set api_server = "api." + pillar['internal_infra_domain']  -%}
-{% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
-{% set api_server_url = 'https://' + api_server + ':' + api_ssl_port -%}
-
 ###
 # kubernetes kubelet (minion) config
 
@@ -13,6 +9,10 @@ KUBELET_PORT="--port=10250"
 
 # Use <machine_id>.<internal_infra_domain> matching the SSL certificates
 KUBELET_HOSTNAME="--hostname-override={{ grains['id'] }}.{{ pillar['internal_infra_domain'] }}"
+
+{% set api_server = "api." + pillar['internal_infra_domain'] -%}
+{% set lb_ssl_port = salt['pillar.get']('api:lb_ssl_port', '6443') -%}
+{% set api_server_url = 'https://' + api_server + ':' + lb_ssl_port -%}
 
 # location of the api-server
 KUBELET_API_SERVER="--api-servers={{ api_server_url }}"
@@ -32,4 +32,5 @@ KUBELET_ARGS="\
     --cloud-provider=aws \
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
+    --register-schedulable={{ schedulable }} \
     --kubeconfig={{ pillar['paths']['kubeconfig'] }}"

@@ -5,7 +5,6 @@ base:
     - certificates
     - ip_addrs
     - fqdn
+    - kubelet
   'G@roles:kube-master':
     - kube-master
-  'G@roles:kube-minion':
-    - kube-minion

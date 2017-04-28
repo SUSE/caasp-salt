@@ -32,10 +32,6 @@ etcd:
       - etcd
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-  cmd.run:
-    - name: rm -rf /var/lib/etcd/*
-    - prereq:
-      - service: etcd
   iptables.append:
     - table: filter
     - family: ipv4
@@ -59,6 +55,9 @@ etcd:
       - file: /var/lib/etcd
     - watch:
       - file: /etc/sysconfig/etcd
+      - file: /etc/pki/minion.crt
+      - file: /etc/pki/minion.key
+      - file: {{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
 
 # note: this id will be inherited/overwritten by the etcd-proxy
 /etc/sysconfig/etcd:
