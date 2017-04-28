@@ -7,4 +7,5 @@
 KUBE_SCHEDULER_ARGS="\
     --leader-elect=true \
     --v=2 \
-    {{ pillar['components']['scheduler']['args']}}"
+    {{ pillar['components']['scheduler']['args'] }} \
+    --kubeconfig={{ pillar['paths']['kubeconfig'] }}"

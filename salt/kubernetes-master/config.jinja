@@ -21,6 +21,10 @@ KUBE_ALLOW_PRIV="--allow-privileged=true"
 
 KUBE_ENABLE_DAEMONSETS=true
 
+{% set api_server = "api." + pillar['internal_infra_domain'] -%}
+{% set lb_ssl_port = salt['pillar.get']('api:lb_ssl_port', '6443') -%}
+{% set api_server_url = 'https://' + api_server + ':' + lb_ssl_port -%}
+
 # How the controller-manager, scheduler, and proxy find the apiserver
-# note: we do not use SSL for local connections
-KUBE_MASTER="--master=http://127.0.0.1:8080"
+# note: uses haproxy and TLS for HA and resiliency
+KUBE_MASTER="--master={{ api_server_url }}"

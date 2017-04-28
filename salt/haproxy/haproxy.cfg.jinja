@@ -1,0 +1,28 @@
+global
+        log /dev/log    local0
+        log /dev/log    local1 notice
+        daemon
+
+defaults
+        log     global
+        mode    tcp
+        option  tcplog
+        option  dontlognull
+        timeout connect 5000
+        timeout client 50000
+        timeout server 50000
+
+listen kubernetes-master
+        bind {{ bind_ip }}:6443
+        mode tcp
+        default-server inter 10s fall 3
+        balance roundrobin
+
+{%- for minion_id, addrlist in salt['mine.get']('roles:kube-master', 'network.ip_addrs', 'grain').items() %}
+{% if addrlist is string -%}
+{% set addr = addrlist -%}
+{% else -%}
+{% set addr = addrlist|first -%}
+{% endif -%}
+        server master-{{ minion_id }} {{ minion_id }}.infra.caasp.local:6444 check
+{% endfor -%}

@@ -2,38 +2,50 @@ include:
   - repositories
   - cert
   - etcd-proxy
+  - kubelet
+  - haproxy
 
-{% from 'cert/init.sls' import ip_addresses %}
+{% from 'cert/init.sls' import subject_alt_names %}
 
-{% do ip_addresses.append("IP: " + pillar['api']['cluster_ip']) %}
+{% do subject_alt_names.append("IP: " + pillar['api']['cluster_ip']) %}
 {% for _, interface_addresses in grains['ip4_interfaces'].items() %}
   {% for interface_address in interface_addresses %}
-    {% do ip_addresses.append("IP: " + interface_address) %}
+    {% do subject_alt_names.append("IP: " + interface_address) %}
   {% endfor %}
 {% endfor %}
 {% for extra_ip in pillar['api']['server']['extra_ips'] %}
-  {% do ip_addresses.append("IP: " + extra_ip) %}
+  {% do subject_alt_names.append("IP: " + extra_ip) %}
 {% endfor %}
 
 # add some extra names the API server could have
 {% set extra_names = ["DNS: " + grains['fqdn'],
                       "DNS: api",
                       "DNS: api." + pillar['internal_infra_domain']] %}
+{% for extra_name in extra_names %}
+  {% do subject_alt_names.append(extra_name) %}
+{% endfor %}
+
 {% for extra_name in pillar['api']['server']['extra_names'] %}
-  {% do extra_names.append("DNS: " + extra_name) %}
+  {% do subject_alt_names.append("DNS: " + extra_name) %}
 {% endfor %}
 
 # add some standard extra names from the DNS domain
 {% if salt['pillar.get']('dns:domain') %}
-  {% do extra_names.append("DNS: kubernetes.default.svc." + pillar['dns']['domain']) %}
+  {% do subject_alt_names.append("DNS: kubernetes.default.svc." + pillar['dns']['domain']) %}
 {% endif %}
 
 extend:
   /etc/pki/minion.crt:
     x509.certificate_managed:
-      - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
-
-{% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
+      - subjectAltName: "{{ ", ".join(subject_alt_names) }}"
+  /etc/kubernetes/kubelet:
+    file.managed:
+      - context:
+        schedulable: "false"
+  /etc/haproxy/haproxy.cfg:
+    file.managed:
+      - context:
+        bind_ip: "0.0.0.0"
 
 #######################
 # components
@@ -65,7 +77,8 @@ kube-apiserver:
     - match:      state
     - connstate:  NEW
     - dports:
-        - {{ api_ssl_port }}
+        - {{ salt['pillar.get']('api:ssl_port', '6444') }}
+        - {{ salt['pillar.get']('api:lb_ssl_port', '6443') }}
     - proto:      tcp
     - require:
       - pkg:      kubernetes-master
@@ -85,10 +98,14 @@ kube-apiserver:
       - file:     /etc/kubernetes/config
       - file:     kube-apiserver
       - sls:      cert
+      - file:     /etc/pki/minion.crt
+      - file:     /etc/pki/minion.key
+      - file:     {{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
 
 kube-scheduler:
   file.managed:
     - name:       /etc/kubernetes/scheduler
+    - template:   jinja
     - source:     salt://kubernetes-master/scheduler.jinja
     - require:
       - pkg:      kubernetes-master
@@ -99,6 +116,9 @@ kube-scheduler:
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-scheduler
+      - file:     /etc/pki/minion.crt
+      - file:     /etc/pki/minion.key
+      - file:     {{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
 
 kube-controller-manager:
   file.managed:
@@ -114,6 +134,9 @@ kube-controller-manager:
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-controller-manager
+      - file:     /etc/pki/minion.crt
+      - file:     /etc/pki/minion.key
+      - file:     {{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
 
 ###################################
 # addons
