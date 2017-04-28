@@ -9,9 +9,11 @@ services_cidr:    '172.21.0.0/16'
 
 api:
   # the API service IP (must be inside the 'services_cidr')
-  cluster_ip:     '172.21.0.1'
+  cluster_ip:   '172.21.0.1'
   # port for listening for SSL connections
-  ssl_port:       '6443'
+  ssl_port:     '6444'
+  # port for haproxy-based SSL connections
+  lb_ssl_port:  '6443'
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
 dns:

@@ -3,6 +3,23 @@
 #######################
 include:
   - repositories
+  - cert
+
+# etcd needs proper certs on the minions too
+{% from 'cert/init.sls' import subject_alt_names %}
+
+{% for _, interface_addresses in grains['ip4_interfaces'].items() %}
+  {% for interface_address in interface_addresses %}
+    {% do subject_alt_names.append("IP: " + interface_address) %}
+  {% endfor %}
+{% endfor %}
+# add some extra names the API server could have
+{% do subject_alt_names.append("DNS: " + grains['fqdn']) %}
+
+extend:
+  /etc/pki/minion.crt:
+    x509.certificate_managed:
+      - subjectAltName: "{{ ", ".join(subject_alt_names) }}"
 
 conntrack-tools:
   pkg.installed
@@ -33,31 +50,6 @@ kube-proxy:
     - require:
       - pkg:    kubernetes-minion
 
-kubelet:
-  file.managed:
-    - name:     /etc/kubernetes/kubelet
-    - source:   salt://kubernetes-minion/kubelet.jinja
-    - template: jinja
-    - require:
-      - pkg:    kubernetes-minion
-  service.running:
-    - enable:   True
-    - watch:
-      - file:   /etc/kubernetes/config
-      - file:   {{ pillar['paths']['kubeconfig'] }}
-      - file:   kubelet
-    - require:
-      - pkg:    kubernetes-minion
-      - file:   /etc/kubernetes/manifests
-#
-# note: br_netfilter is not available in some kernels
-#       not sure we really need it...
-#
-#      - kmod: br_netfilter
-#
-#br_netfilter:
-#  kmod.present
-
 #######################
 # config files
 #######################
@@ -68,11 +60,6 @@ kubelet:
     - group:    root
     - dir_mode: 755
     - makedirs: True
-
-{{ pillar['paths']['kubeconfig'] }}:
-  file.managed:
-    - source:         salt://kubernetes-minion/kubeconfig.jinja
-    - template:       jinja
 
 /etc/kubernetes/config:
   file.managed:

@@ -12,7 +12,7 @@ DIR=/root
 abort() { echo "FATAL: $@" ; exit 1 ; }
 
 NS_ARGS="--namespace=kube-system"
-SRV_ARGS="--server=http://127.0.0.1:8080"
+SRV_ARGS="--server=https://api.{{ pillar['internal_infra_domain'] }}:6444"
 
 echo "Creating kube-system namespace..."
 # use kubectl to create kube-system namespace
