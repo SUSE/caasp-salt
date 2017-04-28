@@ -32,7 +32,7 @@ include:
 # add the fqdn provided by the user
 # this will be the name used by the kubeconfig generated file
 {% if salt['pillar.get']('api:server:external_fqdn') %}
-  {% do extra_names.append("DNS: " + pillar['api']['server']['external_fqdn']) %}
+  {% do subject_alt_names.append("DNS: " + pillar['api']['server']['external_fqdn']) %}
 {% endif %}
 
 # add some standard extra names from the DNS domain
@@ -111,7 +111,6 @@ kube-apiserver:
 kube-scheduler:
   file.managed:
     - name:       /etc/kubernetes/scheduler
-    - template:   jinja
     - source:     salt://kubernetes-master/scheduler.jinja
     - template:   jinja
     - require:

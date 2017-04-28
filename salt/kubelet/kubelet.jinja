@@ -32,4 +32,5 @@ KUBELET_ARGS="\
     --cloud-provider=aws \
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
+    --register-schedulable={{ schedulable }} \
     --kubeconfig={{ pillar['paths']['kubeconfig'] }}"
