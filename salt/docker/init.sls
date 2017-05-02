@@ -15,16 +15,16 @@ docker:
     - require:
       - pkg: docker
 
-{% set docker_reg = pillar['docker']['registry_mirror'] %}
+{% set docker_opts = salt['pillar.get']('docker:args', '')%}
+{% set docker_reg  = salt['pillar.get']('docker:registry_mirror', '') %}
+{% if docker_reg|length > 0 %}
+  {% set docker_opts = docker_opts + " --insecure-registry={{ docker_reg }} --registry-mirror=http://{{ docker_reg }}" %}
+{% endif %}
 
 /etc/sysconfig/docker:
   file.replace:
     - pattern: '^DOCKER_OPTS.*$'
-{% if docker_reg == '' %}
-    - repl: DOCKER_OPTS="{{ pillar['docker']['args'] }}"
-{% else %}
-    - repl: DOCKER_OPTS="{{ pillar['docker']['args'] }} --insecure-registry={{ docker_reg }} --registry-mirror=http://{{ docker_reg }}"
-{% endif %}
+    - repl: DOCKER_OPTS="{{ docker_opts }}"
     - flags: ['IGNORECASE', 'MULTILINE']
     - append_if_not_found: True
     - require:
