@@ -73,8 +73,8 @@ docker:
   # Extra arguments to be passed to the Docker daemon.
   args: '--iptables=false'
 
-  # Use a docker registry mirror (it must be a http service)
-  registry_mirror: ''
+  # Use a docker registry (it must be a http service)
+  registry: ''
 
 # Specific parameters for each Kubernetes component.
 components:

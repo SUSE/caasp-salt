@@ -16,7 +16,7 @@ docker:
       - pkg: docker
 
 {% set docker_opts = salt['pillar.get']('docker:args', '')%}
-{% set docker_reg  = salt['pillar.get']('docker:registry_mirror', '') %}
+{% set docker_reg  = salt['pillar.get']('docker:registry', '') %}
 {% if docker_reg|length > 0 %}
   {% set docker_opts = docker_opts + " --insecure-registry={{ docker_reg }} --registry-mirror=http://{{ docker_reg }}" %}
 {% endif %}
