@@ -38,7 +38,7 @@ extend:
   /etc/pki/minion.crt:
     x509.certificate_managed:
       - subjectAltName: "{{ ", ".join(subject_alt_names) }}"
-  /etc/kubernetes/kubelet:
+  /etc/kubernetes/kubelet-initial:
     file.managed:
       - context:
         schedulable: "false"

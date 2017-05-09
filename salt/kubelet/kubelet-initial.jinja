@@ -1,0 +1,2 @@
+KUBELET_INITIAL_ARGS="--node-labels={{ node_labels|join(",") }} \
+    --register-schedulable={{ schedulable }}"

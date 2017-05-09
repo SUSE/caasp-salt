@@ -95,3 +95,7 @@ components:
   proxy:
     # Extra arguments to be passed to kube-proxy.
     args: ''
+
+availability_zone:
+  region: 'unknown'
+  zone: 'unknown'
