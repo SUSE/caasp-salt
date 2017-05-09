@@ -74,3 +74,7 @@ proxy:
 reboot:
   group:          'default'
   directory:      'opensuse.org/rebootmgr/locks'
+
+availability_zone:
+  region: 'unknown'
+  zone: 'unknown'

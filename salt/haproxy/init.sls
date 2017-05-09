@@ -29,7 +29,7 @@ haproxy_restart:
     - name: |-
             for i in $(docker ps -a | grep haproxy-k8-api | awk '{print $1}')
             do 
-              docker kill -HUP $i 
+              docker kill --signal HUP $i 
             done
     - watch:
       - file: /etc/haproxy/haproxy.cfg
