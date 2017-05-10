@@ -76,6 +76,16 @@ etcd_proxy_setup:
     - require:
       - salt: etcd_discovery_setup
 
+flannel_setup:
+  salt.state:
+    - tgt: 'roles:kube-master'
+    - tgt_type: grain
+    - concurrent: True
+    - sls:
+      - flannel-setup
+    - require:
+      - salt: etcd_proxy_setup
+
 kube_master_setup:
   salt.state:
     - tgt: 'roles:kube-master'
@@ -83,7 +93,7 @@ kube_master_setup:
     - highstate: True
     - concurrent: True
     - require:
-      - salt: etcd_proxy_setup
+      - salt: flannel_setup
 
 kube_minion_setup:
   salt.state:
@@ -92,6 +102,7 @@ kube_minion_setup:
     - highstate: True
     - concurrent: True
     - require:
+      - salt: flannel_setup
       - salt: kube_master_setup
 
 reboot_setup:

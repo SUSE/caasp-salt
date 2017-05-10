@@ -1,5 +1,6 @@
 include:
   - repositories
+  - etcd-proxy
 
 flannel:
   pkg.installed:
@@ -37,4 +38,5 @@ flannel:
       - pkg: flannel
       - iptables: flannel
     - watch:
+      - service: etcd
       - file: /etc/sysconfig/flanneld
