@@ -1,19 +1,42 @@
-mine_update:
-  salt.function:
-    - name: mine.update
-    - tgt: '*'
 
-sync_modules:
+hostname_setup:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
+    - concurrent: True
+    - sls:
+      - hostname
+
+update_pillar:
+  salt.function:
+    - tgt: '*'
+    - name: saltutil.refresh_pillar
+    - require:
+      - salt: hostname_setup
+
+update_mine:
+  salt.function:
+    - tgt: '*'
+    - name: mine.update
+    - require:
+      - salt: update_pillar
+
+update_modules:
   salt.function:
     - name: saltutil.sync_modules
     - tgt: '*'
     - kwarg:
         refresh: True
 
-refresh_pillar:
-  salt.function:
-    - name: saltutil.refresh_pillar
-    - tgt: '*'
+etc_hosts_setup:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
+    - concurrent: True
+    - sls:
+      - etc-hosts
+    - require:
+      - salt: update_mine
 
 ca_setup:
   salt.state:
@@ -21,19 +44,18 @@ ca_setup:
     - tgt_type: grain
     - highstate: True
     - require:
-      - salt: mine_update
-      - salt: refresh_pillar
+      - salt: etc_hosts_setup
+      - salt: update_mine
 
 etcd_discovery_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - sls:
-      - repositories
       - etcd-discovery
     - require:
       - salt: ca_setup
-      - salt: sync_modules
+      - salt: update_modules
 
 etcd_nodes_setup:
   salt.state:
@@ -49,7 +71,6 @@ etcd_proxy_setup:
     - tgt: 'roles:kube-(master|minion)'
     - tgt_type: grain_pcre
     - sls:
-      - repositories
       - etcd-proxy
     - concurrent: True
     - require:
@@ -60,6 +81,7 @@ kube_master_setup:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
+    - concurrent: True
     - require:
       - salt: etcd_proxy_setup
 
@@ -76,7 +98,7 @@ reboot_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
-    - highstate: True
-    - concurrent: True
+    - sls:
+      - reboot
     - require:
-      - salt: etcd_proxy_setup
+      - salt: kube_master_setup

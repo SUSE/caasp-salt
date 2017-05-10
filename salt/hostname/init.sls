@@ -9,3 +9,5 @@ hostname-static:
   cmd.run:
     - name: hostnamectl set-hostname --static --transient {{ hostname }}
     - unless: [[ $(hostnamectl --transient) == {{ hostname }} ]]
+  module.run:
+    - name: mine.update
