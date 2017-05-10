@@ -116,27 +116,6 @@ kube-controller-manager:
       - file:     kube-controller-manager
 
 ###################################
-# load flannel config in etcd
-###################################
-/root/flannel-config.json:
-  file.managed:
-    - source:   salt://kubernetes-master/flannel-config.json.jinja
-    - template: jinja
-
-load_flannel_cfg:
-  cmd.run:
-    - name: /usr/bin/etcdctl --endpoints http://127.0.0.1:2379
-                             --no-sync
-                             set {{ pillar['flannel']['etcd_key'] }}/config < /root/flannel-config.json
-    - require:
-      - sls: cert
-      - pkg: kubernetes-master
-      - service: etcd
-    - watch:
-      - sls:  cert
-      - file: /root/flannel-config.json
-
-###################################
 # addons
 ###################################
 
