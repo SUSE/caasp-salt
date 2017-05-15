@@ -2,18 +2,16 @@ include:
   - repositories
   - flannel
 
-docker:
-  pkg.installed:
-    - install_recommends: False
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
-  service.running:
-    - enable: True
-    - watch:
-      - service: flannel
-      - file: /etc/sysconfig/docker
-    - require:
-      - pkg: docker
+/etc/systemd/system/docker.service.d/proxy.conf:
+  file.managed:
+    - makedirs: True
+    - contents: |
+        [Service]
+        Environment=HTTP_PROXY={{ salt['pillar.get']('proxy:http', '') | yaml_encode }}
+        Environment=HTTPS_PROXY={{ salt['pillar.get']('proxy:https', '') | yaml_encode }}
+        Environment=NO_PROXY={{ salt['pillar.get']('proxy:no_proxy', '') | yaml_encode }}
+  cmd.run:
+    - name: systemctl daemon-reload
 
 {% set docker_opts = salt['pillar.get']('docker:args', '')%}
 {% set docker_reg  = salt['pillar.get']('docker:registry', '') %}
@@ -21,13 +19,34 @@ docker:
   {% set docker_opts = docker_opts + " --insecure-registry={{ docker_reg }} --registry-mirror=http://{{ docker_reg }}" %}
 {% endif %}
 
-/etc/sysconfig/docker:
+docker:
+  pkg.installed:
+    - install_recommends: False
+    - require:
+      - file: /etc/zypp/repos.d/containers.repo
   file.replace:
+    - name: /etc/sysconfig/docker
     - pattern: '^DOCKER_OPTS.*$'
     - repl: DOCKER_OPTS="{{ docker_opts }}"
     - flags: ['IGNORECASE', 'MULTILINE']
     - append_if_not_found: True
     - require:
       - pkg: docker
-    - require_in:
-      - service: docker
+  # [inercia] when dockerd was already running and we require the
+  # service to be "service.running", Salt does not think it must
+  # restart it even when we say "watch these files", so we
+  # need this "cmd.run"...
+  cmd.run:
+    - name: systemctl restart docker.service
+    - onlyif: systemctl status docker.service
+    - require:
+      - file: /etc/sysconfig/docker
+      - /etc/systemd/system/docker.service.d/proxy.conf
+  service.running:
+    - enable: True
+    - watch:
+      - service: flannel
+      - pkg: docker
+      - file: /etc/sysconfig/docker
+      - /etc/systemd/system/docker.service.d/proxy.conf
+

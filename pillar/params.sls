@@ -58,6 +58,11 @@ flannel:
   etcd_key:       '/flannel/network'
   iface:          'eth0'
 
+proxy:
+  http:           ''
+  https:          ''
+  no_proxy:       ''
+
 # Configuration for the reboot manager (https://github.com/SUSE/rebootmgr).
 # notes:
 # - The default group for rebootmgr is "default", so we are simply taking
