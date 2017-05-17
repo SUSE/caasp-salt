@@ -1,37 +1,8 @@
 include:
   - repositories
-  - cert
   - etcd-proxy
-
-{% from 'cert/init.sls' import ip_addresses %}
-
-{% do ip_addresses.append("IP: " + pillar['api']['cluster_ip']) %}
-{% for _, interface_addresses in grains['ip4_interfaces'].items() %}
-  {% for interface_address in interface_addresses %}
-    {% do ip_addresses.append("IP: " + interface_address) %}
-  {% endfor %}
-{% endfor %}
-{% for extra_ip in pillar['api']['server']['extra_ips'] %}
-  {% do ip_addresses.append("IP: " + extra_ip) %}
-{% endfor %}
-
-# add some extra names the API server could have
-{% set extra_names = ["DNS: " + grains['fqdn'],
-                      "DNS: api",
-                      "DNS: api." + pillar['internal_infra_domain']] %}
-{% for extra_name in pillar['api']['server']['extra_names'] %}
-  {% do extra_names.append("DNS: " + extra_name) %}
-{% endfor %}
-
-# add some standard extra names from the DNS domain
-{% if salt['pillar.get']('dns:domain') %}
-  {% do extra_names.append("DNS: kubernetes.default.svc." + pillar['dns']['domain']) %}
-{% endif %}
-
-extend:
-  /etc/pki/minion.crt:
-    x509.certificate_managed:
-      - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
+  - ca-installation
+  - kubernetes-master-cert-installation
 
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
 
@@ -80,11 +51,9 @@ kube-apiserver:
     - require:
       - pkg:      kubernetes-master
       - iptables: kube-apiserver
-      - sls:      cert
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-apiserver
-      - sls:      cert
 
 kube-scheduler:
   file.managed:
@@ -114,6 +83,25 @@ kube-controller-manager:
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-controller-manager
+
+###################################
+# load flannel config in etcd
+###################################
+/root/flannel-config.json:
+  file.managed:
+    - source:   salt://kubernetes-master/flannel-config.json.jinja
+    - template: jinja
+
+load_flannel_cfg:
+  cmd.run:
+    - name: /usr/bin/etcdctl --endpoints http://127.0.0.1:2379
+                             --no-sync
+                             set {{ pillar['flannel']['etcd_key'] }}/config < /root/flannel-config.json
+    - require:
+      - pkg: kubernetes-master
+      - service: etcd
+    - watch:
+      - file: /root/flannel-config.json
 
 ###################################
 # addons

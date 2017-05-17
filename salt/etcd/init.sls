@@ -1,6 +1,7 @@
 include:
   - repositories
-  - cert
+  - ca-installation
+  - etcd-cert-installation
 
 etcd:
   group.present:
@@ -53,12 +54,15 @@ etcd:
     - name: etcd
     - enable: True
     - require:
-      - sls: cert
       - pkg: etcd
       - iptables: etcd
       - file: /var/lib/etcd
+      - file: /etc/pki/etcd.key
+      - file: /etc/pki/etcd.crt
     - watch:
       - file: /etc/sysconfig/etcd
+      - file: /etc/pki/etcd.key
+      - file: /etc/pki/etcd.crt
 
 # note: this id will be inherited/overwritten by the etcd-proxy
 /etc/sysconfig/etcd:

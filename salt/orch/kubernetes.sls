@@ -1,4 +1,3 @@
-
 hostname_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
@@ -47,6 +46,26 @@ ca_setup:
       - salt: etc_hosts_setup
       - salt: update_mine
 
+kubernetes_master_cert_generation:
+  salt.state:
+    - tgt: ca
+    - highstate: False
+    - concurrent: True
+    - sls:
+      - kubernetes-master-cert-generation
+    - require:
+      - salt: ca_setup
+
+etcd_cert_generation:
+  salt.state:
+    - tgt: ca
+    - highstate: False
+    - concurrent: True
+    - sls:
+      - etcd-cert-generation
+    - require:
+      - salt: ca_setup
+
 etcd_discovery_setup:
   salt.state:
     - tgt: 'roles:kube-master'
@@ -65,6 +84,7 @@ etcd_nodes_setup:
     - concurrent: True
     - require:
       - salt: etcd_discovery_setup
+      - salt: etcd_cert_generation
 
 etcd_proxy_setup:
   salt.state:
@@ -75,6 +95,7 @@ etcd_proxy_setup:
     - concurrent: True
     - require:
       - salt: etcd_discovery_setup
+      - salt: etcd_cert_generation
 
 flannel_setup:
   salt.state:
@@ -94,6 +115,7 @@ kube_master_setup:
     - concurrent: True
     - require:
       - salt: flannel_setup
+      - salt: kubernetes_master_cert_generation
 
 kube_minion_setup:
   salt.state:

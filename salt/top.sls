@@ -1,15 +1,15 @@
 base:
   'roles:ca':
     - match: grain
-    - ca
+    - ca-generation
   'roles:kube-(master|minion)':
     - match: grain_pcre
+    - ca-installation
     - repositories
     - motd
     - users
     - hostname
     - etc-hosts
-    - cert
     - etcd-proxy
     - flannel
     - docker

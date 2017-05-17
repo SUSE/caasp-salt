@@ -26,7 +26,7 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
                --cloud-provider=aws \
 {% endif -%}
-               --tls-cert-file=/etc/pki/minion.crt \
-               --tls-private-key-file=/etc/pki/minion.key \
+               --tls-cert-file=/etc/pki/apiserver.crt \
+               --tls-private-key-file=/etc/pki/apiserver.key \
                {{ pillar['components']['apiserver']['args'] }} \
                --client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"

@@ -87,8 +87,9 @@ salt-minion:
 
 mine.send:
   module.run:
-    - func: x509.get_pem_entries
+    - func: ca_cert
     - kwargs:
+        mine_function: x509.get_pem_entries
         glob_path: /etc/pki/ca.crt
     - onchanges:
       - x509: /etc/pki/ca.crt

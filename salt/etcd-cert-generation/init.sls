@@ -1,26 +1,7 @@
 include:
   - crypto
 
-{% set ip_addresses = [] -%}
-
-{{ pillar['paths']['ca_dir'] }}:
-  file.directory:
-    - user: root
-    - group: root
-    - mode: 755
-
-{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}:
-  x509.pem_managed:
-    - text: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').values()[0]['/etc/pki/ca.crt']|replace('\n', '') }}
-    - require:
-      - file: {{ pillar['paths']['ca_dir'] }}
-  file.managed:
-    - replace: false
-    - user: root
-    - group: root
-    - mode: 644
-
-/etc/pki/minion.key:
+/etc/pki/etcd.key:
   x509.private_key_managed:
     - bits: 4096
     - require:
@@ -32,11 +13,11 @@ include:
     - group: root
     - mode: 644
 
-/etc/pki/minion.crt:
+/etc/pki/etcd.crt:
   x509.certificate_managed:
-    - ca_server: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').keys()[0] }}
+    - ca_server: {{ salt['mine.get']('roles:ca', 'ca_cert', expr_form='grain').keys()[0] }}
     - signing_policy: minion
-    - public_key: /etc/pki/minion.key
+    - public_key: /etc/pki/etcd.key
     - CN: {{ grains['fqdn'] }}
     - C: {{ pillar['certificate_information']['subject_properties']['C'] }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email'] }}
@@ -48,9 +29,6 @@ include:
     - ST: {{ pillar['certificate_information']['subject_properties']['ST'] }}
     - basicConstraints: "critical CA:false"
     - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
-    {% if ip_addresses|length > 0 %}
-    - subjectAltName: "{{ ", ".join(ip_addresses) }}"
-    {% endif %}
     - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
     - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
     - backup: True
@@ -62,3 +40,13 @@ include:
     - user: root
     - group: root
     - mode: 644
+
+mine.send:
+  module.run:
+    - func: etcd
+    - kwargs:
+        mine_function: x509.get_pem_entries
+        glob_path: /etc/pki/etcd.*
+    - onchanges:
+      - x509: /etc/pki/etcd.crt
+      - x509: /etc/pki/etcd.key
