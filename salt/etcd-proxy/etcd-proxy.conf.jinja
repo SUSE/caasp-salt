@@ -26,5 +26,5 @@ ETCD_DISCOVERY="http://{{ pillar['dashboard'] }}:{{ pillar['etcd']['disco']['por
 ETCD_DISCOVERY_FALLBACK="proxy"
 
 ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
-ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ grains['fqdn'] }}:2380,https://{{ grains['ip4_interfaces']['eth0'][0] }}:2380"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ grains['fqdn'] }}:2380"
 ETCD_INITIAL_CLUSTER_STATE="new"
