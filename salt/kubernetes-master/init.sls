@@ -96,6 +96,7 @@ kube-scheduler:
   file.managed:
     - name:       /etc/kubernetes/scheduler
     - source:     salt://kubernetes-master/scheduler.jinja
+    - template:   jinja
     - require:
       - pkg:      kubernetes-master
   service.running:

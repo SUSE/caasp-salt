@@ -9,9 +9,9 @@ services_cidr:    '172.21.0.0/16'
 
 api:
   # the API service IP (must be inside the 'services_cidr')
-  cluster_ip:   '172.21.0.1'
+  cluster_ip:     '172.21.0.1'
   # port for listening for SSL connections
-  ssl_port:     '6443'
+  ssl_port:       '6443'
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
 dns:
@@ -72,29 +72,3 @@ proxy:
 reboot:
   group:          'default'
   directory:      'opensuse.org/rebootmgr/locks'
-
-# Docker-specific parameters.
-docker:
-  # Extra arguments to be passed to the Docker daemon.
-  args: '--iptables=false'
-
-  # Use a docker registry (it must be a http service)
-  registry: ''
-
-# Specific parameters for each Kubernetes component.
-components:
-  apiserver:
-    # Extra arguments to be passed to the API server.
-    args: ''
-  controller-manager:
-    # Extra arguments to be passed to the controller manager.
-    args: ''
-  scheduler:
-    # Extra arguments to be passed to the scheduler.
-    args: ''
-  kubelet:
-    # Extra arguments to be passed to the kubelet.
-    args: ''
-  proxy:
-    # Extra arguments to be passed to kube-proxy.
-    args: ''
