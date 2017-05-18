@@ -28,5 +28,5 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
 {% endif -%}
                --tls-cert-file=/etc/pki/minion.crt \
                --tls-private-key-file=/etc/pki/minion.key \
-               {{ pillar['components']['apiserver']['args'] }} \
+               {{ salt['pillar.get']('components:apiserver:args', '') }} \
                --client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"

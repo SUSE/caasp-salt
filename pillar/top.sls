@@ -1,6 +1,7 @@
 base:
   '*':
     - params
+    - args
     - vars
     - certificates
     - ip_addrs
