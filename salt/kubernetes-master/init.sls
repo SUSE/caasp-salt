@@ -98,22 +98,33 @@ kube-controller-manager:
 ###################################
 # addons
 ###################################
+/etc/kubernetes/addons:
+  file.directory:
+    - user:     root
+    - group:    root
+    - dir_mode: 755
+    - makedirs: True
 
-{% if pillar.get('addons', '').lower() == 'true' %}
-
-/root/namespace.yaml:
+/etc/kubernetes/addons/namespace.yaml:
   file.managed:
     - source:      salt://kubernetes-master/addons/namespace.yaml.jinja
     - template:    jinja
 
-/root/skydns-rc.yaml:
+{% if salt['pillar.get']('addons:dns', 'false').lower() == 'true' %}
+
+/etc/kubernetes/addons/kubedns-cm.yaml:
   file.managed:
-    - source:      salt://kubernetes-master/addons/skydns-rc.yaml.jinja
+    - source:      salt://kubernetes-master/addons/kubedns-cm.yaml.jinja
     - template:    jinja
 
-/root/skydns-svc.yaml:
+/etc/kubernetes/addons/kubedns.yaml:
   file.managed:
-    - source:      salt://kubernetes-master/addons/skydns-svc.yaml.jinja
+    - source:      salt://kubernetes-master/addons/kubedns.yaml.jinja
+    - template:    jinja
+
+/etc/kubernetes/addons/kubedns-svc.yaml:
+  file.managed:
+    - source:      salt://kubernetes-master/addons/kubedns-svc.yaml.jinja
     - template:    jinja
 
 deploy_addons.sh:
@@ -122,8 +133,10 @@ deploy_addons.sh:
     - require:
       - pkg:       kubernetes-master
       - service:   kube-apiserver
-      - file:      /root/namespace.yaml
-      - file:      /root/skydns-svc.yaml
-      - file:      /root/skydns-rc.yaml
+      - file:      /etc/kubernetes/addons/namespace.yaml
+      - file:      /etc/kubernetes/addons/kubedns-cm.yaml
+      - file:      /etc/kubernetes/addons/kubedns-svc.yaml
+      - file:      /etc/kubernetes/addons/kubedns.yaml
 
 {% endif %}
+

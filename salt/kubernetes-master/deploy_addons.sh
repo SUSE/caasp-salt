@@ -5,7 +5,7 @@ set -e
 KUBECTL_PATH="${KUBECTL_PATH:-/usr/bin/kubectl}"
 
 # dir where manifests are
-DIR=/root
+DIR=/etc/kubernetes/addons
 
 ############################################################################
 
@@ -25,15 +25,36 @@ else
 fi
 
 echo "Deploying DNS on Kubernetes"
-KUBEDNS=`eval "$KUBECTL_PATH $NS_ARGS $SRV_ARGS get rc | grep kube-dns | cat"`
-if [ ! "$KUBEDNS" ]; then
-	# use kubectl to create skydns rc and service
-	$KUBECTL_PATH $NS_ARGS $SRV_ARGS create -f "$DIR/skydns-rc.yaml"
-	$KUBECTL_PATH $NS_ARGS $SRV_ARGS create -f "$DIR/skydns-svc.yaml"
 
-	echo "Kube-dns replicationController and service successfully deployed."
+KUBEDNS_CM=`eval "$KUBECTL_PATH $NS_ARGS $SRV_ARGS get cm | grep kube-dns | cat"`
+if [ ! "$KUBEDNS_CM" ]; then
+	# use kubectl to create kubedns service
+	$KUBECTL_PATH $NS_ARGS $SRV_ARGS create -f "$DIR/kubedns-cm.yaml"
+
+	echo "Kube-dns config map successfully created."
 else
-	echo "Kube-dns replicationController and service already deployed. Skipping."
+	echo "Kube-dns config map already there. Skipping."
+fi
+
+KUBEDNS=`eval "$KUBECTL_PATH $NS_ARGS $SRV_ARGS get deployment | grep kube-dns | cat"`
+if [ ! "$KUBEDNS" ]; then
+	# use kubectl to create kubedns deployment
+	$KUBECTL_PATH $NS_ARGS $SRV_ARGS create -f "$DIR/kubedns.yaml"
+
+	echo "Kube-dns successfully deployed."
+else
+	echo "Kube-dns already deployed. Skipping."
+fi
+
+KUBEDNS_SVC=`eval "$KUBECTL_PATH $NS_ARGS $SRV_ARGS get svc | grep kube-dns | cat"`
+if [ ! "$KUBEDNS_SVC" ]; then
+	# use kubectl to create kubedns service
+	$KUBECTL_PATH $NS_ARGS $SRV_ARGS create -f "$DIR/kubedns-svc.yaml"
+
+	echo "Kube-dns service successfully created."
+else
+	echo "Kube-dns service already there. Skipping."
 fi
 
 echo
+

@@ -37,7 +37,8 @@ kube_group:       'kube'
 kube_log_level:   '2'
 
 # install the addons (ie, DNS)
-addons:           'false'
+addons:
+  dns: 'true'
 
 ssl:
   enabled:        true
