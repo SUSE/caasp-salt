@@ -38,14 +38,14 @@ include:
     - signing_policy: minion
     - public_key: /etc/pki/minion.key
     - CN: {{ grains['fqdn'] }}
-    - C: {{ pillar['certificate_information']['subject_properties']['C'] }}
-    - Email: {{ pillar['certificate_information']['subject_properties']['Email'] }}
-    - GN: {{ pillar['certificate_information']['subject_properties']['GN'] }}
-    - L: {{ pillar['certificate_information']['subject_properties']['L'] }}
-    - O: {{ pillar['certificate_information']['subject_properties']['O'] }}
-    - OU: {{ pillar['certificate_information']['subject_properties']['OU'] }}
-    - SN: {{ pillar['certificate_information']['subject_properties']['SN'] }}
-    - ST: {{ pillar['certificate_information']['subject_properties']['ST'] }}
+    - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
+    - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
+    - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
+    - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
+    - O: {{ pillar['certificate_information']['subject_properties']['O']|yaml_dquote }}
+    - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
+    - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
+    - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
     - basicConstraints: "critical CA:false"
     - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
     {% if ip_addresses|length > 0 %}
