@@ -32,6 +32,13 @@ az_labels:
     - onchanges:
       - file: /etc/kubernetes/kubelet-initial
 
+/etc/kubernetes/manifests:
+  file.directory:
+    - user:     root
+    - group:    root
+    - dir_mode: 755
+    - makedirs: True
+    
 kubelet:
   pkg.installed:
     - pkgs:
