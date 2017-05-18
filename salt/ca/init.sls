@@ -61,20 +61,20 @@ salt-minion:
 {% else %}
     - CN: kubernetes
 {% endif %}
-    - C: {{ pillar['certificate_information']['subject_properties']['C'] }}
-    - Email: {{ pillar['certificate_information']['subject_properties']['Email'] }}
-    - GN: {{ pillar['certificate_information']['subject_properties']['GN'] }}
-    - L: {{ pillar['certificate_information']['subject_properties']['L'] }}
-    - O: {{ pillar['certificate_information']['subject_properties']['O'] }}
-    - OU: {{ pillar['certificate_information']['subject_properties']['OU'] }}
-    - SN: {{ pillar['certificate_information']['subject_properties']['SN'] }}
-    - ST: {{ pillar['certificate_information']['subject_properties']['ST'] }}
+    - C: {{ pillar.get('certificate_information:subject_properties:C') }}
+    - Email: {{ pillar.get('certificate_information:subject_properties:Email') }}
+    - GN: {{ pillar.get('certificate_information:subject_properties:GN') }}
+    - L: {{ pillar.get('certificate_information:subject_properties:L') }}
+    - O: {{ pillar.get('certificate_information:subject_properties:O') }}
+    - OU: {{ pillar.get('certificate_information:subject_properties:OU') }}
+    - SN: {{ pillar.get('certificate_information:subject_properties:SN') }}
+    - ST: {{ pillar.get('certificate_information:subject_properties:ST') }}
     - basicConstraints: "critical CA:true"
     - keyUsage: "critical cRLSign, keyCertSign"
     - subjectKeyIdentifier: hash
     - authorityKeyIdentifier: keyid,issuer:always
-    - days_valid: {{ pillar['certificate_information']['days_valid']['ca_certificate'] }}
-    - days_remaining: {{ pillar['certificate_information']['days_remaining']['ca_certificate'] }}
+    - days_valid: {{ pillar.get('certificate_information:days_valid:ca_certificate') }}
+    - days_remaining: {{ pillar.get('certificate_information:days_remaining:ca_certificate') }}
     - backup: True
     - require:
       - sls:  crypto
