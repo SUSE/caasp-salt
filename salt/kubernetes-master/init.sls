@@ -23,6 +23,12 @@ include:
   {% do extra_names.append("DNS: " + extra_name) %}
 {% endfor %}
 
+# add the fqdn provided by the user
+# this will be the name used by the kubeconfig generated file
+{% if salt['pillar.get']('api:server:external_fqdn') %}
+  {% do extra_names.append("DNS: " + pillar['api']['server']['external_fqdn']) %}
+{% endif %}
+
 # add some standard extra names from the DNS domain
 {% if salt['pillar.get']('dns:domain') %}
   {% do extra_names.append("DNS: kubernetes.default.svc." + pillar['dns']['domain']) %}

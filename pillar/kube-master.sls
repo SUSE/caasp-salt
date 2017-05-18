@@ -1,4 +1,5 @@
 api:
   server:
-    extra_names: []
-    extra_ips:   []
+    external_fqdn: null
+    extra_names:   []
+    extra_ips:     []
