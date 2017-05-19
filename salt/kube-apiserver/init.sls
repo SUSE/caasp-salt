@@ -1,6 +1,6 @@
 include:
   - repositories
-  - cert
+  - kube-common
 
 kube-apiserver:
   pkg.installed:

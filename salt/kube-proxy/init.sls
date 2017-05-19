@@ -1,8 +1,6 @@
 include:
   - repositories
-
-conntrack-tools:
-  pkg.installed
+  - kube-common
 
 kube-proxy:
   pkg.installed:

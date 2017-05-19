@@ -14,7 +14,6 @@ base:
     - flannel
     - docker
     - haproxy
-    - kube-common
     - kube-proxy
     - kubelet
     - kubeconfig
@@ -24,7 +23,6 @@ base:
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
-    - reboot
   'roles:kube-minion':
     - match: grain
     - kubernetes-minion

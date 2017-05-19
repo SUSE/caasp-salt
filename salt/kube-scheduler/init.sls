@@ -1,5 +1,6 @@
 include:
   - repositories
+  - kube-common
 
 kube-scheduler:
   pkg.installed:
