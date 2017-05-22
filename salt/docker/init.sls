@@ -2,16 +2,24 @@ include:
   - repositories
   - flannel
 
+######################
+# proxy for the daemon
+#######################
+
 /etc/systemd/system/docker.service.d/proxy.conf:
   file.managed:
     - makedirs: True
     - contents: |
         [Service]
-        Environment=HTTP_PROXY={{ salt['pillar.get']('proxy:http', '') | yaml_encode }}
-        Environment=HTTPS_PROXY={{ salt['pillar.get']('proxy:https', '') | yaml_encode }}
-        Environment=NO_PROXY={{ salt['pillar.get']('proxy:no_proxy', '') | yaml_encode }}
+        Environment="HTTP_PROXY={{ salt['pillar.get']('proxy:http', '') }}"
+        Environment="HTTPS_PROXY={{ salt['pillar.get']('proxy:https', '') }}"
+        Environment="NO_PROXY={{ salt['pillar.get']('proxy:no_proxy', '') }}"
   cmd.run:
     - name: systemctl daemon-reload
+
+#######################
+# docker daemon
+#######################
 
 {% set docker_opts = salt['pillar.get']('docker:args', '')%}
 {% set docker_reg  = salt['pillar.get']('docker:registry', '') %}
