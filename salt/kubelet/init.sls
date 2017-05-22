@@ -3,6 +3,7 @@
 #######################
 include:
   - repositories
+  - kube-common
 
 {% set node_labels = salt['pillar.get']('node_labels', []) %}
 {% set region = salt['pillar.get']('availability_zone:region', '') %}
@@ -32,6 +33,13 @@ az_labels:
     - onchanges:
       - file: /etc/kubernetes/kubelet-initial
 
+/etc/kubernetes/manifests:
+  file.directory:
+    - user:     root
+    - group:    root
+    - dir_mode: 755
+    - makedirs: True
+    
 kubelet:
   pkg.installed:
     - pkgs:
