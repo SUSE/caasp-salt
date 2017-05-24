@@ -67,7 +67,7 @@ etcd_nodes_setup:
     - tgt: 'roles:etcd'
     - tgt_type: grain
     - highstate: True
-    - concurrent: True
+    - batch: 1
     - require:
       - salt: etcd_discovery_setup
 
@@ -77,15 +77,15 @@ etcd_proxy_setup:
     - tgt_type: grain_pcre
     - sls:
       - etcd-proxy
-    - concurrent: True
+    - batch: 5
     - require:
-      - salt: etcd_discovery_setup
+      - salt: etcd_nodes_setup
 
 flannel_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
-    - concurrent: True
+    - batch: 5
     - sls:
       - flannel-setup
     - require:
@@ -96,7 +96,7 @@ kube_master_setup:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
-    - concurrent: True
+    - batch: 5
     - require:
       - salt: flannel_setup
 
@@ -105,7 +105,7 @@ kube_minion_setup:
     - tgt: 'roles:kube-minion'
     - tgt_type: grain
     - highstate: True
-    - concurrent: True
+    - batch: 5
     - require:
       - salt: flannel_setup
       - salt: kube_master_setup
@@ -114,6 +114,7 @@ reboot_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
+    - batch: 5
     - sls:
       - reboot
     - require:
