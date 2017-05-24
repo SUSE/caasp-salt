@@ -62,13 +62,18 @@ kubelet:
     - require:
       - service: kubelet
 
-# note: br_netfilter is not available in some kernels
-#       not sure we really need it...
-#
-#      - kmod: br_netfilter
-#
-#br_netfilter:
-#  kmod.present
+  # TODO: This needs to wait for the node to register, which takes a few seconds.
+  # Salt doesn't seem to have a retry mechanism in the version were using, so I'm
+  # doing a horrible hack right now.
+  cmd.run:
+    - name: |
+        ELAPSED=0
+        until kubectl uncordon {{ grains['fqdn'] }} ; do
+            [ $ELAPSED -gt 60 ] && exit 1
+            sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
+        done
+    - env:
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
 
 #######################
 # config files
