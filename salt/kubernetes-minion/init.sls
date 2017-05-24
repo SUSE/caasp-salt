@@ -1,8 +1,8 @@
-#######################
-# k8s components
-#######################
 include:
   - repositories
+  - ca-cert
+  - cert
+  - etcd-proxy
 
 conntrack-tools:
   pkg.installed
