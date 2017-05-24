@@ -6,8 +6,7 @@ ETCD_NAME="{{ grains['id'] }}"
 
 ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:2379"
 ETCD_LISTEN_PEER_URLS="https://0.0.0.0:2380"
-
-ETCD_ADVERTISE_CLIENT_URLS="http://{{ grains['caasp_fqdn'] }}:2379,http://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
+ETCD_ADVERTISE_CLIENT_URLS="http://{{ grains['caasp_fqdn'] }}:2379"
 
 ETCD_CA_FILE={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
 ETCD_CERT_FILE=/etc/pki/minion.crt
