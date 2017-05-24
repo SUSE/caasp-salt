@@ -1,3 +1,6 @@
 .idea/
 Makefile
 *.tgz
+
+# you can set a debug log level with "log_level: debug" in this file
+config/master.d/debug.conf
