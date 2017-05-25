@@ -58,6 +58,9 @@ flannel:
   etcd_key:       '/flannel/network'
   iface:          'eth0'
 
+kubelet:
+  port:           '10250'
+
 proxy:
   http:           ''
   https:          ''
