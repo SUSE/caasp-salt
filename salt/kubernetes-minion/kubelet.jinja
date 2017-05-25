@@ -9,7 +9,7 @@
 KUBELET_ADDRESS="--address=0.0.0.0"
 
 # The port for the info server to serve on
-KUBELET_PORT="--port=10250"
+KUBELET_PORT="--port={{ pillar['kubelet']['port'] }}"
 
 # Use <machine_id>.<internal_infra_domain> matching the SSL certificates
 KUBELET_HOSTNAME="--hostname-override={{ grains['id'] }}.{{ pillar['internal_infra_domain'] }}"

@@ -49,7 +49,19 @@ kubelet:
     - require:
       - pkg:    kubernetes-minion
       - file:   /etc/kubernetes/manifests
-#
+  iptables.append:
+    - table:     filter
+    - family:    ipv4
+    - chain:     INPUT
+    - jump:      ACCEPT
+    - match:     state
+    - connstate: NEW
+    - dports:
+      - {{ pillar['kubelet']['port'] }}
+    - proto:     tcp
+    - require:
+      - service: kubelet
+
 # note: br_netfilter is not available in some kernels
 #       not sure we really need it...
 #
