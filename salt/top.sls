@@ -13,6 +13,7 @@ base:
     - etcd-proxy
     - flannel
     - docker
+    - container-feeder
   'roles:kube-master':
     - match: grain
     - kubernetes-master
