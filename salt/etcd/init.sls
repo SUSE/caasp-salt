@@ -32,10 +32,6 @@ etcd:
       - etcd
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-  cmd.run:
-    - name: rm -rf /var/lib/etcd/*
-    - prereq:
-      - service: etcd
   iptables.append:
     - table: filter
     - family: ipv4
@@ -45,9 +41,7 @@ etcd:
     - connstate: NEW
     # TODO: add "- source: <local-subnet>"
     - dports:
-        - 2379
         - 2380
-        - 4001
     - proto: tcp
   service.running:
     - name: etcd
