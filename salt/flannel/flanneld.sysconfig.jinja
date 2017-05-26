@@ -1,7 +1,20 @@
 # Flanneld configuration options
 
+{% set http_protocol = 'http' -%}
+{% if pillar['ssl']['enabled'] -%}
+{% set http_protocol = 'https' -%}
+# etcd CA file location
+FLANNEL_ETCD_CAFILE="{{ pillar['ssl']['ca_file'] }}"
+
+# etcd certificate key file location
+FLANNEL_ETCD_KEYFILE="{{ pillar['ssl']['key_file'] }}"
+
+# etcd certificate file location
+FLANNEL_ETCD_CERTFILE="{{ pillar['ssl']['crt_file'] }}"
+{% endif -%}
+
 # etcd url location.  Point this to the server where etcd runs
-FLANNEL_ETCD_ENDPOINTS="http://127.0.0.1:2379"
+FLANNEL_ETCD_ENDPOINTS="{{ http_protocol }}://{{ grains['fqdn'] }}:2379"
 
 # etcd config key.  This is the configuration key that flannel queries
 # For address range assignment

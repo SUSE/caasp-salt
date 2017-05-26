@@ -26,6 +26,12 @@ kube_group:       'kube'
 # install the addons (ie, DNS)
 addons:           'false'
 
+ssl:
+  enabled:        true
+  ca_file:        '/etc/pki/trust/anchors/SUSE_CaaSP_CA.crt'
+  crt_file:       '/etc/pki/minion.crt'
+  key_file:       '/etc/pki/minion.key'
+
 paths:
   ca_dir:         '/etc/pki/trust/anchors'
   ca_filename:    'SUSE_CaaSP_CA.crt'
