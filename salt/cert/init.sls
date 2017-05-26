@@ -34,7 +34,7 @@ include:
   {% endif %}
 {% endif %}
 
-/etc/pki/minion.key:
+{{ pillar['ssl']['key_file'] }}:
   x509.private_key_managed:
     - bits: 4096
     - require:
@@ -46,7 +46,7 @@ include:
     - group: root
     - mode: 644
 
-/etc/pki/minion.crt:
+{{ pillar['ssl']['crt_file'] }}:
   x509.certificate_managed:
     - ca_server: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').keys()[0] }}
     - signing_policy: minion
