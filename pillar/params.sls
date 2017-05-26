@@ -28,13 +28,12 @@ addons:           'false'
 
 ssl:
   enabled:        true
+  ca_dir:         '/etc/pki/trust/anchors'
   ca_file:        '/etc/pki/trust/anchors/SUSE_CaaSP_CA.crt'
   crt_file:       '/etc/pki/minion.crt'
   key_file:       '/etc/pki/minion.key'
 
 paths:
-  ca_dir:         '/etc/pki/trust/anchors'
-  ca_filename:    'SUSE_CaaSP_CA.crt'
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
 
