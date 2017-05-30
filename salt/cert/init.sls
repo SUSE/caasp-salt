@@ -2,6 +2,7 @@ include:
   - crypto
 
 {% set ip_addresses = [] -%}
+{% set extra_names = ["DNS: " + grains['fqdn']] -%}
 
 {{ pillar['paths']['ca_dir'] }}:
   file.directory:
@@ -48,8 +49,8 @@ include:
     - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
     - basicConstraints: "critical CA:false"
     - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
-    {% if ip_addresses|length > 0 %}
-    - subjectAltName: "{{ ", ".join(ip_addresses) }}"
+    {% if (ip_addresses|length > 0) or (extra_names|length > 0) %}
+    - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
     {% endif %}
     - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
     - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
