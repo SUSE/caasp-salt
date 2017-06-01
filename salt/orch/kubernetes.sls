@@ -30,7 +30,7 @@ update_mine:
 update_modules:
   salt.function:
     - tgt: '*'
-    - name: saltutil.sync_modules
+    - name: saltutil.sync_all
     - kwarg:
         refresh: True
 
