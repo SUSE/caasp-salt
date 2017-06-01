@@ -4,22 +4,35 @@ include:
 {% set ip_addresses = [] -%}
 {% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
 
-{{ pillar['paths']['ca_dir'] }}:
-  file.directory:
-    - user: root
-    - group: root
-    - mode: 755
+{% if "kube-master" in salt['grains.get']('roles', []) %}
+  {% do ip_addresses.append("IP: " + pillar['api']['cluster_ip']) %}
+  {% for _, interface_addresses in grains['ip4_interfaces'].items() %}
+    {% for interface_address in interface_addresses %}
+      {% do ip_addresses.append("IP: " + interface_address) %}
+    {% endfor %}
+  {% endfor %}
+  {% for extra_ip in pillar['api']['server']['extra_ips'] %}
+    {% do ip_addresses.append("IP: " + extra_ip) %}
+  {% endfor %}
 
-{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}:
-  x509.pem_managed:
-    - text: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').values()[0]['/etc/pki/ca.crt']|replace('\n', '') }}
-    - require:
-      - file: {{ pillar['paths']['ca_dir'] }}
-  file.managed:
-    - replace: false
-    - user: root
-    - group: root
-    - mode: 644
+  # add some extra names the API server could have
+  {% set extra_names = extra_names + ["DNS: api",
+                                      "DNS: api." + pillar['internal_infra_domain']] %}
+  {% for extra_name in pillar['api']['server']['extra_names'] %}
+    {% do extra_names.append("DNS: " + extra_name) %}
+  {% endfor %}
+
+  # add the fqdn provided by the user
+  # this will be the name used by the kubeconfig generated file
+  {% if salt['pillar.get']('api:server:external_fqdn') %}
+    {% do extra_names.append("DNS: " + pillar['api']['server']['external_fqdn']) %}
+  {% endif %}
+
+  # add some standard extra names from the DNS domain
+  {% if salt['pillar.get']('dns:domain') %}
+    {% do extra_names.append("DNS: kubernetes.default.svc." + pillar['dns']['domain']) %}
+  {% endif %}
+{% endif %}
 
 /etc/pki/minion.key:
   x509.private_key_managed:

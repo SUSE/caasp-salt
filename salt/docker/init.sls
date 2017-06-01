@@ -16,6 +16,7 @@ include:
         Environment="NO_PROXY={{ salt['pillar.get']('proxy:no_proxy', '') }}"
   cmd.run:
     - name: systemctl daemon-reload
+    - stateful: True
 
 #######################
 # docker daemon
@@ -40,16 +41,13 @@ docker:
     - append_if_not_found: True
     - require:
       - pkg: docker
-  # [inercia] when dockerd was already running and we require the
-  # service to be "service.running", Salt does not think it must
-  # restart it even when we say "watch these files", so we
-  # need this "cmd.run"...
   cmd.run:
     - name: systemctl restart docker.service
     - onlyif: systemctl status docker.service
+    - onchanges:
+      - /etc/systemd/system/docker.service.d/proxy.conf
     - require:
       - file: /etc/sysconfig/docker
-      - /etc/systemd/system/docker.service.d/proxy.conf
   service.running:
     - enable: True
     - watch:
@@ -57,4 +55,3 @@ docker:
       - pkg: docker
       - file: /etc/sysconfig/docker
       - /etc/systemd/system/docker.service.d/proxy.conf
-

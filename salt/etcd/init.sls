@@ -1,5 +1,6 @@
 include:
   - repositories
+  - ca-cert
   - cert
 
 etcd:
@@ -47,6 +48,7 @@ etcd:
     - name: etcd
     - enable: True
     - require:
+      - sls: ca-cert
       - sls: cert
       - pkg: etcd
       - iptables: etcd

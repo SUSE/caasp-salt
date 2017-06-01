@@ -1,4 +1,5 @@
 include:
+  - ca-cert
   - cert
   - etcd-proxy
 
@@ -15,7 +16,8 @@ load_flannel_cfg:
                              --no-sync
                              set {{ pillar['flannel']['etcd_key'] }}/config < /root/flannel-config.json
     - require:
+      - sls: ca-cert
       - sls: cert
       - service: etcd
-    - watch:
+    - onchanges:
       - file: /root/flannel-config.json

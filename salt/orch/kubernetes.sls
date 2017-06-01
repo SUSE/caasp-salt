@@ -1,4 +1,3 @@
-
 hostname_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
@@ -23,8 +22,8 @@ update_mine:
 
 update_modules:
   salt.function:
-    - name: saltutil.sync_modules
     - tgt: '*'
+    - name: saltutil.sync_modules
     - kwarg:
         refresh: True
 
