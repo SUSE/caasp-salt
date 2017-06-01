@@ -12,7 +12,7 @@ KUBELET_ADDRESS="--address=0.0.0.0"
 KUBELET_PORT="--port={{ pillar['kubelet']['port'] }}"
 
 # Use <machine_id>.<internal_infra_domain> matching the SSL certificates
-KUBELET_HOSTNAME="--hostname-override={{ grains['id'] }}.{{ pillar['internal_infra_domain'] }}"
+KUBELET_HOSTNAME="--hostname-override={{ grains['caasp_fqdn'] }}"
 
 # location of the api-server
 KUBELET_API_SERVER="--api-servers={{ api_server_url }}"
