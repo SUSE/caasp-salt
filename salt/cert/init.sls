@@ -2,7 +2,7 @@ include:
   - crypto
 
 {% set ip_addresses = [] -%}
-{% set extra_names = ["DNS: " + grains['id'] + "." +  pillar['internal_infra_domain'] ] -%}
+{% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
 
 {{ pillar['paths']['ca_dir'] }}:
   file.directory:
@@ -38,7 +38,7 @@ include:
     - ca_server: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: /etc/pki/minion.key
-    - CN: {{ grains['id'] }}.{{ pillar['internal_infra_domain'] }}
+    - CN: {{ grains['caasp_fqdn'] }}
     - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}

@@ -7,7 +7,7 @@ ETCD_NAME="{{ grains['id'] }}"
 ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:2379"
 ETCD_LISTEN_PEER_URLS="https://0.0.0.0:2380"
 
-ETCD_ADVERTISE_CLIENT_URLS="http://{{ grains['fqdn'] }}:2379,http://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
+ETCD_ADVERTISE_CLIENT_URLS="http://{{ grains['caasp_fqdn'] }}:2379,http://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
 
 ETCD_CA_FILE={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
 ETCD_CERT_FILE=/etc/pki/minion.crt
@@ -26,5 +26,5 @@ ETCD_DISCOVERY="http://{{ pillar['dashboard'] }}:{{ pillar['etcd']['disco']['por
 ETCD_DISCOVERY_FALLBACK="proxy"
 
 ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
-ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ grains['fqdn'] }}:2380"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ grains['caasp_fqdn'] }}:2380"
 ETCD_INITIAL_CLUSTER_STATE="new"
