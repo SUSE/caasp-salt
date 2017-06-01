@@ -5,7 +5,7 @@
 drain-kubelet:
   cmd.run:
     - name: |
-        kubectl drain {{ grains['fqdn'] }} --ignore-daemonsets --grace-period=300 --timeout=340s
+        kubectl drain {{ grains['caasp_fqdn'] }} --ignore-daemonsets --grace-period=300 --timeout=340s
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - check_cmd:

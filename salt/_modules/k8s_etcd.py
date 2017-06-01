@@ -36,13 +36,13 @@ def get_cluster_size():
         # A value has not been set in the pillar, calculate a "good" number
         # for the user.
         member_count = len(__salt__['mine.get'](
-            'roles:kube-master', 'fqdn', expr_form='grain').values())
+            'roles:kube-master', 'caasp_fqdn', expr_form='grain').values())
 
         if member_count < DESIRED_MEMBER_COUNT:
             # Attempt to increase the member count to 3, however, if we don't
             # have 3 nodes in total, then match the number of nodes we have.
             increased_member_count = len(__salt__['mine.get'](
-                'roles:kube-*', 'fqdn', expr_form='grain').values())
+                'roles:kube-*', 'caasp_fqdn', expr_form='grain').values())
             increased_member_count = min(
                 DESIRED_MEMBER_COUNT, increased_member_count)
 

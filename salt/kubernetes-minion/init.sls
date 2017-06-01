@@ -68,7 +68,7 @@ kubelet:
   cmd.run:
     - name: |
         ELAPSED=0
-        until kubectl uncordon {{ grains['fqdn'] }} ; do
+        until kubectl uncordon {{ grains['caasp_fqdn'] }} ; do
             [ $ELAPSED -gt 60 ] && exit 1
             sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
         done
