@@ -6,7 +6,12 @@ base:
     - certificates
     - ip_addrs
     - fqdn
-  'G@roles:kube-master':
+  'roles:kube-(master|minion)':
+    - match: grain_pcre
+    - beacons
+  'roles:kube-master':
+    - match: grain
     - kube-master
-  'G@roles:kube-minion':
+  'roles:kube-minion':
+    - match: grain
     - kube-minion
