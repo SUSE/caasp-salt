@@ -1,4 +1,8 @@
-Welcome to {{salt['grains.get']('id', 'ERROR')}}.{{ pillar['internal_infra_domain']}}. 
+Welcome!
+
+Machine ID: {{ salt['grains.get']('machine_id', 'ERROR') }}
+Internal FQDN: {{ salt['grains.get']('caasp_fqdn', 'ERROR') }}
+
 The roles of this node are:
 {%- for role in salt['grains.get']('roles', []) %}
   - {{role}}
