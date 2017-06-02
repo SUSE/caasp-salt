@@ -12,8 +12,9 @@ cd $(dirname $0)
 
 YEAR=$(date +%Y)
 VERSION=$(cat ../../VERSION)
-COMMIT_UNIX_TIME=$(git show -s --format=%ct)
-VERSION="${VERSION%+*}+$(date -d @$COMMIT_UNIX_TIME +%Y%m%d).$(git rev-parse --short HEAD)"
+REVISION=$(git rev-list HEAD | wc -l)
+COMMIT=$(git rev-parse --short HEAD)
+VERSION="${VERSION%+*}+git_r${REVISION}_${COMMIT}"
 NAME=$1
 GITREPONAME=$(basename `git rev-parse --show-toplevel`)
 
