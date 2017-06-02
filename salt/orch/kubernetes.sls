@@ -1,3 +1,9 @@
+disable_rebootmgr:
+  salt.state:
+    - tgt: '*'
+    - sls:
+      - rebootmgr
+
 hostname_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
