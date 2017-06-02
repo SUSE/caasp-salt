@@ -1,42 +1,8 @@
 include:
   - repositories
+  - ca-cert
   - cert
   - etcd-proxy
-
-{% from 'cert/init.sls' import ip_addresses, extra_names %}
-
-{% do ip_addresses.append("IP: " + pillar['api']['cluster_ip']) %}
-{% for _, interface_addresses in grains['ip4_interfaces'].items() %}
-  {% for interface_address in interface_addresses %}
-    {% do ip_addresses.append("IP: " + interface_address) %}
-  {% endfor %}
-{% endfor %}
-{% for extra_ip in pillar['api']['server']['extra_ips'] %}
-  {% do ip_addresses.append("IP: " + extra_ip) %}
-{% endfor %}
-
-# add some extra names the API server could have
-{% set extra_names = extra_names + ["DNS: api",
-                                    "DNS: api." + pillar['internal_infra_domain']] %}
-{% for extra_name in pillar['api']['server']['extra_names'] %}
-  {% do extra_names.append("DNS: " + extra_name) %}
-{% endfor %}
-
-# add the fqdn provided by the user
-# this will be the name used by the kubeconfig generated file
-{% if salt['pillar.get']('api:server:external_fqdn') %}
-  {% do extra_names.append("DNS: " + pillar['api']['server']['external_fqdn']) %}
-{% endif %}
-
-# add some standard extra names from the DNS domain
-{% if salt['pillar.get']('dns:domain') %}
-  {% do extra_names.append("DNS: kubernetes.default.svc." + pillar['dns']['domain']) %}
-{% endif %}
-
-extend:
-  /etc/pki/minion.crt:
-    x509.certificate_managed:
-      - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
 
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
 
@@ -85,10 +51,12 @@ kube-apiserver:
     - require:
       - pkg:      kubernetes-master
       - iptables: kube-apiserver
+      - sls:      ca-cert
       - sls:      cert
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-apiserver
+      - sls:      ca-cert
       - sls:      cert
 
 kube-scheduler:

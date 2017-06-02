@@ -4,6 +4,7 @@ base:
     - ca
   'roles:kube-(master|minion)':
     - match: grain_pcre
+    - ca-cert
     - repositories
     - motd
     - users

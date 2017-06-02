@@ -86,9 +86,9 @@ salt-minion:
     - mode: 644
 
 mine.send:
-  module.run:
+  module.wait:
     - func: x509.get_pem_entries
     - kwargs:
         glob_path: /etc/pki/ca.crt
-    - onchanges:
+    - watch:
       - x509: /etc/pki/ca.crt

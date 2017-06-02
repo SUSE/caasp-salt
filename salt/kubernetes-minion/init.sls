@@ -68,12 +68,14 @@ kubelet:
   cmd.run:
     - name: |
         ELAPSED=0
-        until kubectl uncordon {{ grains['caasp_fqdn'] }} ; do
+        until output=$(kubectl uncordon {{ grains['caasp_fqdn'] }}) ; do
             [ $ELAPSED -gt 60 ] && exit 1
             sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
         done
+        echo changed="$(echo $output | grep 'already uncordoned' &> /dev/null && echo no || echo yes)"
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - stateful: True
 
 #######################
 # config files
