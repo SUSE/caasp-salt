@@ -12,7 +12,7 @@ include:
 {% endfor %}
 
 #Add some extra names the server could have
-{% set extra_names = ["DNS: " + grains['fqdn'] %}
+{% set extra_names = ["DNS: " + grains['fqdn']] %}
 
 extend:
   /etc/pki/minion.crt:
