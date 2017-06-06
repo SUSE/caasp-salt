@@ -93,7 +93,7 @@ spec:
           mountPath: /etc/pki
           readOnly: True
         - name: ca
-          mountPath: {{ pillar['ssl']['ca_file'] }}
+          mountPath: {{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
           readOnly: True
 
       ################
@@ -158,7 +158,7 @@ spec:
           path: "/etc/pki"
       - name: ca
         hostPath:
-          path: "{{ pillar['ssl']['ca_file'] }}"
+          path: "{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
 
       dnsPolicy: Default  # Don't use cluster DNS.
 
