@@ -44,7 +44,7 @@ update_modules:
     - tgt: {{ master_id }}
     - name: cmd.run
     - arg:
-      - rebootmgrctl reboot now
+      - systemctl reboot
     - require:
       - salt: {{ master_id }}-clean-shutdown
 
@@ -96,7 +96,7 @@ update_modules:
     - tgt: {{ worker_id }}
     - name: cmd.run
     - arg:
-      - rebootmgrctl reboot now
+      - systemctl reboot
     - require:
       - salt: {{ worker_id }}-clean-shutdown
 
