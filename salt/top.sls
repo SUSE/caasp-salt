@@ -15,6 +15,7 @@ base:
     - flannel
     - docker
     - container-feeder
+    - transactional-update
   'roles:kube-master':
     - match: grain
     - kubernetes-master
