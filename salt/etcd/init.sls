@@ -40,7 +40,6 @@ etcd:
       - sls: cert
       - pkg: etcd
       - iptables: etcd
-      - file: /var/lib/etcd
     - watch:
       - file: /etc/sysconfig/etcd
 
