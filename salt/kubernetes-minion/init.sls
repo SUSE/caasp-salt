@@ -3,24 +3,6 @@
 #######################
 include:
   - repositories
-  - cert
-  - etcd-proxy
-
-{% from 'cert/init.sls' import ip_addresses %}
-
-{% for _, interface_addresses in grains['ip4_interfaces'].items() %}
-  {% for interface_address in interface_addresses %}
-    {% do ip_addresses.append("IP: " + interface_address) %}
-  {% endfor %}
-{% endfor %}
-
-#Add some extra names the server could have
-{% set extra_names = ["DNS: " + grains['fqdn']] %}
-
-extend:
-  /etc/pki/minion.crt:
-    x509.certificate_managed:
-      - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
 
 conntrack-tools:
   pkg.installed
