@@ -14,18 +14,6 @@ etcd:
       - etcd
     - require:
       - group: etcd
-  file.directory:
-    - name: /var/lib/etcd
-    - user: etcd
-    - group: etcd
-    - dir_mode: 700
-    - recurse:
-      - user
-      - group
-      - mode
-    - require:
-      - user: etcd
-      - group: etcd
   pkg.installed:
     - pkgs:
       - iptables
