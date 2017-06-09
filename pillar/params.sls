@@ -65,6 +65,7 @@ proxy:
   http:           ''
   https:          ''
   no_proxy:       ''
+  systemwide:     'true'
 
 # Configuration for the reboot manager (https://github.com/SUSE/rebootmgr).
 # notes:
