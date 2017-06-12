@@ -2,6 +2,9 @@ base:
   'roles:ca':
     - match: grain
     - ca
+  'roles:admin':
+    - match: grain
+    - admin
   'roles:kube-(master|minion)':
     - match: grain_pcre
     - ca-cert
