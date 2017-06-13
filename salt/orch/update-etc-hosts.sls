@@ -1,8 +1,12 @@
+update_pillar:
+  salt.function:
+    - tgt: '*'
+    - name: saltutil.refresh_pillar
+
 update_grains:
   salt.function:
-    - tgt: 'roles:kube-(master|minion)'
-    - tgt_type: grain_pcre
-    - name: saltutil.sync_all
+    - tgt: '*'
+    - name: saltutil.refresh_grains
 
 update_mine:
   salt.function:
@@ -10,6 +14,7 @@ update_mine:
     - tgt_type: grain_pcre
     - name: mine.update
     - require:
+      - salt: update_pillar
       - salt: update_grains
 
 etc_hosts_setup:

@@ -20,12 +20,20 @@ update_pillar:
     - require:
       - salt: hostname_setup
 
+update_grains:
+  salt.function:
+    - tgt: '*'
+    - name: saltutil.refresh_grains
+    - require:
+      - salt: hostname_setup
+
 update_mine:
   salt.function:
     - tgt: '*'
     - name: mine.update
     - require:
       - salt: update_pillar
+      - salt: update_grains
 
 update_modules:
   salt.function:
