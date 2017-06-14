@@ -21,7 +21,6 @@ etc_hosts_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
     - tgt_type: grain_pcre
-    - queue: True
     - sls:
       - etc-hosts
     - require:
@@ -31,7 +30,6 @@ kube_master_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
-    - queue: True
     - sls:
       - kubernetes-master
     - require:
