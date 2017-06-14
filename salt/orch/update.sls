@@ -4,11 +4,10 @@ update_pillar:
     - tgt: '*'
     - name: saltutil.refresh_pillar
 
-# TODO: When we update to 2016.11.4 uncomment this, as the function does not exist until 2016.11.4
-# update_grains:
-#   salt.function:
-#     - tgt: '*'
-#     - name: saltutil.refresh_grains
+update_grains:
+  salt.function:
+    - tgt: '*'
+    - name: saltutil.refresh_grains
 
 update_mine:
   salt.function:
@@ -16,6 +15,7 @@ update_mine:
     - name: mine.update
     - require:
        - salt: update_pillar
+       - salt: update_grains
 
 update_modules:
   salt.function:
