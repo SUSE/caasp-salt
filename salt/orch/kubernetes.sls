@@ -126,3 +126,13 @@ reboot_setup:
       - reboot
     - require:
       - salt: kube_master_setup
+
+set_bootstrap_grain:
+  salt.function:
+    - tgt: 'roles:kube-(master|minion)'
+    - name: grains.setval
+    - arg:
+      - bootstrap_complete
+      - true
+    - require:
+      - salt: reboot_setup
