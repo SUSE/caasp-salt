@@ -10,8 +10,8 @@ update_grains:
 
 update_mine:
   salt.function:
-    - tgt: 'roles:kube-(master|minion)'
-    - tgt_type: grain_pcre
+    - tgt: 'P@roles:kube-(master|minion) and G@bootstrap_complete:true'
+    - tgt_type: compound
     - name: mine.update
     - require:
       - salt: update_pillar
@@ -19,8 +19,8 @@ update_mine:
 
 etc_hosts_setup:
   salt.state:
-    - tgt: 'roles:kube-(master|minion)'
-    - tgt_type: grain_pcre
+    - tgt: 'P@roles:kube-(master|minion) and G@bootstrap_complete:true'
+    - tgt_type: compound
     - queue: True
     - sls:
       - etc-hosts
@@ -29,8 +29,8 @@ etc_hosts_setup:
 
 kube_master_setup:
   salt.state:
-    - tgt: 'roles:kube-master'
-    - tgt_type: grain
+    - tgt: 'G@roles:kube-master and G@bootstrap_complete:true'
+    - tgt_type: compound
     - queue: True
     - sls:
       - kubernetes-master
