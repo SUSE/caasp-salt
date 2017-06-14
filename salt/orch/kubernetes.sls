@@ -9,7 +9,6 @@ hostname_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
     - tgt_type: grain_pcre
-    - concurrent: True
     - sls:
       - hostname
 
@@ -46,7 +45,6 @@ etc_hosts_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
     - tgt_type: grain_pcre
-    - concurrent: True
     - sls:
       - etc-hosts
     - require:
