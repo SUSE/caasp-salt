@@ -19,10 +19,8 @@ KUBELET_API_SERVER="--api-servers={{ api_server_url }}"
 
 # Add your own!
 KUBELET_ARGS="\
-{% if pillar.get('addons', '').lower() == 'true' -%}
     --cluster-dns={{ pillar['dns']['cluster_ip'] }} \
     --cluster-domain={{ pillar['dns']['domain'] }} \
-{% endif -%}
     --node-ip={{ grains['ip4_interfaces']['eth0'][0] }} \
 {% if grains['lsb_distrib_id'] == "CAASP" -%}
     --pod-manifest-path=/etc/kubernetes/manifests \
