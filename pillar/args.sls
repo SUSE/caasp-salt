@@ -3,9 +3,6 @@ docker:
   # Extra arguments to be passed to the Docker daemon.
   args: '--iptables=false'
 
-  # Use a docker registry (it must be a http service)
-  registry: ''
-
   # Set the logging level for dockerd
   # ( debug, info, warn, error, fatal )
   log_level: 'warn'
