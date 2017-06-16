@@ -14,3 +14,13 @@ certificate_information:
   days_remaining:
     ca_certificate: 90
     certificate: 90
+
+# we can add certificates for particular registries like this:
+#
+# registries:
+#  - "something.com:5000": |
+#    <CA contents>
+#  - "some-other.com:6000": |
+#    <CA contents>
+#
+registries: []
