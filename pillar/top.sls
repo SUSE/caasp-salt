@@ -5,6 +5,7 @@ base:
     - vars
     - certificates
     - mine
+    - docker
     - fqdn
     - schedule
   'roles:ca':
