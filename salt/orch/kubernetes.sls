@@ -130,6 +130,7 @@ reboot_setup:
 set_bootstrap_grain:
   salt.function:
     - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
     - name: grains.setval
     - arg:
       - bootstrap_complete
