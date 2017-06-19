@@ -44,7 +44,6 @@ update_modules:
       - kubernetes-master.stop
       - docker.stop
       - flannel.stop
-      - etcd.stop
 
 # Reboot the node
 {{ master_id }}-reboot:
@@ -114,7 +113,6 @@ update_modules:
       - kubernetes-minion.stop
       - docker.stop
       - flannel.stop
-      - etcd-proxy.stop
 
 # Reboot the node
 {{ worker_id }}-reboot:

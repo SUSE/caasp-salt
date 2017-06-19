@@ -59,7 +59,7 @@ etcd:
 
 # the flannel backend ('udp', 'vxlan', 'host-gw', etc)
 flannel:
-  backend:        'udp'
+  backend:        'vxlan'
   etcd_key:       '/flannel/network'
   iface:          'eth0'
 

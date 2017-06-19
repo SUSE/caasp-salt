@@ -2,7 +2,8 @@ include:
   - repositories
   - ca-cert
   - cert
-  - etcd-proxy
+  - etcd
+  - kubernetes-common
 
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
 
@@ -19,13 +20,6 @@ kubernetes-master:
       - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-
-/etc/kubernetes/config:
-  file.managed:
-    - source:     salt://kubernetes-master/config.jinja
-    - template:   jinja
-    - require:
-      - pkg:      kubernetes-master
 
 kube-apiserver:
   iptables.append:

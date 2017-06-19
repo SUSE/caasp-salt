@@ -1,0 +1,73 @@
+---
+{% set servers = [] -%}
+{% for minion_id, caasp_fqdn in salt['mine.get']('roles:etcd', 'caasp_fqdn', expr_form='grain').items() -%}
+  {% do servers.append(minion_id + '=https://' + caasp_fqdn + ':2380') -%}
+{% endfor -%}
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: etcd
+  name: etcd
+spec:
+  hostNetwork: true
+  containers:
+  - command:
+    - /usr/local/bin/etcd
+    image: quay.io/coreos/etcd:latest
+    name: etcd
+    env:
+    - name: ETCD_DATA_DIR
+      value: /var/lib/etcd
+    - name: ETCD_NAME
+      value: "{{ grains['id'] }}"
+    - name: ETCD_LISTEN_CLIENT_URLS
+      value: http://0.0.0.0:2379
+    - name: ETCD_LISTEN_PEER_URLS
+      value: https://0.0.0.0:2380
+    - name: ETCD_ADVERTISE_CLIENT_URLS
+      value: "https://{{ grains['caasp_fqdn'] }}:2379,https://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
+    - name: ETCD_CA_FILE
+      value: "{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
+    - name: ETCD_CERT_FILE
+      value: "/etc/pki/minion.crt"
+    - name: ETCD_KEY_FILE
+      value: "/etc/pki/minion.key"
+    - name: ETCD_PEER_CA_FILE
+      value: "{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
+    - name: ETCD_PEER_CERT_FILE
+      value: "/etc/pki/minion.crt"
+    - name: ETCD_PEER_KEY_FILE
+      value: "/etc/pki/minion.key"
+    - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
+      value: "https://{{ grains['caasp_fqdn'] }}:2380"
+    - name: ETCD_INITIAL_CLUSTER_TOKEN
+      value: "{{ pillar['etcd']['token'] }}"
+    - name: ETCD_INITIAL_CLUSTER
+      value: "{{ ",".join(servers) }}"
+    - name: ETCD_INITIAL_CLUSTER_STATE
+      value: new
+    - name: ETCD_DISCOVERY
+      value: "http://{{ pillar['dashboard'] }}:{{ pillar['etcd']['disco']['port'] }}/v2/keys/_etcd/registry/{{ pillar['etcd']['token'] }}"
+    - name: ETCD_DISCOVERY_FALLBACK
+      value: proxy
+    volumeMounts:
+    - mountPath: /etc/pki
+      name: pki
+    - mountPath: /var/lib/etcd
+      name: etcd
+    ports:
+    - containerPort: 2379
+      name: client
+      protocol: TCP
+    - containerPort: 2380
+      name: server
+      protocol: TCP
+  restartPolicy: Always
+  volumes:
+  - name: pki
+    hostPath:
+      path: /etc/pki
+  - name: etcd
+    hostPath:
+      path: /var/lib/etcd

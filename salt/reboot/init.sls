@@ -3,7 +3,7 @@
 ##################################################
 
 include:
-  - etcd-proxy
+  - etcd
 
 {% set reboot_uri = "http://127.0.0.1:2379/v2/keys/" + pillar['reboot']['directory'] + "/" +
          pillar['reboot']['group'] %}
@@ -25,8 +25,6 @@ set_max_holders_mutex:
   cmd.run:
     - name: curl -L -X PUT {{ reboot_uri }}/mutex?prevExist=false -d value="0"
     - onlyif: curl {{ reboot_uri }}/mutex?prevExist=false | grep -i "key not found"
-    - require:
-      - service: etcd
 
 # Initialize the `data` key, which is JSON data with: the maximum number of
 # holders, and a list of current holders.
@@ -39,4 +37,3 @@ set_max_holders_data:
     - onlyif: curl {{ reboot_uri }}/data?prevExist=false | grep -i "key not found"
     - require:
       - cmd: set_max_holders_mutex
-      - service: etcd

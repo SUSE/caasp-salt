@@ -16,13 +16,14 @@ base:
     - motd
     - users
     - cert
-    - etcd-proxy
+    - etcd
     - flannel
     - docker
     - container-feeder
   'roles:kube-master':
     - match: grain
     - kubernetes-master
+    - kubernetes-minion
   'roles:kube-minion':
     - match: grain
     - kubernetes-minion
