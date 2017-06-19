@@ -1,11 +1,14 @@
+{% if salt.saltutil.runner('mine.get', tgt='P@roles:kube-(master|minion) and G@bootstrap_complete:true', fun='caasp_fqdn', tgt_type='compound')|length > 0 %}
 update_pillar:
   salt.function:
-    - tgt: '*'
+    - tgt: 'P@roles:kube-(master|minion) and G@bootstrap_complete:true'
+    - tgt_type: compound
     - name: saltutil.refresh_pillar
 
 update_grains:
   salt.function:
-    - tgt: '*'
+    - tgt: 'P@roles:kube-(master|minion) and G@bootstrap_complete:true'
+    - tgt_type: compound
     - name: saltutil.refresh_grains
 
 update_mine:
@@ -36,3 +39,4 @@ kube_master_setup:
       - kubernetes-master
     - require:
       - salt: etc_hosts_setup
+{% endif %}
