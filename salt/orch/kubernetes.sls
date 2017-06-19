@@ -69,24 +69,20 @@ etcd_discovery_setup:
       - salt: ca_setup
       - salt: update_modules
 
-etcd_nodes_setup:
-  salt.state:
-    - tgt: 'roles:etcd'
-    - tgt_type: grain
-    - highstate: True
-    - batch: 1
-    - require:
-      - salt: etcd_discovery_setup
-
 etcd_proxy_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
     - tgt_type: grain_pcre
     - sls:
       - etcd-proxy
-    - batch: 5
+    # Currently, we never ask for more than 3 members. Setting this to 3 ensures
+    # we don't let more than 3 members attempt etcd discovery before a cluster
+    # has been fully formed. If we have less this 3, this will still succeed, as
+    # the exact number of members we expect will also end up attempting discovery
+    # at the same time.
+    - batch: 3
     - require:
-      - salt: etcd_nodes_setup
+      - salt: etcd_discovery_setup
 
 flannel_setup:
   salt.state:
