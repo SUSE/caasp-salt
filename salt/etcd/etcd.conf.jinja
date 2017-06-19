@@ -1,4 +1,5 @@
 {% set servers = [] -%}
+{# roles:etcd doesn't exist, can this be deleted? #}
 {% for minion_id, caasp_fqdn in salt['mine.get']('roles:etcd', 'caasp_fqdn', expr_form='grain').items() -%}
   {% do servers.append(minion_id + '=https://' + caasp_fqdn + ':2380') -%}
 {% endfor -%}

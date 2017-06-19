@@ -69,24 +69,15 @@ etcd_discovery_setup:
       - salt: ca_setup
       - salt: update_modules
 
-etcd_nodes_setup:
-  salt.state:
-    - tgt: 'roles:etcd'
-    - tgt_type: grain
-    - highstate: True
-    - batch: 1
-    - require:
-      - salt: etcd_discovery_setup
-
 etcd_proxy_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
     - tgt_type: grain_pcre
     - sls:
       - etcd-proxy
-    - batch: 5
+    - batch: 1
     - require:
-      - salt: etcd_nodes_setup
+      - salt: etcd_discovery_setup
 
 flannel_setup:
   salt.state:
