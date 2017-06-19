@@ -12,6 +12,7 @@ base:
   'roles:kube-master':
     - match: grain
     - kube-master
+    - kube-minion
   'roles:kube-minion':
     - match: grain
     - kube-minion

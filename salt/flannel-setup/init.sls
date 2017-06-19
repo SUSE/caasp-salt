@@ -1,7 +1,7 @@
 include:
   - ca-cert
   - cert
-  - etcd-proxy
+  - etcd
 
 {% if pillar['ssl']['enabled'] -%}
   {% set ca = '--ca-file ' + pillar['ssl']['ca_file'] -%}
@@ -29,6 +29,5 @@ load_flannel_cfg:
     - require:
       - sls: ca-cert
       - sls: cert
-      - service: etcd
     - onchanges:
       - file: /root/flannel-config.json

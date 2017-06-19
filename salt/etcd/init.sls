@@ -18,7 +18,6 @@ etcd:
     - pkgs:
       - iptables
       - etcdctl
-      - etcd
     - require:
       - file: /etc/zypp/repos.d/containers.repo
   iptables.append:
@@ -32,26 +31,15 @@ etcd:
     - dports:
         - 2380
     - proto: tcp
-  service.running:
-    - name: etcd
-    - enable: True
-    - require:
-      - sls: ca-cert
-      - sls: cert
-      - pkg: etcd
-      - iptables: etcd
-    - watch:
-      - file: /etc/sysconfig/etcd
 
 # note: this id will be inherited/overwritten by the etcd-proxy
-/etc/sysconfig/etcd:
+/etc/kubernetes/manifests/etcd.yaml:
   file.managed:
-    - source: salt://etcd/etcd.conf.jinja
+    - source: salt://etcd/etcd.yaml.jinja
     - template: jinja
     - user: etcd
     - group: etcd
     - mode: 644
     - require:
-      - pkg: etcd
       - user: etcd
       - group: etcd

@@ -12,7 +12,7 @@ base:
     - hostname
     - etc-hosts
     - cert
-    - etcd-proxy
+    - etcd
     - flannel
     - docker
     - container-feeder
@@ -20,6 +20,7 @@ base:
   'roles:kube-master':
     - match: grain
     - kubernetes-master
+    - kubernetes-minion
   'roles:kube-minion':
     - match: grain
     - kubernetes-minion
