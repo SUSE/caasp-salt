@@ -26,7 +26,7 @@ spec:
     - name: ETCD_LISTEN_PEER_URLS
       value: https://0.0.0.0:2380
     - name: ETCD_ADVERTISE_CLIENT_URLS
-      value: "https://{{ grains['caasp_fqdn'] }}:2379,https://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
+      value: "http://{{ grains['caasp_fqdn'] }}:2379,http://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
     - name: ETCD_CA_FILE
       value: "{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
     - name: ETCD_CERT_FILE

@@ -51,7 +51,6 @@ docker:
   service.running:
     - enable: True
     - watch:
-      - service: flannel
       - pkg: docker
       - file: /etc/sysconfig/docker
       - /etc/systemd/system/docker.service.d/proxy.conf

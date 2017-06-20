@@ -1,0 +1,22 @@
+base:
+  '*':
+    - params
+    - args
+    - vars
+    - certificates
+    - ip_addrs
+    - fqdn
+  'roles:kube-(master|minion)':
+    - match: grain_pcre
+    - beacons
+  'roles:kube-master':
+    - match: grain
+    - kube-master
+<<<<<<< HEAD
+  'roles:kube-minion':
+    - match: grain
+=======
+    - kube-minion
+  'G@roles:kube-minion':
+>>>>>>> Start of POC
+    - kube-minion

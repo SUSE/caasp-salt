@@ -30,4 +30,6 @@ KUBELET_ARGS="\
     --cloud-provider=aws \
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
+    --network-plugin=cni \
+    --cni-bin-dir=/etc/cni/bin \
     --kubeconfig={{ pillar['paths']['kubeconfig'] }}"

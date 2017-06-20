@@ -34,6 +34,18 @@ kube-proxy:
     - require:
       - pkg:    kubernetes-minion
 
+/etc/cni/bin/flannel:
+  file.managed:
+    - source: salt://kubernetes-minion/flannel
+    - makedirs: True
+    - mode: 0755
+
+/etc/cni/bin/loopback:
+  file.managed:
+    - source: salt://kubernetes-minion/loopback
+    - makedirs: True
+    - mode: 0755
+
 kubelet:
   file.managed:
     - name:     /etc/kubernetes/kubelet
@@ -70,7 +82,7 @@ kubelet:
     - name: |
         ELAPSED=0
         until output=$(kubectl uncordon {{ grains['caasp_fqdn'] }}) ; do
-            [ $ELAPSED -gt 60 ] && exit 1
+            [ $ELAPSED -gt 2400 ] && exit 1
             sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
         done
         echo changed="$(echo $output | grep 'already uncordoned' &> /dev/null && echo no || echo yes)"
