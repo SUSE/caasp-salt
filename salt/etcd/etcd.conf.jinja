@@ -6,6 +6,19 @@
 ETCD_DATA_DIR="/var/lib/etcd/"
 ETCD_NAME="{{ grains['id'] }}"
 
+# Bug bsc#1043614, Cannot bootstrap cluster with the qcow2
+# Problem occured on virtualized environment with high network latency.
+# https://coreos.com/etcd/docs/latest/v2/tuning.html
+# The election timeout should be set based on the heartbeat 
+# interval and average round-trip time between members. 
+# Election timeouts must be at least 10 times the round-trip time 
+# so it can account for variance in the network.
+# The values are specified in milliseconds.
+# default ETCD_HEARTBEAT_INTERVAL=100
+ETCD_HEARTBEAT_INTERVAL=100
+# default ETCD_ELECTION_TIMEOUT=1000
+ETCD_ELECTION_TIMEOUT=2000
+
 ETCD_LISTEN_CLIENT_URLS="https://0.0.0.0:2379"
 ETCD_LISTEN_PEER_URLS="https://0.0.0.0:2380"
 ETCD_ADVERTISE_CLIENT_URLS="https://{{ grains['caasp_fqdn'] }}:2379"
