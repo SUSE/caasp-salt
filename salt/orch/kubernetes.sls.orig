@@ -7,7 +7,7 @@ disable_rebootmgr:
 
 hostname_setup:
   salt.state:
-    - tgt: 'roles:kube-(master|minion)'
+    - tgt: 'roles:(admin|kube-(master|minion))'
     - tgt_type: grain_pcre
     - sls:
       - hostname
@@ -83,14 +83,21 @@ admin_setup:
     - tgt: 'roles:admin'
     - tgt_type: grain
     - highstate: True
+    - batch: 5
+    - require:
+      - salt: flannel_setup
 
 kube_master_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
+<<<<<<< HEAD
+    - batch: 5
     - require:
-      - salt: flannel_setup
+      - salt: admin_setup
+=======
+>>>>>>> etcd starts, flannel starts manually
 
 kube_minion_setup:
   salt.state:
@@ -98,7 +105,6 @@ kube_minion_setup:
     - tgt_type: grain
     - highstate: True
     - require:
-      - salt: flannel_setup
       - salt: kube_master_setup
 
 reboot_setup:

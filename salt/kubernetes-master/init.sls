@@ -21,6 +21,16 @@ kubernetes-master:
     - require:
       - file: /etc/zypp/repos.d/containers.repo
 
+/etc/systemd/system/kube-apiserver.service.d/apiserver-restarts.conf:
+  file.managed:
+    - source: salt://kubernetes-master/apiserver-restarts.conf
+    - makedirs: True
+    - cmd.run:
+      - name: systemctl daemon-reload
+      - stateful: True
+    - require:
+      - pkg: kubernetes-master
+
 kube-apiserver:
   iptables.append:
     - table:      filter
