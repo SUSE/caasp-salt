@@ -9,7 +9,7 @@ etcd-discovery-setup:
     - name: curl
   cmd.run:
     - name: curl -L -X PUT {{ etcd_size_uri }} -d value={{ salt.k8s_etcd.get_cluster_size() }}
-    - unless: curl {{ etcd_size_uri }} | grep '"value":"{{ salt.k8s_etcd.get_cluster_size() }}"'
+    - onlyif: curl {{ etcd_size_uri }} | grep '"message":"Key not found"'
     - require:
       - pkg: curl
 
