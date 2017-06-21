@@ -73,6 +73,8 @@ kubelet:
             sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
         done
         echo changed="$(echo $output | grep 'already uncordoned' &> /dev/null && echo no || echo yes)"
+    - unless: |
+        kubectl uncordon {{ grains['caasp_fqdn'] }} | grep 'already uncordoned'
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - stateful: True
