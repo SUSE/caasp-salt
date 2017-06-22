@@ -85,3 +85,5 @@ reboot:
 transactional-update:
   timer:
     on_calendar: 'daily' # See https://www.freedesktop.org/software/systemd/man/systemd.time.html#Calendar%20Events for syntax
+
+hyperkube_image: gcr.io/google_containers/hyperkube:v1.5.7

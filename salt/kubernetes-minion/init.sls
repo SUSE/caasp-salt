@@ -75,21 +75,6 @@ kubelet:
     - require:
       - service: kubelet
 
-  # TODO: This needs to wait for the node to register, which takes a few seconds.
-  # Salt doesn't seem to have a retry mechanism in the version were using, so I'm
-  # doing a horrible hack right now.
-  cmd.run:
-    - name: |
-        ELAPSED=0
-        until output=$(kubectl uncordon {{ grains['caasp_fqdn'] }}) ; do
-            [ $ELAPSED -gt 2400 ] && exit 1
-            sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
-        done
-        echo changed="$(echo $output | grep 'already uncordoned' &> /dev/null && echo no || echo yes)"
-    - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - stateful: True
-
 #######################
 # config files
 #######################
