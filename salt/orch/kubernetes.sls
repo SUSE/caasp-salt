@@ -83,6 +83,8 @@ kube_master_setup:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
+    - require:
+      - salt: etcd_proxy_setup
 
 kube_minion_setup:
   salt.state:

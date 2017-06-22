@@ -80,18 +80,11 @@ kube-scheduler:
 
 kube-controller-manager:
   file.managed:
-    - name:       /etc/kubernetes/controller-manager
-    - source:     salt://kubernetes-master/controller-manager.jinja
+    - name:       /etc/kubernetes/manifests/controller-manager.yaml
+    - source:     salt://kubernetes-master/controller-manager.yaml.jinja
     - template:   jinja
     - require:
       - pkg:      kubernetes-master
-  service.running:
-    - enable:     True
-    - require:
-      - service:  kube-apiserver
-    - watch:
-      - file:     /etc/kubernetes/config
-      - file:     kube-controller-manager
 
 ###################################
 # addons
