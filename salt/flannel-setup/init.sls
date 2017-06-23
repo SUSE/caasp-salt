@@ -1,33 +1,14 @@
-include:
-  - ca-cert
-  - cert
-  - etcd
-
-{% if pillar['ssl']['enabled'] -%}
-  {% set ca = '--ca-file ' + pillar['ssl']['ca_file'] -%}
-  {% set key = '--key-file ' + pillar['ssl']['key_file'] -%}
-  {% set crt = '--cert-file ' + pillar['ssl']['crt_file'] -%}
-  {% set endpoint = '--endpoints https://' + grains['caasp_fqdn'] + ':2379' -%}
-  {% set etcd_opt = ca + ' ' + key + ' ' + crt + ' ' + endpoint -%}
-{% else -%}
-  {% set endpoint = '--endpoints http://' + grains['caasp_fqdn'] + ':2379' -%}
-  {% set etcd_opt = endpoint -%}
-{% endif -%}
-
-/root/flannel-config.json:
-  file.managed:
-    - source:   salt://flannel-setup/config.json.jinja
-    - template: jinja
-
 load_flannel_cfg:
+  file.managed:
+    - name: /root/flanneld.yaml
+    - source: salt://flannel-setup/flanneld.yaml.jinja
+    - template: jinja
+    - user: root
+    - group: root
+    - mode: 644
   pkg.installed:
     - name: etcdctl
   cmd.run:
-    - name: /usr/bin/etcdctl {{ etcd_opt }}
-                             --no-sync
-                             set {{ pillar['flannel']['etcd_key'] }}/config < /root/flannel-config.json
-    - require:
-      - sls: ca-cert
-      - sls: cert
+    - name: until kubectl get daemonset kube-flannel-ds --namespace=kube-system; do kubectl create -f /root/flanneld.yaml; sleep 10; done
     - onchanges:
-      - file: /root/flannel-config.json
+      - file: /root/flanneld.yaml

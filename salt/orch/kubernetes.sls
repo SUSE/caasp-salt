@@ -103,6 +103,15 @@ reboot_setup:
     - require:
       - salt: kube_master_setup
 
+flannel_setup:
+  salt.state:
+    - tgt: 'roles:kube-master'
+    - tgt_type: grain
+    - sls:
+      - flannel-setup
+    - require:
+      - salt: reboot_setup
+
 set_bootstrap_grain:
   salt.function:
     - tgt: 'roles:kube-(master|minion)'
@@ -112,4 +121,5 @@ set_bootstrap_grain:
       - bootstrap_complete
       - true
     - require:
-      - salt: reboot_setup
+      - salt: flannel_setup
+
