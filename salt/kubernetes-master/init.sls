@@ -72,8 +72,6 @@ kube-scheduler:
       - pkg:      kubernetes-master
   service.running:
     - enable:     True
-    - require:
-      - service:  kube-apiserver
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-scheduler
