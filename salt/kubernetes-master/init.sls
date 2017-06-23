@@ -50,8 +50,8 @@ kube-apiserver:
     - template:   jinja
     - require:
       - pkg:      kubernetes-master
-  service.running:
-    - enable:     True
+  cmd.run:
+    - name: systemctl start kube-apiserver.service
     - require:
       - pkg:      kubernetes-master
       - iptables: kube-apiserver
