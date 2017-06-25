@@ -1,4 +1,7 @@
 base:
+  'roles:admin':
+    - match: grain
+    - infra-certs
   'roles:ca':
     - match: grain
     - ca

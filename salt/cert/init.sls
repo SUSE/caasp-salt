@@ -48,8 +48,8 @@ include:
 
 {{ pillar['ssl']['crt_file'] }}:
   x509.certificate_managed:
-    - ca_server: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').keys()[0] }}
-    - signing_policy: minion
+    - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
+    - signing_policy: internal
     - public_key: /etc/pki/minion.key
     - CN: {{ grains['caasp_fqdn'] }}
     - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
@@ -76,3 +76,93 @@ include:
     - user: root
     - group: root
     - mode: 644
+
+{% if "kube-master" in salt['grains.get']('roles', []) %}
+{{ pillar['ssl']['apiserver_key_file'] }}:
+  x509.private_key_managed:
+    - bits: 4096
+    - require:
+      - sls:  crypto
+      - file: /etc/pki
+  file.managed:
+    - replace: false
+    - user: root
+    - group: root
+    - mode: 644
+
+{{ pillar['ssl']['apiserver_crt_file'] }}:
+  x509.certificate_managed:
+    - ca_server: {{ salt['mine.get']('roles:ca', 'public-ca.crt', expr_form='grain').keys()[0] }}
+    - signing_policy: external
+    - public_key: {{ pillar['ssl']['apiserver_key_file'] }}
+    - CN: {{ grains['caasp_fqdn'] }}
+    - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
+    - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
+    - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
+    - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
+    - O: {{ pillar['certificate_information']['subject_properties']['O']|yaml_dquote }}
+    - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
+    - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
+    - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
+    - basicConstraints: "critical CA:false"
+    - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
+    {% if (ip_addresses|length > 0) or (extra_names|length > 0) %}
+    - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
+    {% endif %}
+    - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
+    - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
+    - backup: True
+    - require:
+      - sls:  crypto
+      - file: /etc/pki
+  file.managed:
+    - replace: false
+    - user: root
+    - group: root
+    - mode: 644
+{% endif %}
+
+{% if ("kube-minion" in salt['grains.get']('roles', [])) or ("kube-master" in salt['grains.get']('roles', [])) %}
+{{ pillar['ssl']['apiserver_client_key_file'] }}:
+  x509.private_key_managed:
+    - bits: 4096
+    - require:
+      - sls:  crypto
+      - file: /etc/pki
+  file.managed:
+    - replace: false
+    - user: root
+    - group: root
+    - mode: 644
+
+{{ pillar['ssl']['apiserver_client_crt_file'] }}:
+  x509.certificate_managed:
+    - ca_server: {{ salt['mine.get']('roles:ca', 'public-ca.crt', expr_form='grain').keys()[0] }}
+    - signing_policy: external
+    - public_key: {{ pillar['ssl']['apiserver_client_key_file'] }}
+    - CN: {{ grains['caasp_fqdn'] }}
+    - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
+    - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
+    - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
+    - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
+    - O: {{ pillar['certificate_information']['subject_properties']['O']|yaml_dquote }}
+    - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
+    - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
+    - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
+    - basicConstraints: "critical CA:false"
+    - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
+    {% if (ip_addresses|length > 0) or (extra_names|length > 0) %}
+    - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
+    {% endif %}
+    - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
+    - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
+    - backup: True
+    - require:
+      - sls:  crypto
+      - file: /etc/pki
+  file.managed:
+    - replace: false
+    - user: root
+    - group: root
+    - mode: 644
+{% endif %}
