@@ -65,16 +65,11 @@ kube-apiserver:
 
 kube-scheduler:
   file.managed:
-    - name:       /etc/kubernetes/scheduler
-    - source:     salt://kubernetes-master/scheduler.jinja
+    - name:       /etc/kubernetes/manifests/scheduler.yaml
+    - source:     salt://kubernetes-master/scheduler.yaml.jinja
     - template:   jinja
     - require:
       - pkg:      kubernetes-master
-  service.running:
-    - enable:     True
-    - watch:
-      - file:     /etc/kubernetes/config
-      - file:     kube-scheduler
 
 kube-controller-manager:
   file.managed:
