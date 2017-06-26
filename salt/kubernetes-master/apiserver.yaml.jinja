@@ -28,7 +28,8 @@
           "--tls-cert-file=/etc/pki/minion.crt",
           "--tls-private-key-file=/etc/pki/minion.key",
           "{{ salt['pillar.get']('components:apiserver:args', '') }}",
-          "--client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
+          "--client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}",
+          "--allow-privileged"
         ],
         "ports": [
           {
