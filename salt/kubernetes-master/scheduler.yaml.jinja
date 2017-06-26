@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-scheduler
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-scheduler
+    image: {{ pillar['hyperkube_image'] }}
+    command:
+    - /hyperkube
+    - scheduler
+    - --master=127.0.0.1:8080
+    - --leader-elect=true
+    - --v=2
+    - --kubeconfig={{ pillar['paths']['kubeconfig'] }}
+    - "{{ salt['pillar.get']('components:scheduler:args', '') }}"
+    resources:
+      requests:
+        cpu: 100m
+    livenessProbe:
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 10251
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    volumeMounts:
+      - name: etckubernetes
+        mountPath: /etc/kubernetes
+        readOnly: true
+      - name: varlibkubelet
+        mountPath: /var/lib/kubelet
+        readOnly: true
+      - name: etcssl
+        mountPath: /etc/pki
+        readOnly: true
+  volumes:
+    - name: etckubernetes
+      hostPath:
+        path: /etc/kubernetes
+    - name: varlibkubelet
+      hostPath:
+        path: /var/lib/kubelet
+    - name: etcssl
+      hostPath:
+        path: /etc/pki
