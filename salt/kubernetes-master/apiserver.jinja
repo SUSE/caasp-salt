@@ -11,7 +11,14 @@ KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 KUBE_API_PORT="--insecure-port=8080 --secure-port={{ pillar['api']['ssl_port'] }}"
 
 # Comma separated list of nodes in the etcd cluster
-KUBE_ETCD_SERVERS="--etcd-servers=http://127.0.0.1:2379"
+{% if pillar['ssl']['enabled'] -%}
+KUBE_ETCD_SERVERS="--etcd-cafile={{ pillar['ssl']['ca_file'] }} \
+                   --etcd-certfile={{ pillar['ssl']['crt_file'] }} \
+                   --etcd-keyfile={{ pillar['ssl']['key_file'] }} \
+                   --etcd-servers=https://{{ grains['caasp_fqdn'] }}:2379"
+{% else -%}
+KUBE_ETCD_SERVERS="--etcd-servers=http://{{ grains['caasp_fqdn'] }}:2379"
+{% endif -%}
 
 # Address range to use for services
 # [alvaro] should not be in the same range as the flannel network (https://github.com/coreos/flannel/issues/232)
@@ -26,7 +33,7 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
                --cloud-provider=aws \
 {% endif -%}
-               --tls-cert-file=/etc/pki/minion.crt \
-               --tls-private-key-file=/etc/pki/minion.key \
+               --tls-cert-file={{ pillar['ssl']['crt_file'] }} \
+               --tls-private-key-file={{ pillar['ssl']['key_file'] }} \
                {{ salt['pillar.get']('components:apiserver:args', '') }} \
-               --client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
+               --client-ca-file={{ pillar['ssl']['ca_file'] }}"
