@@ -20,17 +20,7 @@ kubernetes-master:
       - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-
-/etc/systemd/system/kube-apiserver.service.d/apiserver-restarts.conf:
-  file.managed:
-    - source: salt://kubernetes-master/apiserver-restarts.conf
-    - makedirs: True
-    - cmd.run:
-      - name: systemctl daemon-reload
-      - stateful: True
-    - require:
-      - pkg: kubernetes-master
-
+        
 kube-apiserver:
   iptables.append:
     - table:      filter
@@ -45,23 +35,9 @@ kube-apiserver:
     - require:
       - pkg:      kubernetes-master
   file.managed:
-    - name:       /etc/kubernetes/apiserver
-    - source:     salt://kubernetes-master/apiserver.jinja
+    - name:       /etc/kubernetes/manifests/apiserver.yaml
+    - source:     salt://kubernetes-master/apiserver.yaml.jinja
     - template:   jinja
-    - require:
-      - pkg:      kubernetes-master
-  cmd.run:
-    - name: systemctl start kube-apiserver.service
-    - require:
-      - pkg:      kubernetes-master
-      - iptables: kube-apiserver
-      - sls:      ca-cert
-      - sls:      cert
-    - watch:
-      - file:     /etc/kubernetes/config
-      - file:     kube-apiserver
-      - sls:      ca-cert
-      - sls:      cert
 
 kube-scheduler:
   file.managed:
@@ -76,8 +52,6 @@ kube-controller-manager:
     - name:       /etc/kubernetes/manifests/controller-manager.yaml
     - source:     salt://kubernetes-master/controller-manager.yaml.jinja
     - template:   jinja
-    - require:
-      - pkg:      kubernetes-master
 
 ###################################
 # addons
