@@ -112,6 +112,15 @@ flannel_setup:
     - require:
       - salt: reboot_setup
 
+calico_setup:
+  salt.state:
+    - tgt: 'roles:kube-master'
+    - tgt_type: grain
+    - sls:
+      - calico-setup
+    - require:
+      - salt: flannel_setup
+
 set_bootstrap_grain:
   salt.function:
     - tgt: 'roles:kube-(master|minion)'
@@ -121,5 +130,5 @@ set_bootstrap_grain:
       - bootstrap_complete
       - true
     - require:
-      - salt: flannel_setup
+      - salt: calico_setup
 
