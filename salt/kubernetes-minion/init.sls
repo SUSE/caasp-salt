@@ -20,17 +20,9 @@ kubernetes-minion:
 
 kube-proxy:
   file.managed:
-    - name:     /etc/kubernetes/proxy
-    - source:   salt://kubernetes-minion/proxy.jinja
+    - name:     /etc/kubernetes/manifests/proxy.yaml
+    - source:   salt://kubernetes-minion/proxy.yaml.jinja
     - template: jinja
-    - require:
-      - pkg:    kubernetes-minion
-  service.running:
-    - enable:   True
-    - watch:
-      - file:   /etc/kubernetes/config
-      - file:   {{ pillar['paths']['kubeconfig'] }}
-      - file:   kube-proxy
     - require:
       - pkg:    kubernetes-minion
 
