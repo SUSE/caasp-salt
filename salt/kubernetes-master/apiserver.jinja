@@ -33,7 +33,7 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
                --cloud-provider=aws \
 {% endif -%}
-               --tls-cert-file={{ pillar['ssl']['crt_file'] }} \
-               --tls-private-key-file={{ pillar['ssl']['key_file'] }} \
+               --tls-cert-file={{ pillar['ssl']['apiserver_crt_file'] }} \
+               --tls-private-key-file={{ pillar['ssl']['apiserver_key_file'] }} \
                {{ salt['pillar.get']('components:apiserver:args', '') }} \
-               --client-ca-file={{ pillar['ssl']['ca_file'] }}"
+               --client-ca-file={{ pillar['ssl']['ca_public_file'] }}"

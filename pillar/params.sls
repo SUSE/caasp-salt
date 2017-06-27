@@ -27,11 +27,16 @@ kube_group:       'kube'
 addons:           'false'
 
 ssl:
-  enabled:        true
-  ca_dir:         '/etc/pki/trust/anchors'
-  ca_file:        '/etc/pki/trust/anchors/SUSE_CaaSP_CA.crt'
-  crt_file:       '/etc/pki/minion.crt'
-  key_file:       '/etc/pki/minion.key'
+  enabled:                   true
+  ca_dir:                    '/etc/pki/trust/anchors'
+  ca_file:                   '/etc/pki/trust/anchors/SUSE_CaaSP_CA.crt'
+  ca_public_file:            '/etc/pki/trust/anchors/SUSE_CaaSP_PUBLIC_CA.crt'
+  crt_file:                  '/etc/pki/minion.crt'
+  key_file:                  '/etc/pki/minion.key'
+  apiserver_crt_file:        '/etc/pki/apiserver.crt'
+  apiserver_key_file:        '/etc/pki/apiserver.key'
+  apiserver_client_crt_file: '/etc/pki/apiserver-client.crt'
+  apiserver_client_key_file: '/etc/pki/apiserver-client.key'
 
 paths:
   var_kubelet:    '/var/lib/kubelet'
