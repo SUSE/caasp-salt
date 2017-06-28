@@ -17,13 +17,11 @@ spec:
     - --cluster-cidr={{ pillar['cluster_cidr'] }}
     - --cluster-name=kubernetes
     - --service-account-private-key-file=/etc/pki/minion.key
-    - --root-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}
-    {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
-    - --cloud-provider=aws
-    {% endif -%}
+    - --root-ca-file={{ pillar['ssl']['ca_file'] }}
     - --v=2
     - --kubeconfig={{ pillar['paths']['kubeconfig'] }}
     - "{{ salt['pillar.get']('components:controller-manager:args', '') }}"
+    {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' %}- --cloud-provider=aws{% endif %}
     volumeMounts:
     - name: varlibkubelet
       mountPath: /var/lib/kubelet

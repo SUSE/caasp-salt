@@ -69,22 +69,13 @@ etcd_discovery_setup:
       - salt: ca_setup
       - salt: update_modules
 
-etcd_proxy_setup:
-  salt.state:
-    - tgt: 'roles:kube-(master|minion)'
-    - tgt_type: grain_pcre
-    - sls:
-      - etcd-proxy
-    - require:
-      - salt: etcd_nodes_setup
-
 kube_master_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
     - require:
-      - salt: etcd_proxy_setup
+      - salt: etcd_discovery_setup
 
 kube_minion_setup:
   salt.state:
