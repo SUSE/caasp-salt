@@ -26,8 +26,16 @@ update_modules:
 
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.ip_addrs', tgt_type='compound') %}
-
 {%- for master_id in masters.keys() %}
+
+# Ensure the node is marked as upgrading
+{{ master_id }}-set-update-grain:
+  salt.function:
+    - tgt: {{ master_id }}
+    - name: grains.setval
+    - arg:
+      - update_in_progress
+      - true
 
 {{ master_id }}-clean-shutdown:
   salt.state:
@@ -65,7 +73,7 @@ update_modules:
     - require:
       - salt: {{ master_id }}-wait-for-start
 
-{{ master_id }}-update-grain:
+{{ master_id }}-update-reboot-needed-grain:
   salt.function:
     - tgt: {{ master_id }}
     - name: grains.setval
@@ -75,10 +83,28 @@ update_modules:
     - require:
       - salt: {{ master_id }}-start-services
 
+# Ensure the node is marked as finished upgrading
+{{ master_id }}-remove-update-grain:
+  salt.function:
+    - tgt: {{ master_id }}
+    - name: grains.setval
+    - arg:
+      - update_in_progress
+      - false
+
 {% endfor %}
 
 {%- set workers = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion and G@tx_update_reboot_needed:true', fun='network.ip_addrs', tgt_type='compound') %}
 {%- for worker_id, ip in workers.items() %}
+
+# Ensure the node is marked as upgrading
+{{ worker_id }}-set-update-grain:
+  salt.function:
+    - tgt: {{ worker_id }}
+    - name: grains.setval
+    - arg:
+      - update_in_progress
+      - true
 
 # Call the node clean shutdown script
 {{ worker_id }}-clean-shutdown:
@@ -117,7 +143,7 @@ update_modules:
     - require:
       - salt: {{ worker_id }}-wait-for-start
 
-{{ worker_id }}-update-grain:
+{{ worker_id }}-update-reboot-needed-grain:
   salt.function:
     - tgt: {{ worker_id }}
     - name: grains.setval
@@ -126,5 +152,14 @@ update_modules:
       - false
     - require:
       - salt: {{ worker_id }}-start-services
+
+# Ensure the node is marked as finished upgrading
+{{ worker_id }}-remove-update-grain:
+  salt.function:
+    - tgt: {{ worker_id }}
+    - name: grains.setval
+    - arg:
+      - update_in_progress
+      - false
 
 {% endfor %}
