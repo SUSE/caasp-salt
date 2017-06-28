@@ -79,7 +79,6 @@ deploy_addons.sh:
     - source:      salt://kubernetes-master/deploy_addons.sh
     - require:
       - pkg:       kubernetes-master
-      - service:   kube-apiserver
       - file:      /root/namespace.yaml
       - file:      /root/skydns-svc.yaml
       - file:      /root/skydns-rc.yaml

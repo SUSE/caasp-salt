@@ -1,74 +1,53 @@
-{
-  "kind": "Pod",
-  "apiVersion": "v1",
-  "metadata": {
-    "name": "kube-apiserver"
-  },
-  "spec": {
-    "hostNetwork": true,
-    "containers": [
-      {
-        "name": "kube-apiserver",
-        "image": "{{ pillar['hyperkube_image'] }}",
-        "command": [
-          "/hyperkube",
-          "apiserver",
-          "--insecure-bind-address=127.0.0.1",
-          "--bind-address=0.0.0.0",
-          "--insecure-port=8080",
-          "--secure-port={{ pillar['api']['ssl_port'] }}",
-          "--etcd-servers=http://127.0.0.1:2379",
-          "--service-cluster-ip-range={{ pillar['services_cidr'] }}",
-          "--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota",
-          "--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }}",
-          "--apiserver-count={{ salt['mine.get']('roles:kube-master', 'caasp_fqdn', expr_form='grain').values()|length }}",
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: kube-apiserver
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-apiserver
+    image: "{{ pillar['hyperkube_image'] }}"
+    command:
+    - "/hyperkube"
+    - apiserver
+    - "--insecure-bind-address=127.0.0.1"
+    - "--bind-address=0.0.0.0"
+    - "--insecure-port=8080"
+    - "--secure-port={{ pillar['api']['ssl_port'] }}"
+    - "--etcd-servers=http://127.0.0.1:2379"
+    - "--service-cluster-ip-range={{ pillar['services_cidr'] }}"
+    - "--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota"
+    - "--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }}"
+    - "--apiserver-count={{ salt['mine.get']('roles:kube-master', 'caasp_fqdn', expr_form='grain').values()|length }}"
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
-          "--cloud-provider=aws",
+    - "--cloud-provider=aws"
 {% endif -%}
-          "--tls-cert-file=/etc/pki/minion.crt",
-          "--tls-private-key-file=/etc/pki/minion.key",
-          "{{ salt['pillar.get']('components:apiserver:args', '') }}",
-          "--client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}",
-          "--allow-privileged"
-        ],
-        "ports": [
-          {
-            "name": "https",
-            "hostPort": 443,
-            "containerPort": 443
-          },
-          {
-            "name": "local",
-            "hostPort": 8080,
-            "containerPort": 8080
-          }
-        ],
-        "volumeMounts": [
-          {
-            "name": "etcssl",
-            "mountPath": "/etc/pki",
-            "readOnly": true
-          }
-        ],
-        "livenessProbe": {
-          "httpGet": {
-            "scheme": "HTTP",
-            "host": "127.0.0.1",
-            "port": 8080,
-            "path": "/healthz"
-          },
-          "initialDelaySeconds": 15,
-          "timeoutSeconds": 15
-        }
-      }
-    ],
-    "volumes": [
-      {
-        "name": "etcssl",
-        "hostPath": {
-          "path": "/etc/pki"
-        }
-      }
-    ]
-  }
-}
+    - "--tls-cert-file=/etc/pki/minion.crt"
+    - "--tls-private-key-file=/etc/pki/minion.key"
+    - "{{ salt['pillar.get']('components:apiserver:args', '') }}"
+    - "--client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
+    - "--allow-privileged"
+    ports:
+    - name: https
+      hostPort: 443
+      containerPort: 443
+    - name: local
+      hostPort: 8080
+      containerPort: 8080
+    volumeMounts:
+    - name: etcssl
+      mountPath: "/etc/pki"
+      readOnly: true
+    livenessProbe:
+      httpGet:
+        scheme: HTTP
+        host: 127.0.0.1
+        port: 8080
+        path: "/healthz"
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+  volumes:
+  - name: etcssl
+    hostPath:
+      path: "/etc/pki"
