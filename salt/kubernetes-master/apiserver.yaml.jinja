@@ -3,6 +3,7 @@ kind: Pod
 apiVersion: v1
 metadata:
   name: kube-apiserver
+  namespace: kube-system
 spec:
   hostNetwork: true
   containers:
@@ -20,14 +21,12 @@ spec:
     - "--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota"
     - "--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }}"
     - "--apiserver-count={{ salt['mine.get']('roles:kube-master', 'caasp_fqdn', expr_form='grain').values()|length }}"
-{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
-    - "--cloud-provider=aws"
-{% endif -%}
     - "--tls-cert-file=/etc/pki/minion.crt"
     - "--tls-private-key-file=/etc/pki/minion.key"
     - "{{ salt['pillar.get']('components:apiserver:args', '') }}"
-    - "--client-ca-file={{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
+    - "--client-ca-file={{ pillar['ssl']['ca_file'] }}"
     - "--allow-privileged"
+    {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' %}- "--cloud-provider=aws"{% endif %}
     ports:
     - name: https
       hostPort: 443

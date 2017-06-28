@@ -9,6 +9,7 @@ metadata:
   labels:
     app: etcd
   name: etcd
+  namespace: kube-system
 spec:
   hostNetwork: true
   containers:
@@ -28,13 +29,13 @@ spec:
     - name: ETCD_ADVERTISE_CLIENT_URLS
       value: "http://{{ grains['caasp_fqdn'] }}:2379,http://{{ grains['ip4_interfaces']['eth0'][0] }}:2379"
     - name: ETCD_CA_FILE
-      value: "{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
+      value: "{{ pillar['ssl']['ca_file'] }}"
     - name: ETCD_CERT_FILE
       value: "/etc/pki/minion.crt"
     - name: ETCD_KEY_FILE
       value: "/etc/pki/minion.key"
     - name: ETCD_PEER_CA_FILE
-      value: "{{ pillar['paths']['ca_dir'] }}/{{ pillar['paths']['ca_filename'] }}"
+      value: "{{ pillar['ssl']['ca_file'] }}"
     - name: ETCD_PEER_CERT_FILE
       value: "/etc/pki/minion.crt"
     - name: ETCD_PEER_KEY_FILE

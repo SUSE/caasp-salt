@@ -83,13 +83,6 @@ kubelet:
     - source:         salt://kubernetes-minion/kubeconfig.jinja
     - template:       jinja
 
-/etc/kubernetes/config:
-  file.managed:
-    - source:   salt://kubernetes-minion/config.jinja
-    - template: jinja
-    - require:
-      - pkg:    kubernetes-minion
-
 {% if pillar.get('e2e', '').lower() == 'true' %}
 /etc/kubernetes/manifests/e2e-image-puller.manifest:
   file.managed:
