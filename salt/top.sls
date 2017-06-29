@@ -2,6 +2,10 @@ base:
   'roles:ca':
     - match: grain
     - ca
+  'roles:(admin|kube-(master|minion))':
+    - match: grain_pcre
+    - hostname
+    - etc-hosts
   'roles:kube-(master|minion)':
     - match: grain_pcre
     - ca-cert
@@ -9,8 +13,6 @@ base:
     - repositories
     - motd
     - users
-    - hostname
-    - etc-hosts
     - cert
     - etcd-proxy
     - flannel

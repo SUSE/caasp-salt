@@ -7,7 +7,7 @@ disable_rebootmgr:
 
 hostname_setup:
   salt.state:
-    - tgt: 'roles:kube-(master|minion)'
+    - tgt: 'roles:(admin|kube-(master|minion))'
     - tgt_type: grain_pcre
     - sls:
       - hostname
@@ -43,7 +43,7 @@ update_modules:
 
 etc_hosts_setup:
   salt.state:
-    - tgt: 'roles:kube-(master|minion)'
+    - tgt: 'roles:(admin|kube-(master|minion))'
     - tgt_type: grain_pcre
     - sls:
       - etc-hosts
@@ -94,6 +94,15 @@ flannel_setup:
     - require:
       - salt: etcd_proxy_setup
 
+admin_setup:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - highstate: True
+    - batch: 5
+    - require:
+      - salt: flannel_setup
+
 kube_master_setup:
   salt.state:
     - tgt: 'roles:kube-master'
@@ -101,7 +110,7 @@ kube_master_setup:
     - highstate: True
     - batch: 5
     - require:
-      - salt: flannel_setup
+      - salt: admin_setup
 
 kube_minion_setup:
   salt.state:
@@ -125,7 +134,7 @@ reboot_setup:
 
 set_bootstrap_grain:
   salt.function:
-    - tgt: 'roles:kube-(master|minion)'
+    - tgt: 'roles:(admin|kube-(master|minion))'
     - tgt_type: grain_pcre
     - name: grains.setval
     - arg:
