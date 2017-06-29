@@ -1,6 +1,6 @@
 disable_rebootmgr:
   salt.state:
-    - tgt: 'roles:kube-(master|minion)'
+    - tgt: 'roles:(admin|kube-(master|minion))'
     - tgt_type: grain_pcre
     - sls:
       - rebootmgr
