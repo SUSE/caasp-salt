@@ -1,4 +1,15 @@
-### kubernetes API server(s) ###
+### admin nodes ###
+{%- set admins = salt['mine.get']('roles:admin', 'network.ip_addrs', 'grain') %}
+{%- for admin_id, addrlist in admins.items() %}
+	{%- if addrlist is string %}
+		{%- set ip = addrlist %}
+	{%- else %}
+		{%- set ip = addrlist|first %}
+	{%- endif %}
+{{ ip }} {{ admin_id }} {{ admin_id }}.{{ pillar['internal_infra_domain'] }}
+{%- endfor %}
+
+### kubernetes masters ###
 {%- set masters = salt['mine.get']('roles:kube-master', 'network.ip_addrs', 'grain') %}
 {%- for master_id, addrlist in masters.items() %}
 	{%- if addrlist is string %}
@@ -9,7 +20,7 @@
 {{ ip }} api api.{{ pillar['internal_infra_domain'] }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}
 
-### kubernetes minions ###
+### kubernetes workers ###
 {%- set minions = salt['mine.get']('roles:kube-minion', 'network.ip_addrs', 'grain') %}
 {%- for minion_id, addrlist in minions.items() %}
 	{%- if addrlist is string %}
@@ -19,4 +30,3 @@
 	{%- endif %}
 {{ ip }} {{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}
-
