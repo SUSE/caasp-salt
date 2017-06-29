@@ -37,18 +37,16 @@ include:
 {{ pillar['ssl']['key_file'] }}:
   x509.private_key_managed:
     - bits: 4096
+    - user: root
+    - group: root
+    - mode: 444
     - require:
       - sls:  crypto
       - file: /etc/pki
-  file.managed:
-    - replace: false
-    - user: root
-    - group: root
-    - mode: 644
 
 {{ pillar['ssl']['crt_file'] }}:
   x509.certificate_managed:
-    - ca_server: {{ salt['mine.get']('roles:ca', 'x509.get_pem_entries', expr_form='grain').keys()[0] }}
+    - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: /etc/pki/minion.key
     - CN: {{ grains['caasp_fqdn'] }}
@@ -68,11 +66,9 @@ include:
     - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
     - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
     - backup: True
-    - require:
-      - sls:  crypto
-      - file: /etc/pki
-  file.managed:
-    - replace: false
     - user: root
     - group: root
     - mode: 644
+    - require:
+      - sls:  crypto
+      - file: /etc/pki

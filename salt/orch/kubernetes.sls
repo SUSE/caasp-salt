@@ -132,6 +132,7 @@ reboot_setup:
     - require:
       - salt: kube_master_setup
 
+{% if salt.saltutil.runner('mine.get', tgt='roles:kube-(master|minion)', fun='caasp_fqdn', tgt_type='grain_pcre')|length > 0 %}
 set_bootstrap_grain:
   salt.function:
     - tgt: 'roles:(admin|kube-(master|minion))'
@@ -142,3 +143,4 @@ set_bootstrap_grain:
       - true
     - require:
       - salt: reboot_setup
+{% endif %}
