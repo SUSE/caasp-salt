@@ -6,12 +6,12 @@ base:
     - match: grain_pcre
     - hostname
     - etc-hosts
+    - proxy
     - rebootmgr
     - transactional-update
   'roles:kube-(master|minion)':
     - match: grain_pcre
     - ca-cert
-    - proxy
     - repositories
     - motd
     - users
