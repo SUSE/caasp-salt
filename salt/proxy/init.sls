@@ -9,4 +9,10 @@
         HTTPS_PROXY="{{ salt['pillar.get']('proxy:https', '') }}"
         NO_PROXY="{{ pillar['dashboard'] }},{{ salt['pillar.get']('proxy:no_proxy', '') }}"
 
+/root/.curlrc:
+  file.managed:
+    - contents: |
+        --proxy "{{ salt['pillar.get']('proxy:http', '') }}"
+        --noproxy "{{ pillar['dashboard'] }},{{ salt['pillar.get']('proxy:no_proxy', '') }}"
+
 {% endif %}
