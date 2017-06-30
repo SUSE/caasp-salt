@@ -107,8 +107,6 @@ flannel_setup:
     - tgt_type: grain
     - sls:
       - flannel-setup
-    - require:
-      - salt: reboot_setup
 
 calico_setup:
   salt.state:
