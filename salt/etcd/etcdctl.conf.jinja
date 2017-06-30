@@ -1,0 +1,4 @@
+ETCDCTL_ENDPOINT="https://{{ grains['caasp_fqdn'] }}:2379"
+ETCDCTL_CA_FILE={{ pillar['ssl']['ca_file'] }}
+ETCDCTL_CERT_FILE={{ pillar['ssl']['crt_file'] }}
+ETCDCTL_KEY_FILE={{ pillar['ssl']['key_file'] }}

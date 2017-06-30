@@ -55,3 +55,16 @@ etcd:
       - pkg: etcd
       - user: etcd
       - group: etcd
+
+# note: this will be used to run etcdctl client command
+/etc/sysconfig/etcdctl:
+  file.managed:
+    - source: salt://etcd/etcdctl.conf.jinja
+    - template: jinja
+    - user: etcd
+    - group: etcd
+    - mode: 644
+    - require:
+      - pkg: etcd
+      - user: etcd
+      - group: etcd
