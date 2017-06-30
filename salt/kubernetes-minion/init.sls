@@ -4,9 +4,7 @@
 include:
   - repositories
   - kubernetes-common
-
-conntrack-tools:
-  pkg.installed
+  - kubelet
 
 kubernetes-minion:
   pkg.installed:
@@ -25,63 +23,6 @@ kube-proxy:
     - template: jinja
     - require:
       - pkg:    kubernetes-minion
-
-/etc/cni/bin/flannel:
-  file.managed:
-    - source: salt://kubernetes-minion/flannel
-    - makedirs: True
-    - mode: 0755
-
-/etc/cni/bin/loopback:
-  file.managed:
-    - source: salt://kubernetes-minion/loopback
-    - makedirs: True
-    - mode: 0755
-
-kubelet:
-  file.managed:
-    - name:     /etc/kubernetes/kubelet
-    - source:   salt://kubernetes-minion/kubelet.jinja
-    - template: jinja
-    - require:
-      - pkg:    kubernetes-minion
-  service.running:
-    - enable:   True
-    - watch:
-      - file:   /etc/kubernetes/config
-      - file:   {{ pillar['paths']['kubeconfig'] }}
-      - file:   kubelet
-    - require:
-      - pkg:    kubernetes-minion
-      - file:   /etc/kubernetes/manifests
-  iptables.append:
-    - table:     filter
-    - family:    ipv4
-    - chain:     INPUT
-    - jump:      ACCEPT
-    - match:     state
-    - connstate: NEW
-    - dports:
-      - {{ pillar['kubelet']['port'] }}
-    - proto:     tcp
-    - require:
-      - service: kubelet
-
-#######################
-# config files
-#######################
-
-/etc/kubernetes/manifests:
-  file.directory:
-    - user:     root
-    - group:    root
-    - dir_mode: 755
-    - makedirs: True
-
-{{ pillar['paths']['kubeconfig'] }}:
-  file.managed:
-    - source:         salt://kubernetes-minion/kubeconfig.jinja
-    - template:       jinja
 
 {% if pillar.get('e2e', '').lower() == 'true' %}
 /etc/kubernetes/manifests/e2e-image-puller.manifest:
