@@ -22,8 +22,10 @@ include:
 # docker daemon
 #######################
 
-{% set docker_opts = salt['pillar.get']('docker:args', '')%}
+{% set docker_args = salt['pillar.get']('docker:args', '') %}
+{% set docker_logs = salt['pillar.get']('docker:log_level', '') %}
 {% set docker_reg  = salt['pillar.get']('docker:registry', '') %}
+{% set docker_opts = docker_args + " --log-level=" + docker_logs %}
 {% if docker_reg|length > 0 %}
   {% set docker_opts = docker_opts + " --insecure-registry=" + docker_reg + " --registry-mirror=http://" + docker_reg  %}
 {% endif %}
