@@ -69,6 +69,10 @@ etcd:
   disco:
     port:         '2379'
     id:           'k8s'
+# set log level for etcd service
+# potential log levels are:
+# [ CRITICAL, ERROR, WARNING NOTICE, INFO, DEBUG ]
+  log_level:      'WARNING'
 
 # the flannel backend ('udp', 'vxlan', 'host-gw', etc)
 flannel:
