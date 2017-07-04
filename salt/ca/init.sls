@@ -17,20 +17,6 @@ include:
 # restart the service. Inside a container we mount this file, so when the salt minion starts
 # signing policies are already on filesystem and there is no need to restart the minion
 # service.
-{% if not salt['file.file_exists']('/.dockerenv') %}
-salt-minion:
-  service.running:
-    - enable: True
-    - listen:
-      - file: /etc/salt/minion.d/signing_policies.conf
-
-/etc/salt/minion.d/signing_policies.conf:
-  file.managed:
-    - source: salt://ca/signing_policies.conf
-    - user: root
-    - group: root
-    - mode: 644
-{% endif %}
 
 /etc/pki/issued_certs:
   file.directory:
