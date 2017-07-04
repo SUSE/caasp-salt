@@ -28,3 +28,10 @@ ETCD_DISCOVERY_FALLBACK="proxy"
 ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
 ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ grains['caasp_fqdn'] }}:2380"
 ETCD_INITIAL_CLUSTER_STATE="new"
+
+# set log level
+{% if pillar['etcd']['log_level'] == 'DEBUG' -%}
+ETCD_DEBUG="true"
+{% else -%}
+ETCD_LOG_PACKAGE_LEVELS="etcdserver={{ pillar['etcd']['log_level'] }},etcdmain={{ pillar['etcd']['log_level'] }}"
+{% endif -%}
