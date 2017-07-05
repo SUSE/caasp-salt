@@ -13,6 +13,7 @@
 		    "args": [
 			      "/hyperkube",
             "kubelet",
+            "--cgroup-driver=systemd",
             "-v=2",
             "--allow-privileged=true",
             "--address=0.0.0.0",
@@ -32,7 +33,8 @@
             "--network-plugin=cni",
             "--cni-bin-dir=/etc/cni/bin",
             "--kubeconfig={{ pillar['paths']['kubeconfig'] }}",
-            "--require-kubeconfig"
+            "--require-kubeconfig",
+            "--containerized"
 		    ],
 		    "env": [
 			      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
@@ -93,16 +95,89 @@
 	  },
 	  "mounts": [
         {
+            "destination": "/proc",
+            "type": "proc",
+            "source": "proc"
+        },
+        {
+            "destination": "/dev",
+            "type": "tmpfs",
+            "source": "tmpfs",
+            "options": [
+                "nosuid",
+                "strictatime",
+                "mode=755",
+                "size=65536k"
+            ]
+        },
+        {
+            "destination": "/dev/pts",
+            "type": "devpts",
+            "source": "devpts",
+            "options": [
+                "nosuid",
+                "noexec",
+                "newinstance",
+                "ptmxmode=0666",
+                "mode=0620",
+                "gid=5"
+            ]
+        },
+        {
+            "destination": "/dev/shm",
+            "type": "tmpfs",
+            "source": "shm",
+            "options": [
+                "nosuid",
+                "noexec",
+                "nodev",
+                "mode=1777",
+                "size=65536k"
+            ]
+        },
+        {
+            "destination": "/dev/mqueue",
+            "type": "mqueue",
+            "source": "mqueue",
+            "options": [
+                "nosuid",
+                "noexec",
+                "nodev"
+            ]
+        },
+        {
+            "destination": "/sys",
+            "type": "sysfs",
+            "source": "sysfs",
+            "options": [
+                "nosuid",
+                "noexec",
+                "nodev"
+            ]
+        },
+        {
+            "destination": "/sys/fs/cgroup",
+            "type": "cgroup",
+            "source": "cgroup",
+            "options": [
+                "nosuid",
+                "noexec",
+                "nodev",
+                "relatime",
+                "ro"
+            ]
+        },
+        {
             "type": "bind",
-            "destination": "/etc",
             "source": "/etc",
+            "destination": "/etc",
             "options": [
                 "rbind",
                 "ro",
                 "rprivate"
             ]
-        },
-        {
+         },
+          {
             "type": "bind",
             "source": "/",
             "destination": "/rootfs",
@@ -110,9 +185,9 @@
                 "rbind",
                 "rslave",
                 "ro"
-            ]
-        },
-        {
+             ]
+          },
+          {
             "type": "bind",
             "source": "/var/run/",
             "destination": "/var/run/",
@@ -120,9 +195,9 @@
                 "rbind",
                 "rw",
                 "mode=755"
-            ]
-        },
-        {
+             ]
+          },
+          {
             "type": "bind",
             "source": "/run",
             "destination": "/run",
@@ -130,19 +205,30 @@
                 "rbind",
                 "rw",
                 "mode=755"
-            ]
-        },
-        {
+             ]
+          },
+          {
             "type": "bind",
             "source": "/var/lib",
             "destination": "/var/lib",
             "options": [
-                "rbind",
+                "bind",
                 "rw",
                 "mode=755"
-            ]
-        },
-        {
+             ]
+          },
+          {
+            "type": "bind",
+            "source": "/var/lib/kubelet",
+            "destination": "/var/lib/kubelet",
+            "options": [
+                "rbind",
+                "rslave",
+                "rw",
+                "mode=755"
+             ]
+          },
+          {
             "type": "bind",
             "source": "/var/log",
             "destination": "/var/log",
@@ -150,82 +236,8 @@
                 "bind",
                 "rw",
                 "mode=755"
-            ]
-        },
-		    {
-			      "destination": "/proc",
-			      "type": "proc",
-			      "source": "proc"
-		    },
-		    {
-			      "destination": "/dev",
-			      "type": "tmpfs",
-			      "source": "tmpfs",
-			      "options": [
-				        "nosuid",
-				        "strictatime",
-				        "mode=755",
-				        "size=65536k"
-			      ]
-		    },
-		    {
-			      "destination": "/dev/pts",
-			      "type": "devpts",
-			      "source": "devpts",
-			      "options": [
-				        "nosuid",
-				        "noexec",
-				        "newinstance",
-				        "ptmxmode=0666",
-				        "mode=0620",
-				        "gid=5"
-			      ]
-		    },
-		    {
-			      "destination": "/dev/shm",
-			      "type": "tmpfs",
-			      "source": "shm",
-			      "options": [
-				        "nosuid",
-				        "noexec",
-				        "nodev",
-				        "mode=1777",
-				        "size=65536k"
-			      ]
-		    },
-		    {
-			      "destination": "/dev/mqueue",
-			      "type": "mqueue",
-			      "source": "mqueue",
-			      "options": [
-				        "nosuid",
-				        "noexec",
-				        "nodev"
-			      ]
-		    },
-		    {
-			      "destination": "/sys",
-			      "type": "sysfs",
-			      "source": "sysfs",
-			      "options": [
-				        "nosuid",
-				        "noexec",
-				        "nodev",
-				        "ro"
-			      ]
-		    },
-		    {
-			      "destination": "/sys/fs/cgroup",
-			      "type": "cgroup",
-			      "source": "cgroup",
-			      "options": [
-				        "nosuid",
-				        "noexec",
-				        "nodev",
-				        "relatime",
-				        "ro"
-			      ]
-		    }
+             ]
+          }
 	  ],
     "linux": {
         "rootfsPropagation": "rslave",
