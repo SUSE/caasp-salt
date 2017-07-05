@@ -5,7 +5,7 @@ Description=Kubelet in runC
 Type=forking
 ExecStart=/usr/sbin/runc run -d --pid-file /run/runc-kubelet.pid kubelet
 ExecStopPost=/usr/sbin/runc delete kubelet
-WorkingDirectory=/var/lib/containers/kubelet
+WorkingDirectory=/root/kubelet
 PIDFile=/run/runc-kubelet.pid
 
 [Install]

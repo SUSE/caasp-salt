@@ -44,18 +44,19 @@ kubelet_image:
       - cmd: docker
       - service: docker
 
-kubelet_container:
+/root/kubelet/rootfs:
   file.directory:
-    - name: /var/lib/containers/kubelet/rootfs
     - user: root
     - group: root
     - makedirs: True
+
+kubelet_container:
   cmd.run:
-    - name: docker export $(docker create {{ pillar['hyperkube_image'] }}) | tar -C /var/lib/containers/kubelet/rootfs -xvf -
+    - name: docker export $(docker create {{ pillar['hyperkube_image'] }}) | tar -C /root/kubelet/rootfs -xvf -
     - require:
       - kubelet_image
   file.managed:
-    - name: /var/lib/containers/kubelet/config.json
+    - name: /root/kubelet/config.json
     - source: salt://kubelet/config.json
     - template: jinja
 
@@ -66,7 +67,7 @@ kubelet_systemd:
     - template: jinja
   service.running:
     - name: runc-kubelet
-    - enabled: True
+    - enable: True
     - reload: True
     - require:
       - kubelet_container

@@ -75,13 +75,22 @@ admin_setup:
     - tgt_type: grain
     - highstate: True
 
+kubelet_setup:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain
+    - highstate: True
+    - sls:
+      - kubelet
+
 kube_master_setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
     - require:
-      - salt: flannel_setup
+      - salt: kubelet_setup
+#      - salt: flannel_setup
 
 kube_minion_setup:
   salt.state:
@@ -89,7 +98,7 @@ kube_minion_setup:
     - tgt_type: grain
     - highstate: True
     - require:
-      - salt: flannel_setup
+      - salt: kubelet_setup
       - salt: kube_master_setup
 
 reboot_setup:
