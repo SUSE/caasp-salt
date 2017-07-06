@@ -71,4 +71,4 @@ include:
     - mode: 644
     - require:
       - sls:  crypto
-      - file: /etc/pki
+      - x509: {{ pillar['ssl']['key_file'] }}
