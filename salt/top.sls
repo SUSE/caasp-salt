@@ -23,6 +23,7 @@ base:
   'roles:kube-master':
     - match: grain
     - kubernetes-master
+    - kubectl-client-cert
   'roles:kube-minion':
     - match: grain
     - kubernetes-minion
