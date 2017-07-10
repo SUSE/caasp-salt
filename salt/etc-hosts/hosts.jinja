@@ -1,3 +1,8 @@
+### hostname resolved as IPv4 and IPv6 ###
+# note: this will probably lead to a dupliccated 127.0.0.1 entry, but not a big deal for localhost
+127.0.0.1  {{ grains['host'] }}
+::ffff:{{ grains['ip4_interfaces']['eth0'][0] }}  {{ grains['host'] }}
+
 ### admin nodes ###
 {%- set admins = salt['mine.get']('roles:admin', 'network.ip_addrs', 'grain') %}
 {%- for admin_id, addrlist in admins.items() %}
