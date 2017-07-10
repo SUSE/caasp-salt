@@ -1,8 +1,8 @@
 {
   "Network":   "{{ pillar['cluster_cidr'] }}",
-  "SubnetLen": 24,
-  "SubnetMin": "172.20.50.0",
-  "SubnetMax": "172.20.199.0",
+  "SubnetLen": {{ pillar['cluster_cidr_len'] }},
+  "SubnetMin": "{{ pillar['cluster_cidr_min'] }}",
+  "SubnetMax": "{{ pillar['cluster_cidr_max'] }}",
   "Backend":
   {
     "Type": "{{ pillar['flannel']['backend'] }}"
