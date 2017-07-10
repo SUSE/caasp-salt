@@ -18,6 +18,7 @@ VERSION="${VERSION%+*}+git_r${REVISION}_${COMMIT}"
 NAME=$1
 GITREPONAME=$(basename `git rev-parse --show-toplevel`)
 BRANCH=${2:-master}
+SAFE_BRANCH=${BRANCH//\//-}
 
 cat <<EOF > ${NAME}.spec
 #
@@ -48,7 +49,7 @@ Summary:        Production-Grade Container Scheduling and Management
 License:        Apache-2.0
 Group:          System/Management
 Url:            https://github.com/kubic-project/salt
-Source:         ${BRANCH}.tar.gz
+Source:         ${SAFE_BRANCH}.tar.gz
 BuildRequires:  systemd-rpm-macros
 Requires:       salt
 Requires:       python-m2crypto
@@ -57,14 +58,14 @@ Requires:       python-m2crypto
 Salt scripts for deploying a Kubernetes cluster
 
 %prep
-%setup -q -n %{gitrepo}-${BRANCH}
+%setup -q -n %{gitrepo}-${SAFE_BRANCH}
 
 %build
 
 %install
 rm -rf %{buildroot}%{_datadir}
 mkdir -p %{buildroot}%{_datadir}/salt/kubernetes
-cp -R %{_builddir}/%{gitrepo}-${BRANCH}/*  %{buildroot}%{_datadir}/salt/kubernetes/
+cp -R %{_builddir}/%{gitrepo}-${SAFE_BRANCH}/*  %{buildroot}%{_datadir}/salt/kubernetes/
 
 %files
 %defattr(-,root,root)
