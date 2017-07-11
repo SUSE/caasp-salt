@@ -24,7 +24,7 @@ include:
     - group: root
     - mode: 755
 
-/etc/pki/ca.key:
+/etc/pki/private/ca.key:
   file.managed:
     - replace: false
     - user: root
