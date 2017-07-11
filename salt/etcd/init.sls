@@ -43,19 +43,6 @@ etcd:
     - watch:
       - file: /etc/sysconfig/etcd
 
-# note: this id will be inherited/overwritten by the etcd-proxy
-/etc/sysconfig/etcd:
-  file.managed:
-    - source: salt://etcd/etcd.conf.jinja
-    - template: jinja
-    - user: etcd
-    - group: etcd
-    - mode: 644
-    - require:
-      - pkg: etcd
-      - user: etcd
-      - group: etcd
-
 # note: this will be used to run etcdctl client command
 /etc/sysconfig/etcdctl:
   file.managed:
