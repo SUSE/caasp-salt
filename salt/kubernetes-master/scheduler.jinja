@@ -6,5 +6,4 @@
 # Add your own!
 KUBE_SCHEDULER_ARGS="\
     --leader-elect=true \
-    --v=2 \
     {{ salt['pillar.get']('components:scheduler:args', '') }}"
