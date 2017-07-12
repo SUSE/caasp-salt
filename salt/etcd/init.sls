@@ -34,7 +34,7 @@ etcd:
     - proto: tcp
   service.running:
     - name: etcd
-    - enable: True
+    - enable: False
     - require:
       - sls: ca-cert
       - sls: cert
