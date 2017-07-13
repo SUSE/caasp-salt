@@ -50,6 +50,12 @@ kubelet_image:
     - group: root
     - makedirs: True
 
+/root/dockershim:
+  file.directory:
+    - user: root
+    - group: root
+    - makedirs: True
+
 kubelet_container:
   cmd.run:
     - name: docker export $(docker create {{ pillar['hyperkube_image'] }}) | tar -C /root/kubelet/rootfs -xvf -

@@ -26,6 +26,7 @@ spec:
     - "{{ salt['pillar.get']('components:apiserver:args', '') }}"
     - "--client-ca-file={{ pillar['ssl']['ca_file'] }}"
     - "--allow-privileged"
+    - "--storage-backend=etcd2"
     {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' %}- "--cloud-provider=aws"{% endif %}
     ports:
     - name: https

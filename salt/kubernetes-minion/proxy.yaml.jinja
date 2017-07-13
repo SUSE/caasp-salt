@@ -11,11 +11,7 @@ spec:
     command:
     - /hyperkube
     - proxy
-    - --proxy-mode=iptables
-    - --v=2
     - --kubeconfig={{ pillar['paths']['kubeconfig'] }}
-    - --cluster-cidr={{ pillar['cluster_cidr'] }}
-    - "{{ salt['pillar.get']('components:proxy:args', '') }}"
     securityContext:
       privileged: true
     resources:

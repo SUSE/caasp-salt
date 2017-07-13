@@ -13,7 +13,7 @@
 		    "args": [
 			      "/hyperkube",
             "kubelet",
-            "--cgroup-driver=systemd",
+            "--cgroup-driver=cgroupfs",
             "-v=2",
             "--allow-privileged=true",
             "--address=0.0.0.0",
@@ -34,7 +34,9 @@
             "--cni-bin-dir=/etc/cni/bin",
             "--kubeconfig={{ pillar['paths']['kubeconfig'] }}",
             "--require-kubeconfig",
-            "--containerized"
+            "--containerized",
+            "--cgroups-per-qos=false",
+            "--enforce-node-allocatable="
 		    ],
 		    "env": [
 			      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
@@ -221,6 +223,17 @@
             "type": "bind",
             "source": "/var/lib/kubelet",
             "destination": "/var/lib/kubelet",
+            "options": [
+                "rbind",
+                "rslave",
+                "rw",
+                "mode=755"
+             ]
+          },
+          {
+            "type": "bind",
+            "source": "/root/dockershim",
+            "destination": "/var/lib/dockershim",
             "options": [
                 "rbind",
                 "rslave",
