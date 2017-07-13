@@ -6,6 +6,7 @@ base:
     - certificates
     - ip_addrs
     - fqdn
+    - schedule
   'roles:kube-(master|minion)':
     - match: grain_pcre
     - beacons
