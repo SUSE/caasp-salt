@@ -60,6 +60,7 @@ update_modules:
 {{ master_id }}-wait-for-start:
   salt.wait_for_event:
     - name: salt/minion/*/start
+    - timeout: 1200
     - id_list:
       - {{ master_id }}
     - require:
@@ -130,6 +131,7 @@ update_modules:
 {{ worker_id }}-wait-for-start:
   salt.wait_for_event:
     - name: salt/minion/*/start
+    - timeout: 1200
     - id_list:
       - {{ worker_id }}
     - require:
