@@ -66,8 +66,14 @@ etcd_discovery_setup:
     - sls:
       - etcd-discovery
     - require:
-      - salt: ca_setup
       - salt: update_modules
+
+refresh_mine:
+  salt.function:
+    - tgt: '*'
+    - name: mine.update
+    - require:
+      - salt: ca_setup
 
 etcd_proxy_setup:
   salt.state:
@@ -83,6 +89,7 @@ etcd_proxy_setup:
     - batch: 3
     - require:
       - salt: etcd_discovery_setup
+      - salt: refresh_mine
 
 flannel_setup:
   salt.state:
