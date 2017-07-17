@@ -50,13 +50,8 @@ def ext_pillar(minion_id,
     log = logging.getLogger(__name__)
     cache = salt.cache.Cache(__opts__)
 
-    if username is None:
-        with open(os.environ['VELUM_INTERNAL_API_USERNAME_FILE'], 'r') as f:
-            username = f.read().strip()
-
-    if password is None:
-        with open(os.environ['VELUM_INTERNAL_API_PASSWORD_FILE'], 'r') as f:
-            password = f.read().strip()
+    username = username or os.environ['VELUM_INTERNAL_API_USERNAME']
+    password = password or os.environ['VELUM_INTERNAL_API_PASSWORD']
 
     data = __salt__['http.query'](url=url,
                                   ca_bundle=ca_bundle,
