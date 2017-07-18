@@ -51,6 +51,7 @@ update_modules:
   salt.function:
     - tgt: {{ master_id }}
     - name: cmd.run
+    - bg: True
     - arg:
       - systemctl reboot
     - require:
@@ -122,6 +123,7 @@ update_modules:
   salt.function:
     - tgt: {{ worker_id }}
     - name: cmd.run
+    - bg: True
     - arg:
       - systemctl reboot
     - require:
