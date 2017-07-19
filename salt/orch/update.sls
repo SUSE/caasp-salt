@@ -23,6 +23,8 @@ update_modules:
     - tgt: '*'
     - kwarg:
         refresh: True
+    - require:
+      - salt: update_mine
 
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.ip_addrs', tgt_type='compound') %}
@@ -36,6 +38,8 @@ update_modules:
     - arg:
       - update_in_progress
       - true
+    - require:
+      - salt: update_modules
 
 {{ master_id }}-clean-shutdown:
   salt.state:
@@ -45,6 +49,8 @@ update_modules:
       - docker.stop
       - flannel.stop
       - etcd.stop
+    - require:
+      - salt: {{ master_id }}-set-update-grain
 
 # Reboot the node
 {{ master_id }}-reboot:
@@ -93,6 +99,8 @@ update_modules:
     - arg:
       - update_in_progress
       - false
+    - require:
+      - salt: {{ master_id }}-update-reboot-needed-grain
 
 {% endfor %}
 
@@ -117,6 +125,8 @@ update_modules:
       - docker.stop
       - flannel.stop
       - etcd-proxy.stop
+    - require:
+      - salt: {{ worker_id }}-set-update-grain
 
 # Reboot the node
 {{ worker_id }}-reboot:
@@ -165,5 +175,7 @@ update_modules:
     - arg:
       - update_in_progress
       - false
+    - require:
+      - salt: {{ worker_id }}-update-reboot-needed-grain
 
 {% endfor %}
