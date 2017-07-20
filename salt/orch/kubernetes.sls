@@ -68,13 +68,6 @@ etcd_discovery_setup:
     - require:
       - salt: update_modules
 
-refresh_mine:
-  salt.function:
-    - tgt: '*'
-    - name: mine.update
-    - require:
-      - salt: ca_setup
-
 etcd_proxy_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
@@ -89,7 +82,6 @@ etcd_proxy_setup:
     - batch: 3
     - require:
       - salt: etcd_discovery_setup
-      - salt: refresh_mine
 
 flannel_setup:
   salt.state:
