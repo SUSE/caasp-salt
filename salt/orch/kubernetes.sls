@@ -59,6 +59,21 @@ ca_setup:
       - salt: etc_hosts_setup
       - salt: update_mine
 
+refresh_ca_mine:
+  salt.function:
+    - tgt: 'roles:ca'
+    - tgt_type: grain
+    - name: mine.update
+    - require:
+      - salt: ca_setup
+
+refresh_all_mines:
+  salt.function:
+    - tgt: '*'
+    - name: mine.update
+    - require:
+      - salt: refresh_ca_mine
+
 etcd_discovery_setup:
   salt.state:
     - tgt: 'roles:kube-master'
@@ -67,13 +82,6 @@ etcd_discovery_setup:
       - etcd-discovery
     - require:
       - salt: update_modules
-
-refresh_mine:
-  salt.function:
-    - tgt: '*'
-    - name: mine.update
-    - require:
-      - salt: ca_setup
 
 etcd_proxy_setup:
   salt.state:
@@ -89,7 +97,7 @@ etcd_proxy_setup:
     - batch: 3
     - require:
       - salt: etcd_discovery_setup
-      - salt: refresh_mine
+      - salt: refresh_all_mines
 
 flannel_setup:
   salt.state:
