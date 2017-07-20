@@ -57,9 +57,10 @@ update_modules:
   salt.function:
     - tgt: {{ master_id }}
     - name: cmd.run
-    - bg: True
     - arg:
-      - systemctl reboot
+      - sleep 15; systemctl reboot
+    - kwarg:
+        bg: True
     - require:
       - salt: {{ master_id }}-clean-shutdown
 
@@ -133,9 +134,10 @@ update_modules:
   salt.function:
     - tgt: {{ worker_id }}
     - name: cmd.run
-    - bg: True
     - arg:
-      - systemctl reboot
+      - sleep 15; systemctl reboot
+    - kwarg:
+        bg: True
     - require:
       - salt: {{ worker_id }}-clean-shutdown
 
