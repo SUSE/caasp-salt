@@ -13,6 +13,10 @@ services_cidr:    '172.24.0.0/16'
 
 # the cluster domain name used for internal infrastructure host <-> host  communication
 internal_infra_domain: 'infra.caasp.local'
+ldap_internal_infra_domain: 'dc=infra,dc=caasp,dc=local'
+
+# the CIDR for services (virtual IPs for services)
+services_cidr:    '172.21.0.0/16'
 
 api:
   # the API service IP (must be inside the 'services_cidr')

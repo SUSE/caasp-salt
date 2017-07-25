@@ -1,0 +1,43 @@
+# LDIF fragment to create user branch under root
+
+dn: ou=People,dc=infra,dc=caasp,dc=local
+objectclass:top
+objectclass:organizationalUnit
+description: Users
+ou: People
+
+# admin user
+
+dn: uid=admin,ou=People,dc=infra,dc=caasp,dc=local
+objectclass:top
+objectclass:person
+objectclass:posixAccount
+objectclass:inetOrgPerson
+uid: admin
+cn: Administrator User
+gecos: Administrator User
+sn: User
+uidNumber: 1000
+gidNumber: 1000
+# Password1234!
+userPassword: CRYPTCIkf2DvHJl1vs 
+mail: admin@example.com
+homeDirectory: /home/admin
+loginShell: /bin/bash
+
+# LDIF fragment to create group branch under root
+
+dn: ou=Groups,dc=infra,dc=caasp,dc=local
+objectclass:top
+objectclass:organizationalUnit
+description: User groups
+ou: Groups
+
+# create the Cluster-Administrator entry
+
+dn: cn=Staff,ou=Groups,dc=infra,dc=caasp,dc=local
+objectclass:top
+objectclass:posixGroup
+cn: staff
+gidNumber: 1000
+

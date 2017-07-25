@@ -40,4 +40,9 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
                --tls-private-key-file={{ pillar['ssl']['key_file'] }} \
                {{ salt['pillar.get']('components:apiserver:args', '') }} \
                --client-ca-file={{ pillar['ssl']['ca_file'] }} \
-               --storage-backend={{ pillar['api']['etcd_version'] }}"
+               --storage-backend={{ pillar['api']['etcd_version'] }} \
+               --oidc-issuer-url=https://{{ grains['caasp_fqdn'] }}:32000 \
+               --oidc-client-id=example-app \
+               --oidc-ca-file={{ pillar['ssl']['ca_file'] }} \
+               --oidc-username-claim=email \
+               --oidc-groups-claim=groups"
