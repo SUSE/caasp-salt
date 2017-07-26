@@ -39,6 +39,12 @@ kube_log_level:   '2'
 # install the addons (ie, DNS)
 addons:           'false'
 
+versions:
+  # kubernetes version to use
+  # it can be "" (no specifi version is foced, just installed), "latest",
+  # a specific version or (for Salt>=2017.7.0) a version with wildcards (ie, "1.5*")
+  kubernetes:     ''
+
 ssl:
   enabled:        true
   ca_dir:         '/etc/pki/trust/anchors'
