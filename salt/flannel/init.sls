@@ -1,6 +1,6 @@
 include:
   - repositories
-  - etcd-proxy
+  - etcd
 
 flannel:
   pkg.installed:

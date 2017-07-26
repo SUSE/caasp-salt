@@ -1,7 +1,7 @@
 include:
   - ca-cert
   - cert
-  - etcd-proxy
+  - etcd
 
 {% if pillar['ssl']['enabled'] -%}
   {% set ca = '--ca-file ' + pillar['ssl']['ca_file'] -%}

@@ -16,7 +16,6 @@ base:
     - motd
     - users
     - cert
-    - etcd-proxy
     - flannel
     - docker
     - container-feeder
@@ -27,3 +26,5 @@ base:
   'roles:kube-minion':
     - match: grain
     - kubernetes-minion
+  'roles:etcd':
+    - etcd

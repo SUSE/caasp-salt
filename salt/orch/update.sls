@@ -125,7 +125,7 @@ update_modules:
       - kubernetes-minion.stop
       - docker.stop
       - flannel.stop
-      - etcd-proxy.stop
+      - etcd.stop
     - require:
       - salt: {{ worker_id }}-set-update-grain
 

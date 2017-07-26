@@ -43,7 +43,6 @@ etcd:
     - watch:
       - file: /etc/sysconfig/etcd
 
-# note: this id will be inherited/overwritten by the etcd-proxy
 /etc/sysconfig/etcd:
   file.managed:
     - source: salt://etcd/etcd.conf.jinja
@@ -68,3 +67,9 @@ etcd:
       - pkg: etcd
       - user: etcd
       - group: etcd
+
+/etc/systemd/system/etcd.service.d/etcd.conf:
+  file.managed:
+    - source: salt://etcd/systemd-etcd.conf
+    - makedirs: True
+

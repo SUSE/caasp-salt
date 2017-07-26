@@ -2,7 +2,7 @@ include:
   - repositories
   - ca-cert
   - cert
-  - etcd-proxy
+  - etcd
 
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
 
