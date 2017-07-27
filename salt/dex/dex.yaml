@@ -73,7 +73,7 @@ data:
           baseDN: ou=People,{{ pillar['ldap_internal_infra_domain'] }}
           filter: "(objectClass=inetOrgPerson)"
           username: uid
-          idAttr: DN
+          idAttr: dn
           emailAttr: mail
           nameAttr: gecos          
         groupSearch:
