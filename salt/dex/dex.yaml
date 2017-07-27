@@ -26,6 +26,8 @@ spec:
           mountPath: /etc/dex/cfg
         - name: tls
           mountPath: /etc/dex/tls
+        - name: ca
+          mountPath: {{ pillar['ssl']['ca_file'] }}
 
       volumes:
       - name: config
@@ -37,6 +39,9 @@ spec:
       - name: tls
         secret:
           secretName: dex-tls
+      - name: ca
+        hostPath:
+          path: {{ pillar['ssl']['ca_file'] }}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -59,11 +64,11 @@ data:
       id: ldap
       name: LDAP
       config:
-        host: "{{ pillar['dashboard'] }}:389"
+        host: "{{ pillar['dashboard'] }}"
         startTLS: true
-        insecureSkipVerify: true
-        bindDN: admin
+        bindDN: cn=admin,{{ pillar['ldap_internal_infra_domain'] }}
         bindPW: admin
+        rootCA: {{ pillar['ssl']['ca_file'] }}
         userSearch:
           baseDN: ou=People,{{ pillar['ldap_internal_infra_domain'] }}
           filter: "(objectClass=inetOrgPerson)"

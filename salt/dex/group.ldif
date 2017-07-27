@@ -19,8 +19,8 @@ gecos: Administrator User
 sn: User
 uidNumber: 1000
 gidNumber: 1000
-# Password1234!
-userPassword: CRYPTCIkf2DvHJl1vs 
+# Password1234
+userPassword: {SHA}W5ZnKudwnqspdVDK42LVvuRoxX0=  
 mail: admin@example.com
 homeDirectory: /home/admin
 loginShell: /bin/bash
