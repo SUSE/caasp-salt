@@ -4,16 +4,44 @@ include:
   - cert
   - etcd-proxy
 
+{% set kubernetes_version = salt['pillar.get']('versions:kubernetes', '') %}
+
 conntrack-tools:
   pkg.installed
 
-kubernetes-minion:
+extra-tools:
   pkg.installed:
     - pkgs:
       - iptables
       - conntrack-tools
-      - kubernetes-client
-      - kubernetes-node
+    - require:
+      - file: /etc/zypp/repos.d/containers.repo
+
+kubernetes-kubelet:
+  pkg.installed:
+    - name: kubernetes-kubelet
+    {%- if kubernetes_version|length > 0 %}
+    - version: {{ kubernetes_version }}
+    {%- endif %}
+    - require:
+      - file: /etc/zypp/repos.d/containers.repo
+
+kubernetes-node:
+  pkg.installed:
+    - name: kubernetes-node
+    {%- if kubernetes_version|length > 0 %}
+    - version: {{ kubernetes_version }}
+    {%- endif %}
+    - require:
+      - pkg:  kubernetes-kubelet
+      - file: /etc/zypp/repos.d/containers.repo
+
+kubernetes-client:
+  pkg.installed:
+    - name: kubernetes-client
+    {%- if kubernetes_version|length > 0 %}
+    - version: {{ kubernetes_version }}
+    {%- endif %}
     - require:
       - file: /etc/zypp/repos.d/containers.repo
 
@@ -23,15 +51,17 @@ kube-proxy:
     - source:   salt://kubernetes-minion/proxy.jinja
     - template: jinja
     - require:
-      - pkg:    kubernetes-minion
+      - pkg:    extra-tools
+      - pkg:    kubernetes-node
+      - pkg:    kubernetes-client
   service.running:
     - enable:   True
     - watch:
       - file:   /etc/kubernetes/config
       - file:   {{ pillar['paths']['kubeconfig'] }}
       - file:   kube-proxy
-    - require:
-      - pkg:    kubernetes-minion
+      - pkg:    kubernetes-kubelet
+      - pkg:    kubernetes-node
 
 kubelet:
   file.managed:
@@ -39,15 +69,19 @@ kubelet:
     - source:   salt://kubernetes-minion/kubelet.jinja
     - template: jinja
     - require:
-      - pkg:    kubernetes-minion
+      - pkg:    extra-tools
+      - pkg:    kubernetes-kubelet
+      - pkg:    kubernetes-node
+      - pkg:    kubernetes-client
   service.running:
     - enable:   True
     - watch:
       - file:   /etc/kubernetes/config
       - file:   {{ pillar['paths']['kubeconfig'] }}
       - file:   kubelet
+      - pkg:    kubernetes-node
+      - pkg:    kubernetes-kubelet
     - require:
-      - pkg:    kubernetes-minion
       - file:   /etc/kubernetes/manifests
   iptables.append:
     - table:     filter
@@ -98,7 +132,7 @@ kubelet:
     - source:   salt://kubernetes-minion/config.jinja
     - template: jinja
     - require:
-      - pkg:    kubernetes-minion
+      - pkg:    kubernetes-node
 
 {% if pillar.get('e2e', '').lower() == 'true' %}
 /etc/kubernetes/manifests/e2e-image-puller.manifest:
