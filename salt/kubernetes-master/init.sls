@@ -3,8 +3,20 @@ include:
   - ca-cert
   - cert
   - etcd-proxy
+  - kubernetes-common
+  - kubernetes-minion
 
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
+
+extend:
+  /etc/kubernetes/kubelet-initial:
+    file.managed:
+      - context:
+        schedulable: "false"
+  kubelet:
+    cmd.run:
+      - require:
+        - sls: kubernetes-master
 
 #######################
 # components
@@ -20,13 +32,6 @@ kubernetes-master:
     - require:
       - file: /etc/zypp/repos.d/containers.repo
 
-/etc/kubernetes/config:
-  file.managed:
-    - source:     salt://kubernetes-master/config.jinja
-    - template:   jinja
-    - require:
-      - pkg:      kubernetes-master
-
 kube-apiserver:
   iptables.append:
     - table:      filter
@@ -40,6 +45,7 @@ kube-apiserver:
     - proto:      tcp
     - require:
       - pkg:      kubernetes-master
+      - sls:      kubernetes-common
   file.managed:
     - name:       /etc/kubernetes/apiserver
     - source:     salt://kubernetes-master/apiserver.jinja
@@ -54,7 +60,7 @@ kube-apiserver:
       - sls:      ca-cert
       - sls:      cert
     - watch:
-      - file:     /etc/kubernetes/config
+      - sls:      kubernetes-common
       - file:     kube-apiserver
       - sls:      ca-cert
       - sls:      cert
@@ -71,7 +77,7 @@ kube-scheduler:
     - require:
       - service:  kube-apiserver
     - watch:
-      - file:     /etc/kubernetes/config
+      - sls:      kubernetes-common
       - file:     kube-scheduler
 
 kube-controller-manager:
@@ -86,7 +92,7 @@ kube-controller-manager:
     - require:
       - service:  kube-apiserver
     - watch:
-      - file:     /etc/kubernetes/config
+      - sls:      kubernetes-common
       - file:     kube-controller-manager
 
 ###################################

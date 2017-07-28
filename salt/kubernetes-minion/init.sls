@@ -3,6 +3,7 @@ include:
   - ca-cert
   - cert
   - etcd-proxy
+  - kubernetes-common
 
 conntrack-tools:
   pkg.installed
@@ -27,11 +28,19 @@ kube-proxy:
   service.running:
     - enable:   True
     - watch:
-      - file:   /etc/kubernetes/config
       - file:   {{ pillar['paths']['kubeconfig'] }}
       - file:   kube-proxy
+      - sls:    kubernetes-common
     - require:
       - pkg:    kubernetes-minion
+
+/etc/kubernetes/kubelet-initial:
+  file.managed:
+    - name: /etc/kubernetes/kubelet-initial
+    - source: salt://kubernetes-minion/kubelet-initial.jinja
+    - template: jinja
+    - defaults:
+      schedulable: "true"
 
 kubelet:
   file.managed:
@@ -40,6 +49,7 @@ kubelet:
     - template: jinja
     - require:
       - pkg:    kubernetes-minion
+      - sls:    kubernetes-common
   service.running:
     - enable:   True
     - watch:
@@ -49,6 +59,7 @@ kubelet:
     - require:
       - pkg:    kubernetes-minion
       - file:   /etc/kubernetes/manifests
+      - file:   /etc/kubernetes/kubelet-initial
   iptables.append:
     - table:     filter
     - family:    ipv4
@@ -65,11 +76,13 @@ kubelet:
   # TODO: This needs to wait for the node to register, which takes a few seconds.
   # Salt doesn't seem to have a retry mechanism in the version were using, so I'm
   # doing a horrible hack right now.
+  # RAR: Increasing the timeout to 5 minutes, since this now occurs during the initial
+  # bootstrap - it takes more than 60 seconds before kube-apiserver is running.
   cmd.run:
     - name: |
         ELAPSED=0
         until output=$(kubectl uncordon {{ grains['caasp_fqdn'] }}) ; do
-            [ $ELAPSED -gt 60 ] && exit 1
+            [ $ELAPSED -gt 300 ] && exit 1
             sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
         done
         echo changed="$(echo $output | grep 'already uncordoned' &> /dev/null && echo no || echo yes)"
@@ -87,18 +100,6 @@ kubelet:
     - group:    root
     - dir_mode: 755
     - makedirs: True
-
-{{ pillar['paths']['kubeconfig'] }}:
-  file.managed:
-    - source:         salt://kubernetes-minion/kubeconfig.jinja
-    - template:       jinja
-
-/etc/kubernetes/config:
-  file.managed:
-    - source:   salt://kubernetes-minion/config.jinja
-    - template: jinja
-    - require:
-      - pkg:    kubernetes-minion
 
 {% if pillar.get('e2e', '').lower() == 'true' %}
 /etc/kubernetes/manifests/e2e-image-puller.manifest:

@@ -20,10 +20,8 @@ base:
     - flannel
     - docker
     - container-feeder
+    - kubernetes-minion
   'roles:kube-master':
     - match: grain
     - kubernetes-master
     - kubectl-client-cert
-  'roles:kube-minion':
-    - match: grain
-    - kubernetes-minion
