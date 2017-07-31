@@ -80,6 +80,19 @@ etcd:
 # [ CRITICAL, ERROR, WARNING NOTICE, INFO, DEBUG ]
   log_level:      'WARNING'
 
+# CNI network configuration
+cni:
+  enabled:        true
+  dirs:
+    bin:          '/opt/cni/bin'
+    conf:         '/etc/cni/net.d'
+  driver:
+    package:      'kubernetes-addons-flannel'
+    manifests:
+      # TODO: enable this when we have RBAC
+      # - '/etc/kubernetes/addons/flannel-rbac.yml'
+      - '/etc/kubernetes/addons/flannel.yml'
+
 # the flannel backend ('udp', 'vxlan', 'host-gw', etc)
 flannel:
   backend:        'udp'

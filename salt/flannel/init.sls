@@ -1,3 +1,5 @@
+{% if not salt['pillar.get']('cni:enabled', false) -%}
+
 include:
   - repositories
   - etcd-proxy
@@ -40,3 +42,5 @@ flannel:
     - watch:
       - service: etcd
       - file: /etc/sysconfig/flanneld
+
+{% endif %} # not cni

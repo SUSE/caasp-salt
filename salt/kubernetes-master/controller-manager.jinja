@@ -14,4 +14,7 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
 {% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
     --cloud-provider=aws \
 {% endif -%}
+{% if salt['pillar.get']('cni:enabled', false) -%}
+    --allocate-node-cidrs=true \
+{%- endif %}
     {{ salt['pillar.get']('components:controller-manager:args', '') }}"

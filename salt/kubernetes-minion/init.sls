@@ -67,6 +67,14 @@ kube-proxy:
       - pkg:    kubernetes-kubelet
       - pkg:    kubernetes-node
 
+{% if cni_enabled -%}
+cni:
+  pkg.installed:
+    - name:     cni
+    - require:
+      - file:   /etc/zypp/repos.d/containers.repo
+{%- endif %}
+
 kubelet:
   file.managed:
     - name:     /etc/kubernetes/kubelet
@@ -77,6 +85,9 @@ kubelet:
       - pkg:    kubernetes-kubelet
       - pkg:    kubernetes-node
       - pkg:    kubernetes-client
+      {% if cni_enabled -%}
+      - pkg:    cni
+      {%- endif %}
   service.running:
     - enable:   True
     - watch:
@@ -85,6 +96,9 @@ kubelet:
       - file:   kubelet
       - pkg:    kubernetes-node
       - pkg:    kubernetes-kubelet
+      {% if cni_enabled -%}
+      - pkg:    cni
+      {% endif %}
     - require:
       - file:   /etc/kubernetes/manifests
   iptables.append:

@@ -53,7 +53,9 @@ docker:
   service.running:
     - enable: True
     - watch:
+      {% if not salt['pillar.get']('cni:enabled', false) -%}
       - service: flannel
+      {%- endif %}
       - pkg: docker
       - file: /etc/sysconfig/docker
       - /etc/systemd/system/docker.service.d/proxy.conf
