@@ -1,3 +1,5 @@
+{% if not salt['pillar.get']('cni:enabled', false) -%}
+
 include:
   - ca-cert
   - cert
@@ -32,3 +34,5 @@ load_flannel_cfg:
       - service: etcd
     - onchanges:
       - file: /root/flannel-config.json
+
+{% endif %} # not cni

@@ -3,19 +3,51 @@ include:
   - ca-cert
   - cert
   - etcd-proxy
+  - kubernetes-common
+
+{% set cni_enabled = salt['pillar.get']('cni:enabled', false) %}
+
+{% set kubernetes_version = salt['pillar.get']('versions:kubernetes', '') %}
 
 conntrack-tools:
   pkg.installed
 
-kubernetes-minion:
+extra-tools:
   pkg.installed:
     - pkgs:
       - iptables
       - conntrack-tools
-      - kubernetes-client
-      - kubernetes-node
     - require:
       - file: /etc/zypp/repos.d/containers.repo
+
+kubernetes-kubelet:
+  pkg.installed:
+    - name: kubernetes-kubelet
+    {%- if kubernetes_version|length > 0 %}
+    - version: {{ kubernetes_version }}
+    {%- endif %}
+    - require:
+      - file: /etc/zypp/repos.d/containers.repo
+
+kubernetes-node:
+  pkg.installed:
+    - name: kubernetes-node
+    {%- if kubernetes_version|length > 0 %}
+    - version: {{ kubernetes_version }}
+    {%- endif %}
+    - require:
+      - pkg:  kubernetes-kubelet
+      - file: /etc/zypp/repos.d/containers.repo
+
+kubernetes-client:
+  pkg.installed:
+    - name: kubernetes-client
+    {%- if kubernetes_version|length > 0 %}
+    - version: {{ kubernetes_version }}
+    {%- endif %}
+    - require:
+      - file:   /etc/zypp/repos.d/containers.repo
+      - sls:    kubernetes-common
 
 kube-proxy:
   file.managed:
@@ -23,15 +55,25 @@ kube-proxy:
     - source:   salt://kubernetes-minion/proxy.jinja
     - template: jinja
     - require:
-      - pkg:    kubernetes-minion
+      - pkg:    extra-tools
+      - pkg:    kubernetes-node
+      - pkg:    kubernetes-client
   service.running:
     - enable:   True
     - watch:
       - file:   /etc/kubernetes/config
       - file:   {{ pillar['paths']['kubeconfig'] }}
       - file:   kube-proxy
+      - pkg:    kubernetes-kubelet
+      - pkg:    kubernetes-node
+
+{% if cni_enabled -%}
+cni:
+  pkg.installed:
+    - name:     cni
     - require:
-      - pkg:    kubernetes-minion
+      - file:   /etc/zypp/repos.d/containers.repo
+{%- endif %}
 
 kubelet:
   file.managed:
@@ -39,15 +81,25 @@ kubelet:
     - source:   salt://kubernetes-minion/kubelet.jinja
     - template: jinja
     - require:
-      - pkg:    kubernetes-minion
+      - pkg:    extra-tools
+      - pkg:    kubernetes-kubelet
+      - pkg:    kubernetes-node
+      - pkg:    kubernetes-client
+      {% if cni_enabled -%}
+      - pkg:    cni
+      {%- endif %}
   service.running:
     - enable:   True
     - watch:
       - file:   /etc/kubernetes/config
       - file:   {{ pillar['paths']['kubeconfig'] }}
       - file:   kubelet
+      - pkg:    kubernetes-node
+      - pkg:    kubernetes-kubelet
+      {% if cni_enabled -%}
+      - pkg:    cni
+      {% endif %}
     - require:
-      - pkg:    kubernetes-minion
       - file:   /etc/kubernetes/manifests
   iptables.append:
     - table:     filter
@@ -76,6 +128,8 @@ kubelet:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - stateful: True
+    - require:
+      - file:   {{ pillar['paths']['kubeconfig'] }}
 
 #######################
 # config files
@@ -88,18 +142,12 @@ kubelet:
     - dir_mode: 755
     - makedirs: True
 
-{{ pillar['paths']['kubeconfig'] }}:
-  file.managed:
-    - source:         salt://kubernetes-minion/kubeconfig.jinja
-    - template:       jinja
+#######################
+# misc stuff
+#######################
 
-/etc/kubernetes/config:
-  file.managed:
-    - source:   salt://kubernetes-minion/config.jinja
-    - template: jinja
-    - require:
-      - pkg:    kubernetes-minion
-
+# this is only necessary for the kubernetes conformance tests:
+# it pre-pulls the images
 {% if pillar.get('e2e', '').lower() == 'true' %}
 /etc/kubernetes/manifests/e2e-image-puller.manifest:
   file.managed:

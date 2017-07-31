@@ -3,29 +3,41 @@ include:
   - ca-cert
   - cert
   - etcd-proxy
+  - kubernetes-common
 
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
+{% set kubernetes_version = salt['pillar.get']('versions:kubernetes', '') %}
 
 #######################
 # components
 #######################
 
-kubernetes-master:
+extra-tools:
   pkg.installed:
     - pkgs:
       - iptables
       - etcdctl
-      - kubernetes-client
-      - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
 
-/etc/kubernetes/config:
-  file.managed:
-    - source:     salt://kubernetes-master/config.jinja
-    - template:   jinja
+kubernetes-client:
+  pkg.installed:
+    - name: kubernetes-client
+    {%- if kubernetes_version|length > 0 %}
+    - version: {{ kubernetes_version }}
+    {%- endif %}
     - require:
-      - pkg:      kubernetes-master
+      - file: /etc/zypp/repos.d/containers.repo
+
+kubernetes-master:
+  pkg.installed:
+    - name: kubernetes-master
+    {%- if kubernetes_version|length > 0 %}
+    - version: {{ kubernetes_version }}
+    {%- endif %}
+    - require:
+      - file:     /etc/zypp/repos.d/containers.repo
+      - sls:      kubernetes-common
 
 kube-apiserver:
   iptables.append:
@@ -39,25 +51,28 @@ kube-apiserver:
         - {{ api_ssl_port }}
     - proto:      tcp
     - require:
+      - pkg:      kubernetes-client
       - pkg:      kubernetes-master
   file.managed:
     - name:       /etc/kubernetes/apiserver
     - source:     salt://kubernetes-master/apiserver.jinja
     - template:   jinja
     - require:
+      - pkg:      kubernetes-client
       - pkg:      kubernetes-master
   service.running:
     - enable:     True
     - require:
-      - pkg:      kubernetes-master
       - iptables: kube-apiserver
       - sls:      ca-cert
       - sls:      cert
+      - pkg:      kubernetes-client
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-apiserver
       - sls:      ca-cert
       - sls:      cert
+      - pkg:      kubernetes-master
 
 kube-scheduler:
   file.managed:
@@ -65,6 +80,7 @@ kube-scheduler:
     - source:     salt://kubernetes-master/scheduler.jinja
     - template:   jinja
     - require:
+      - pkg:      kubernetes-client
       - pkg:      kubernetes-master
   service.running:
     - enable:     True
@@ -73,6 +89,7 @@ kube-scheduler:
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-scheduler
+      - pkg:      kubernetes-master
 
 kube-controller-manager:
   file.managed:
@@ -80,6 +97,8 @@ kube-controller-manager:
     - source:     salt://kubernetes-master/controller-manager.jinja
     - template:   jinja
     - require:
+      - pkg:      kubernetes-client
+    - watch:
       - pkg:      kubernetes-master
   service.running:
     - enable:     True
@@ -88,6 +107,7 @@ kube-controller-manager:
     - watch:
       - file:     /etc/kubernetes/config
       - file:     kube-controller-manager
+      - pkg:      kubernetes-master
 
 ###################################
 # addons

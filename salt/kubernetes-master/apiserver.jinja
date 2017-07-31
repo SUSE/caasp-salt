@@ -4,6 +4,8 @@
 # The following values are used to configure the kube-apiserver
 #
 
++{% set kubernetes_version = salt['pillar.get']('versions:kubernetes', '') %}
+
 # The address on the local server to listen to.
 KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 
@@ -25,7 +27,13 @@ KUBE_ETCD_SERVERS="--etcd-servers=http://{{ grains['caasp_fqdn'] }}:2379"
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}"
 
 # default admission control policies
+{% if kubernetes_version.startswith("1.6") or kubernetes_version.startswith("1.7") %}
+KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds"
+{% elif kubernetes_version.startswith("1.4") or kubernetes_version.startswith("1.5") %}
+KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota"
+{% else %}
 KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota"
+{% endif %}
 
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \

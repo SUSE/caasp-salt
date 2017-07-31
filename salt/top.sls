@@ -20,6 +20,7 @@ base:
     - flannel
     - docker
     - container-feeder
+    - kubernetes-common
   'roles:kube-master':
     - match: grain
     - kubernetes-master

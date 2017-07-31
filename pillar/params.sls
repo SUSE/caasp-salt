@@ -39,6 +39,12 @@ kube_log_level:   '2'
 # install the addons (ie, DNS)
 addons:           'false'
 
+versions:
+  # kubernetes version to use
+  # it can be "" (no specifi version is foced, just installed), "latest",
+  # a specific version or (for Salt>=2017.7.0) a version with wildcards (ie, "1.5*")
+  kubernetes:     ''
+
 ssl:
   enabled:        true
   ca_dir:         '/etc/pki/trust/anchors'
@@ -73,6 +79,19 @@ etcd:
 # potential log levels are:
 # [ CRITICAL, ERROR, WARNING NOTICE, INFO, DEBUG ]
   log_level:      'WARNING'
+
+# CNI network configuration
+cni:
+  enabled:        true
+  dirs:
+    bin:          '/opt/cni/bin'
+    conf:         '/etc/cni/net.d'
+  driver:
+    package:      'kubernetes-addons-flannel'
+    manifests:
+      # TODO: enable this when we have RBAC
+      # - '/etc/kubernetes/addons/flannel-rbac.yml'
+      - '/etc/kubernetes/addons/flannel.yml'
 
 # the flannel backend ('udp', 'vxlan', 'host-gw', etc)
 flannel:

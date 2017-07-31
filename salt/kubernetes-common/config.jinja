@@ -10,6 +10,10 @@
 #   kubelet.service
 #   kube-proxy.service
 
+{% set api_server = "api." + pillar['internal_infra_domain']  -%}
+{% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
+{% set api_server_url = 'https://' + api_server + ':' + api_ssl_port -%}
+
 # logging to stderr means we get it in the systemd journal
 KUBE_LOGTOSTDERR="--logtostderr=true"
 
@@ -23,4 +27,4 @@ KUBE_ENABLE_DAEMONSETS=true
 
 # How the controller-manager, scheduler, and proxy find the apiserver
 # note: we do not use SSL for local connections
-KUBE_MASTER="--master=http://127.0.0.1:8080"
+KUBE_MASTER="--master={{ api_server_url }}"

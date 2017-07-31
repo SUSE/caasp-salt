@@ -121,6 +121,17 @@ kube_minion_setup:
       - salt: flannel_setup
       - salt: kube_master_setup
 
+cni_setup:
+  salt.state:
+    - tgt: 'roles:kube-master'
+    - tgt_type: grain
+    - batch: 1
+    - sls:
+      - cni
+    - require:
+      - salt: kube_master_setup
+      - salt: kube_minion_setup
+
 reboot_setup:
   salt.state:
     - tgt: 'roles:kube-master'
