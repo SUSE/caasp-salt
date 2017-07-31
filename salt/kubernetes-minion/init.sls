@@ -3,6 +3,9 @@ include:
   - ca-cert
   - cert
   - etcd-proxy
+  - kubernetes-common
+
+{% set cni_enabled = salt['pillar.get']('cni:enabled', false) %}
 
 {% set kubernetes_version = salt['pillar.get']('versions:kubernetes', '') %}
 
@@ -43,7 +46,8 @@ kubernetes-client:
     - version: {{ kubernetes_version }}
     {%- endif %}
     - require:
-      - file: /etc/zypp/repos.d/containers.repo
+      - file:   /etc/zypp/repos.d/containers.repo
+      - sls:    kubernetes-common
 
 kube-proxy:
   file.managed:
@@ -110,6 +114,8 @@ kubelet:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - stateful: True
+    - require:
+      - file:   {{ pillar['paths']['kubeconfig'] }}
 
 #######################
 # config files
@@ -122,18 +128,12 @@ kubelet:
     - dir_mode: 755
     - makedirs: True
 
-{{ pillar['paths']['kubeconfig'] }}:
-  file.managed:
-    - source:         salt://kubernetes-minion/kubeconfig.jinja
-    - template:       jinja
+#######################
+# misc stuff
+#######################
 
-/etc/kubernetes/config:
-  file.managed:
-    - source:   salt://kubernetes-minion/config.jinja
-    - template: jinja
-    - require:
-      - pkg:    kubernetes-node
-
+# this is only necessary for the kubernetes conformance tests:
+# it pre-pulls the images
 {% if pillar.get('e2e', '').lower() == 'true' %}
 /etc/kubernetes/manifests/e2e-image-puller.manifest:
   file.managed:
