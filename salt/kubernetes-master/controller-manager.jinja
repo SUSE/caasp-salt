@@ -5,6 +5,7 @@
 
 # Add your own!
 KUBE_CONTROLLER_MANAGER_ARGS="\
+    --kubeconfig={{ pillar['paths']['kubeconfig'] }} \
     --leader-elect=true \
     --cluster-name=kubernetes \
     --cluster-cidr={{ pillar['cluster_cidr'] }} \

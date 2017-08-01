@@ -14,9 +14,6 @@ KUBELET_PORT="--port={{ pillar['kubelet']['port'] }}"
 # Use <machine_id>.<internal_infra_domain> matching the SSL certificates
 KUBELET_HOSTNAME="--hostname-override={{ grains['caasp_fqdn'] }}"
 
-# location of the api-server
-KUBELET_API_SERVER="--api-servers={{ api_server_url }}"
-
 # Add your own!
 KUBELET_ARGS="\
     --cluster-dns={{ pillar['dns']['cluster_ip'] }} \
@@ -30,4 +27,5 @@ KUBELET_ARGS="\
     --cloud-provider=aws \
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
+    --require-kubeconfig \
     --kubeconfig={{ pillar['paths']['kubeconfig'] }}"
