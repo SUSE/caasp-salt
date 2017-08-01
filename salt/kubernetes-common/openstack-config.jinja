@@ -12,3 +12,5 @@ create-monitor=yes
 monitor-delay=1m
 monitor-timeout=30s
 monitor-max-retries={{ pillar['cloud']['openstack']['lb_mon_retries'] }}
+[BlockStorage]
+trust-device-path = false
