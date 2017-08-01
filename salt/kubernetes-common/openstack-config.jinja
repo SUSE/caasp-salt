@@ -1,0 +1,14 @@
+[Global]
+auth-url="{{ pillar['cloud']['openstack']['auth_url'] }}"
+username="{{ pillar['cloud']['openstack']['username'] }}"
+password="{{ pillar['cloud']['openstack']['password'] }}"
+tenant-name="{{ pillar['cloud']['openstack']['project'] }}"
+domain-name="{{ pillar['cloud']['openstack']['domain'] }}"
+region="{{ pillar['cloud']['openstack']['region'] }}"
+[LoadBalancer]
+lb-version=v2
+subnet-id="{{ pillar['cloud']['openstack']['subnet'] }}"
+create-monitor=yes
+monitor-delay=1m
+monitor-timeout=30s
+monitor-max-retries={{ pillar['cloud']['openstack']['lb_mon_retries'] }}
