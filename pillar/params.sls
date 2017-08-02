@@ -175,3 +175,6 @@ reboot:
 transactional-update:
   timer:
     on_calendar: 'daily' # See https://www.freedesktop.org/software/systemd/man/systemd.time.html#Calendar%20Events for syntax
+
+dex:
+  node_port: 32000

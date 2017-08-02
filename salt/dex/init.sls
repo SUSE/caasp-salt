@@ -17,7 +17,8 @@ include:
   {% set extra_names = extra_names + ["DNS: dex",
                                       "DNS: dex.kube-system",
                                       "DNS: dex.kube-system.svc",
-                                      "DNS: dex.kube-system.svc." + pillar['internal_infra_domain']] %}
+                                      "DNS: dex.kube-system.svc." + pillar['internal_infra_domain'],
+                                      "DNS: api." + pillar['internal_infra_domain']] %}
   {% for extra_name in pillar['api']['server']['extra_names'] %}
     {% do extra_names.append("DNS: " + extra_name) %}
   {% endfor %}
