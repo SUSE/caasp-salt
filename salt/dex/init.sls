@@ -107,7 +107,7 @@ dex_instance:
 roles:
   cmd.run:
     - name: |
-        until kubectl get role find-dex --namespace=kube-system && kubectl get rolebinding find-dex ; do
+        until kubectl get role find-dex --namespace=kube-system && kubectl get rolebinding find-dex --namespace=kube-system ; do
             kubectl create -f /root/roles.yaml
             sleep 5
         done

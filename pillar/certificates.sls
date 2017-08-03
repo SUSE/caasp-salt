@@ -4,7 +4,7 @@ certificate_information:
     Email:
     GN:
     L: Nuremberg
-    O: SUSE
+    O: system:nodes
     OU: Containers Team
     SN:
     ST: Bavaria

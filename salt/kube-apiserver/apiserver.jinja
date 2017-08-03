@@ -25,7 +25,7 @@ KUBE_ETCD_SERVERS="--etcd-servers=http://{{ grains['caasp_fqdn'] }}:2379"
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}"
 
 # default admission control policies
-KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota"
+KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota,NodeRestriction"
 
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
@@ -41,8 +41,9 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
                {{ salt['pillar.get']('components:apiserver:args', '') }} \
                --client-ca-file={{ pillar['ssl']['ca_file'] }} \
                --storage-backend={{ pillar['api']['etcd_version'] }} \
+               --authorization-mode=RBAC,Node \
                --oidc-issuer-url=https://{{ grains['caasp_fqdn'] }}:32000 \
-               --oidc-client-id=example-app \
+               --oidc-client-id=caasp-cli \
                --oidc-ca-file={{ pillar['ssl']['ca_file'] }} \
-               --oidc-username-claim=email \
+               --oidc-username-claim=mail \
                --oidc-groups-claim=groups"
