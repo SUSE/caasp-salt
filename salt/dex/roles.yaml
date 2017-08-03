@@ -1,0 +1,32 @@
+---
+# This role exists so that the CLI can find Dex at
+# any time. It will be in a different location in a
+# cloud provider environment.
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: find-dex
+  namespace: kube-system
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["dex"]
+  verbs: ["get", "watch", "list"]
+---
+# Allow any authenticated *or* unauthenticated
+# user to look up Dex's service entry
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: find-dex
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:unauthenticated
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: find-dex
+  apiGroup: rbac.authorization.k8s.io

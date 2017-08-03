@@ -1,3 +1,56 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: dex
+  namespace: kube-system
+data:
+  config.yaml: |
+    issuer: "https://{{ grains['caasp_fqdn'] }}:32000"
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+    web:
+      https: 0.0.0.0:5556
+      tlsCert: /etc/dex/tls/dex.crt
+      tlsKey: /etc/dex/tls/dex.key
+    connectors:
+    - type: ldap
+      id: ldap
+      name: LDAP
+      config:
+        host: "{{ pillar['dashboard'] }}"
+        startTLS: true
+        bindDN: cn=admin,{{ pillar['ldap_internal_infra_domain'] }}
+        bindPW: admin
+        rootCA: {{ pillar['ssl']['ca_file'] }}
+        userSearch:
+          baseDN: ou=People,{{ pillar['ldap_internal_infra_domain'] }}
+          filter: "(objectClass=inetOrgPerson)"
+          username: mail
+          idAttr: uid
+          emailAttr: mail
+          nameAttr: gecos          
+        groupSearch:
+          baseDN: ou=Groups,{{ pillar['ldap_internal_infra_domain'] }}
+          filter: "(objectClass=posixGroup)"
+
+          userAttr: uid
+          groupAttr: memberUid
+
+          nameAttr: cn       
+
+    oauth2:
+      skipApprovalScreen: true
+
+    staticClients:
+    - id: caasp-cli
+      redirectURIs:
+      - 'http://127.0.0.1'
+      name: "CaaSP CLI"
+      secret: "swac7qakes7AvucH8bRucucH"
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -43,63 +96,6 @@ spec:
         hostPath:
           path: {{ pillar['ssl']['ca_file'] }}
 ---
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: dex
-  namespace: kube-system
-data:
-  config.yaml: |
-    issuer: "https://{{ grains['caasp_fqdn'] }}:32000"
-    storage:
-      type: kubernetes
-      config:
-        inCluster: true
-    web:
-      https: 0.0.0.0:5556
-      tlsCert: /etc/dex/tls/dex.crt
-      tlsKey: /etc/dex/tls/dex.key
-    connectors:
-    - type: ldap
-      id: ldap
-      name: LDAP
-      config:
-        host: "{{ pillar['dashboard'] }}"
-        startTLS: true
-        bindDN: cn=admin,{{ pillar['ldap_internal_infra_domain'] }}
-        bindPW: admin
-        rootCA: {{ pillar['ssl']['ca_file'] }}
-        userSearch:
-          baseDN: ou=People,{{ pillar['ldap_internal_infra_domain'] }}
-          filter: "(objectClass=inetOrgPerson)"
-          username: uid
-          idAttr: uid
-          emailAttr: mail
-          nameAttr: gecos          
-        groupSearch:
-          baseDN: ou=Groups,{{ pillar['ldap_internal_infra_domain'] }}
-          filter: "(objectClass=posixGroup)"
-
-          userAttr: uid
-          groupAttr: memberUid
-
-          nameAttr: cn       
-
-    oauth2:
-      skipApprovalScreen: true
-
-    staticClients:
-    - id: caasp-cli
-      redirectURIs:
-      - 'http://127.0.0.1'
-      name: "CaaSP CLI"
-      secret: "swac7qakes7AvucH8bRucucH"
-    - id: example-app
-      redirectURIs:
-      - 'http://127.0.0.1:5555/callback'
-      name: 'Example App'
-      secret: ZXhhbXBsZS1hcHAtc2VjcmV0
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -114,52 +110,4 @@ spec:
     targetPort: 5556
     nodePort: {{ pillar['dex']['node_port'] }}
   selector:
-    app: dex
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: caaspconfig.suse.com
-spec:
-  group: caaspconfig.suse.com
-  version: v1
-  scope: Cluster
-  names:
-    plural: caaspconfig
-    singular: caaspconfig
-    kind: Config
-    shortNames:
-    - cc
----
-apiVersion: caaspconfig.suse.com/v1
-kind: Config
-metadata:
-  name: dex-issuer-location
-spec:
-  host: "api.{{ pillar['internal_infra_domain'] }}"
-  port: {{ pillar['dex']['node_port'] }}
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: anonymous-user
-rules:
-- apiGroups: ["caaspconfig.suse.com"]
-  resources: ["config"]
-  verbs: ["get", "watch", "list"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: read-config-global
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: system:unauthenticated
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: anonymous-user
-  apiGroup: rbac.authorization.k8s.io
+    app: dex    

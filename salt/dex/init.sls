@@ -71,6 +71,16 @@ include:
     - require:
       - x509: /etc/pki/dex.crt
 
+/root/roles.yaml:
+  file.managed:
+    - source: salt://dex/roles.yaml
+    - template: jinja
+    - user: root
+    - group: root
+    - mode: 644
+    - require:
+      - file: /root/dex.yaml
+
 dex_secrets:
   cmd.run:
     - name: |
@@ -85,10 +95,24 @@ dex_secrets:
 dex_instance:
   cmd.run:
     - name: |
-        until output=$(kubectl create -f /root/dex.yaml ) ; do
+        until kubectl get configmap dex --namespace=kube-system && kubectl get deployment dex --namespace=kube-system && kubectl get service dex --namespace=kube-system ; do
+            kubectl create -f /root/dex.yaml
             sleep 5
         done
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - file: /root/dex.yaml
+
+roles:
+  cmd.run:
+    - name: |
+        until kubectl get role find-dex --namespace=kube-system && kubectl get rolebinding find-dex ; do
+            kubectl create -f /root/roles.yaml
+            sleep 5
+        done
+    - env:
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - require:
+      - file: /root/roles.yaml
+      - dex_instance
