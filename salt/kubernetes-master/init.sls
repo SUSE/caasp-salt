@@ -70,7 +70,7 @@ kube-apiserver:
   cmd.run:
     - name: |
         ELAPSED=0
-        until curl --insecure --silent --fail -o /dev/null https://127.0.0.1:{{ pillar['api']['ssl_port'] }}/healthz ; do
+        until curl --insecure --silent --fail -o /dev/null http://127.0.0.1:8080/healthz ; do
             [ $ELAPSED -gt 300 ] && exit 1
             sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
         done
