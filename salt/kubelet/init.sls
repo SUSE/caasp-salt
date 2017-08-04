@@ -11,7 +11,11 @@ include:
     - source: salt://kubelet/kubelet-initial.jinja
     - template: jinja
     - defaults:
+{% if not "kube-master" in salt['grains.get']('roles', []) %}
       schedulable: "true"
+{% else %}
+      schedulable: "false"
+{% endif %}
 
 kubelet:
   pkg.installed:

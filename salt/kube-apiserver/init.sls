@@ -99,18 +99,14 @@ kube-apiserver:
         - {{ api_ssl_port }}
     - proto:      tcp
     - require:
-      - pkg:      kubernetes-master
       - sls:      kubernetes-common
   file.managed:
     - name:       /etc/kubernetes/apiserver
     - source:     salt://kube-apiserver/apiserver.jinja
     - template:   jinja
-    - require:
-      - pkg:      kubernetes-master
   service.running:
     - enable:     True
     - require:
-      - pkg:      kubernetes-master
       - iptables: kube-apiserver
       - sls:      ca-cert
       - {{ pillar['ssl']['kube_apiserver_crt'] }}

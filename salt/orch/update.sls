@@ -45,7 +45,9 @@ update_modules:
   salt.state:
     - tgt: {{ master_id }}
     - sls:
-      - kubernetes-master.stop
+      - kube-apiserver.stop
+      - kube-controller-manager.stop
+      - kube-scheduler.stop
       - docker.stop
       - flannel.stop
       - etcd.stop
