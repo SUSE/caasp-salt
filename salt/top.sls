@@ -24,4 +24,5 @@ base:
   'roles:kube-master':
     - match: grain
     - kubernetes-master
+    - kube-apiserver
     - kubectl-client-cert

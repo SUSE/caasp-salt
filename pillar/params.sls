@@ -47,6 +47,12 @@ ssl:
   crt_file:       '/etc/pki/minion.crt'
   key_file:       '/etc/pki/minion.key'
 
+  crt_dir:        '/etc/pki'
+  key_dir:        '/etc/pki'
+
+  kube_apiserver_key: '/etc/pki/kube-apiserver.key'
+  kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
+
 paths:
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
