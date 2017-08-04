@@ -13,10 +13,6 @@ extend:
     file.managed:
       - context:
         schedulable: "false"
-  kubelet:
-    cmd.run:
-      - require:
-        - sls: kubernetes-master
 
 #######################
 # components

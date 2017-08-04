@@ -21,6 +21,7 @@ base:
     - docker
     - container-feeder
     - kubernetes-minion
+    - kubelet
   'roles:kube-master':
     - match: grain
     - kubernetes-master

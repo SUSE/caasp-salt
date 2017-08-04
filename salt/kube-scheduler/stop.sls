@@ -1,3 +1,3 @@
-kube-proxy:
+kube-scheduler:
   service.dead:
     - enable: False

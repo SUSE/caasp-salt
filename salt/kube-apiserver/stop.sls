@@ -1,3 +1,3 @@
-kube-proxy:
+kube-apiserver:
   service.dead:
     - enable: False
