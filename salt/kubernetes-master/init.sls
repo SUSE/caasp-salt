@@ -47,21 +47,6 @@ kube-scheduler:
       - sls:      kubernetes-common
       - file:     kube-scheduler
 
-kube-controller-manager:
-  file.managed:
-    - name:       /etc/kubernetes/controller-manager
-    - source:     salt://kubernetes-master/controller-manager.jinja
-    - template:   jinja
-    - require:
-      - pkg:      kubernetes-master
-  service.running:
-    - enable:     True
-    - require:
-      - service:  kube-apiserver
-    - watch:
-      - sls:      kubernetes-common
-      - file:     kube-controller-manager
-
 ###################################
 # addons
 ###################################

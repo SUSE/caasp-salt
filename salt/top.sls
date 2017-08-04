@@ -25,4 +25,5 @@ base:
     - match: grain
     - kubernetes-master
     - kube-apiserver
+    - kube-controller-manager
     - kubectl-client-cert

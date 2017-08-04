@@ -105,7 +105,7 @@ kube-apiserver:
       - sls:      kubernetes-common
   file.managed:
     - name:       /etc/kubernetes/apiserver
-    - source:     salt://kubernetes-master/apiserver.jinja
+    - source:     salt://kube-apiserver/apiserver.jinja
     - template:   jinja
     - require:
       - pkg:      kubernetes-master
