@@ -26,4 +26,5 @@ base:
     - kubernetes-master
     - kube-apiserver
     - kube-controller-manager
+    - kube-scheduler
     - kubectl-client-cert

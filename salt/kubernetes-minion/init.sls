@@ -78,6 +78,8 @@ kubelet:
   # doing a horrible hack right now.
   # RAR: Increasing the timeout to 5 minutes, since this now occurs during the initial
   # bootstrap - it takes more than 60 seconds before kube-apiserver is running.
+  # DO NOT uncordon the "master" nodes, this makes them schedulable.
+{% if not "kube-master" in salt['grains.get']('roles', []) %}
   cmd.run:
     - name: |
         ELAPSED=0
@@ -89,6 +91,7 @@ kubelet:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - stateful: True
+{% endif %}
 
 #######################
 # config files

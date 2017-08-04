@@ -85,7 +85,6 @@ kube-apiserver:
   pkg.installed:
     - pkgs:
       - iptables
-      - etcdctl
       - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo

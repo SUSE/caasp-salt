@@ -2,10 +2,10 @@ include:
   - repositories
   - kubernetes-common
 
-kube-controller-manager:
+kube-scheduler:
   file.managed:
-    - name:       /etc/kubernetes/controller-manager
-    - source:     salt://kube-controller-manager/controller-manager.jinja
+    - name:       /etc/kubernetes/scheduler
+    - source:     salt://kube-scheduler/scheduler.jinja
     - template:   jinja
     - require:
       - pkg:      kubernetes-master
@@ -13,4 +13,4 @@ kube-controller-manager:
     - enable:     True
     - watch:
       - sls:      kubernetes-common
-      - file:     kube-controller-manager
+      - file:     kube-scheduler

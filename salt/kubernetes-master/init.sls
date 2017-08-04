@@ -25,27 +25,10 @@ extend:
 kubernetes-master:
   pkg.installed:
     - pkgs:
-      - iptables
-      - etcdctl
       - kubernetes-client
       - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-
-kube-scheduler:
-  file.managed:
-    - name:       /etc/kubernetes/scheduler
-    - source:     salt://kubernetes-master/scheduler.jinja
-    - template:   jinja
-    - require:
-      - pkg:      kubernetes-master
-  service.running:
-    - enable:     True
-    - require:
-      - service:  kube-apiserver
-    - watch:
-      - sls:      kubernetes-common
-      - file:     kube-scheduler
 
 ###################################
 # addons
