@@ -4,7 +4,6 @@ include:
   - cert
   - etcd-proxy
   - kubernetes-common
-  - kubernetes-minion
 
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
 

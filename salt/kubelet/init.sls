@@ -26,7 +26,6 @@ kubelet:
     - source:   salt://kubelet/kubelet.jinja
     - template: jinja
     - require:
-      - pkg:    kubernetes-minion
       - sls:    kubernetes-common
   service.running:
     - enable:   True
@@ -35,7 +34,6 @@ kubelet:
       - file:   {{ pillar['paths']['kubeconfig'] }}
       - file:   kubelet
     - require:
-      - pkg:    kubernetes-minion
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial
   iptables.append:
@@ -57,19 +55,19 @@ kubelet:
   # RAR: Increasing the timeout to 5 minutes, since this now occurs during the initial
   # bootstrap - it takes more than 60 seconds before kube-apiserver is running.
   # DO NOT uncordon the "master" nodes, this makes them schedulable.
-# {% if not "kube-master" in salt['grains.get']('roles', []) %}
-#   cmd.run:
-#     - name: |
-#         ELAPSED=0
-#         until output=$(kubectl uncordon {{ grains['caasp_fqdn'] }}) ; do
-#             [ $ELAPSED -gt 300 ] && exit 1
-#             sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
-#         done
-#         echo changed="$(echo $output | grep 'already uncordoned' &> /dev/null && echo no || echo yes)"
-#     - env:
-#       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-#     - stateful: True
-# {% endif %}
+{% if not "kube-master" in salt['grains.get']('roles', []) %}
+  cmd.run:
+    - name: |
+        ELAPSED=0
+        until output=$(kubectl uncordon {{ grains['caasp_fqdn'] }}) ; do
+            [ $ELAPSED -gt 300 ] && exit 1
+            sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
+        done
+        echo changed="$(echo $output | grep 'already uncordoned' &> /dev/null && echo no || echo yes)"
+    - env:
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - stateful: True
+{% endif %}
 
 #######################
 # config files

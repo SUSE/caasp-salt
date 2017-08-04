@@ -122,7 +122,8 @@ update_modules:
   salt.state:
     - tgt: {{ worker_id }}
     - sls:
-      - kubernetes-minion.stop
+      - kubelet.stop
+      - kube-proxy.stop      
       - docker.stop
       - flannel.stop
       - etcd-proxy.stop

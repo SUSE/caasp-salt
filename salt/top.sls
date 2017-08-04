@@ -20,8 +20,8 @@ base:
     - flannel
     - docker
     - container-feeder
-    - kubernetes-minion
     - kubelet
+    - kube-proxy
   'roles:kube-master':
     - match: grain
     - kubernetes-master
