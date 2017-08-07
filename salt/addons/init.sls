@@ -30,6 +30,20 @@ include:
     - source:      salt://addons/addons/kubedns-svc.yaml.jinja
     - template:    jinja
 
+kube_apiserver_ready:
+  # We need to wait for Kube API server to actually start, see k8s issue #47739
+  # TODO: Salt doesn't seem to have a retry mechanism in the version were using,
+  # so I'm doing a horrible hack right now.
+  cmd.run:
+    - name: |
+        ELAPSED=0
+        until curl --insecure --silent --fail -o /dev/null http://127.0.0.1:8080/healthz ; do
+            [ $ELAPSED -gt 300 ] && exit 1
+            sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
+        done
+        echo changed="no"
+    - stateful: True
+
 deploy_addons.sh:
   cmd.script:
     - source:      salt://addons/deploy_addons.sh
@@ -39,5 +53,6 @@ deploy_addons.sh:
       - file:      /etc/kubernetes/addons/kubedns-cm.yaml
       - file:      /etc/kubernetes/addons/kubedns-svc.yaml
       - file:      /etc/kubernetes/addons/kubedns.yaml
+      - kube_apiserver_ready
 {% endif %}
 
