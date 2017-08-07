@@ -64,6 +64,20 @@ kube-apiserver:
       - file:     kube-apiserver
       - sls:      ca-cert
       - sls:      cert
+  # We need to wait for Kube API server to actually start, see k8s issue #47739
+  # TODO: Salt doesn't seem to have a retry mechanism in the version were using,
+  # so I'm doing a horrible hack right now.
+  cmd.run:
+    - name: |
+        ELAPSED=0
+        until curl --insecure --silent --fail -o /dev/null http://127.0.0.1:8080/healthz ; do
+            [ $ELAPSED -gt 300 ] && exit 1
+            sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
+        done
+        echo changed="no"
+    - stateful: True
+    - require:
+      - service: kube-apiserver
 
 kube-scheduler:
   file.managed:
@@ -131,12 +145,11 @@ deploy_addons.sh:
   cmd.script:
     - source:      salt://kubernetes-master/deploy_addons.sh
     - require:
+      - kube-apiserver
       - pkg:       kubernetes-master
-      - service:   kube-apiserver
       - file:      /etc/kubernetes/addons/namespace.yaml
       - file:      /etc/kubernetes/addons/kubedns-cm.yaml
       - file:      /etc/kubernetes/addons/kubedns-svc.yaml
       - file:      /etc/kubernetes/addons/kubedns.yaml
 
 {% endif %}
-
