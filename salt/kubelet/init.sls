@@ -85,7 +85,7 @@ kubelet:
     - enable:   True
     - watch:
       - file:   /etc/kubernetes/config
-      - file:   {{ pillar['paths']['kubeconfig'] }}
+      - kubelet-config
       - file:   kubelet
     - require:
       - file:   /etc/kubernetes/manifests

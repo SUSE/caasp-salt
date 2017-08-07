@@ -59,6 +59,9 @@ ssl:
   kubelet_key: '/etc/pki/kubelet.key'
   kubelet_crt: '/etc/pki/kubelet.crt'
 
+  kube_proxy_key: '/etc/pki/kube-proxy.key'
+  kube_proxy_crt: '/etc/pki/kube-proxy.crt'
+
 paths:
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
@@ -66,6 +69,8 @@ paths:
   kube_scheduler_config: '/var/lib/kubelet/kube-scheduler-config'
 
   kubelet_config: '/var/lib/kubelet/kubelet-config'
+
+  kube_proxy_config: '/var/lib/kubelet/kube-proxy-config'
 
 # etcd details
 # notes:

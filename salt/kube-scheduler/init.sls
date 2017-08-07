@@ -18,6 +18,7 @@ kube-scheduler:
     - watch:
       - sls: kubernetes-common
       - file: kube-scheduler
+      - kube-scheduler-config
     - require:
       - kube-scheduler-config
 
