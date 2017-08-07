@@ -56,11 +56,16 @@ ssl:
   kube_scheduler_key: '/etc/pki/kube-scheduler.key'
   kube_scheduler_crt: '/etc/pki/kube-scheduler.crt'
   
+  kubelet_key: '/etc/pki/kubelet.key'
+  kubelet_crt: '/etc/pki/kubelet.crt'
+
 paths:
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
 
   kube_scheduler_config: '/var/lib/kubelet/kube-scheduler-config'
+
+  kubelet_config: '/var/lib/kubelet/kubelet-config'
 
 # etcd details
 # notes:
