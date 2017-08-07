@@ -15,7 +15,11 @@ kubernetes-common:
 
 {{ pillar['paths']['kubeconfig'] }}:
   file.managed:
-    - source:         salt://kubernetes-common/kubeconfig.jinja
+    - source:         salt://kubeconfig/kubeconfig.jinja
     - template:       jinja
     - require:
       - pkg: kubernetes-common
+    - defaults:
+        user: 'default-admin'
+        client_certificate: {{ pillar['ssl']['crt_file'] }}
+        client_key: {{ pillar['ssl']['key_file'] }}

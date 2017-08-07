@@ -55,7 +55,7 @@ include:
   x509.certificate_managed:
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
-    - public_key: {{ pillar['ssl']['key_dir'] }}/kube-apiserver.key
+    - public_key: {{ pillar['ssl']['kube_apiserver_key'] }}
     - CN: {{ grains['caasp_fqdn'] }}
     - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}

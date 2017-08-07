@@ -53,9 +53,14 @@ ssl:
   kube_apiserver_key: '/etc/pki/kube-apiserver.key'
   kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
 
+  kube_scheduler_key: '/etc/pki/kube-scheduler.key'
+  kube_scheduler_crt: '/etc/pki/kube-scheduler.crt'
+  
 paths:
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
+
+  kube_scheduler_config: '/var/lib/kubelet/kube-scheduler-config'
 
 # etcd details
 # notes:
