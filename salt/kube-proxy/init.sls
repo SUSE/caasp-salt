@@ -43,8 +43,8 @@ kube-proxy:
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
     - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
-    # system:node is a kubernetes specific role identifying a node in the system.
-    - O: 'system:node'
+    # system:node-proxier is a kubernetes specific role identifying a proxier in the system.
+    - O: 'system:node-proxier'
     - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
     - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
     - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}

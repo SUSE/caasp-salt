@@ -42,7 +42,8 @@ kube-scheduler:
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
     - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
-    - O: {{ pillar['certificate_information']['subject_properties']['O']|yaml_dquote }}
+    # system:kube-scheduler is a kubernetes specific role identifying a scheduler in the system.
+    - O: 'system:kube-scheduler'
     - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
     - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
     - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}

@@ -14,6 +14,7 @@ kubernetes-common:
       - pkg: kubernetes-common
 
 {{ pillar['paths']['kubeconfig'] }}:
+# this kubeconfig file is used by kubectl for administrative functions
   file.managed:
     - source:         salt://kubeconfig/kubeconfig.jinja
     - template:       jinja

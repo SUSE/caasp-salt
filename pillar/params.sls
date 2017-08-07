@@ -55,6 +55,9 @@ ssl:
 
   kube_scheduler_key: '/etc/pki/kube-scheduler.key'
   kube_scheduler_crt: '/etc/pki/kube-scheduler.crt'
+
+  kube_controller_mgr_key: '/etc/pki/kube-controller-mgr.key'
+  kube_controller_mgr_crt: '/etc/pki/kube-controller-mgr.crt'
   
   kubelet_key: '/etc/pki/kubelet.key'
   kubelet_crt: '/etc/pki/kubelet.crt'
@@ -67,6 +70,8 @@ paths:
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
 
   kube_scheduler_config: '/var/lib/kubelet/kube-scheduler-config'
+
+  kube_controller_mgr_config: '/var/lib/kubelet/kube-controller-mgr-config'
 
   kubelet_config: '/var/lib/kubelet/kubelet-config'
 
