@@ -7,6 +7,7 @@ base:
     - ip_addrs
     - fqdn
     - schedule
+    - config
   'roles:ca':
     - match: grain
     - ca
