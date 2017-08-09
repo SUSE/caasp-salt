@@ -45,7 +45,9 @@ update_modules:
   salt.state:
     - tgt: {{ master_id }}
     - sls:
-      - kubernetes-master.stop
+      - kube-apiserver.stop
+      - kube-controller-manager.stop
+      - kube-scheduler.stop
       - docker.stop
       - flannel.stop
       - etcd.stop
@@ -122,7 +124,8 @@ update_modules:
   salt.state:
     - tgt: {{ worker_id }}
     - sls:
-      - kubernetes-minion.stop
+      - kubelet.stop
+      - kube-proxy.stop      
       - docker.stop
       - flannel.stop
       - etcd-proxy.stop

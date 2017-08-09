@@ -47,9 +47,35 @@ ssl:
   crt_file:       '/etc/pki/minion.crt'
   key_file:       '/etc/pki/minion.key'
 
+  crt_dir:        '/etc/pki'
+  key_dir:        '/etc/pki'
+
+  kube_apiserver_key: '/etc/pki/kube-apiserver.key'
+  kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
+
+  kube_scheduler_key: '/etc/pki/kube-scheduler.key'
+  kube_scheduler_crt: '/etc/pki/kube-scheduler.crt'
+
+  kube_controller_mgr_key: '/etc/pki/kube-controller-mgr.key'
+  kube_controller_mgr_crt: '/etc/pki/kube-controller-mgr.crt'
+  
+  kubelet_key: '/etc/pki/kubelet.key'
+  kubelet_crt: '/etc/pki/kubelet.crt'
+
+  kube_proxy_key: '/etc/pki/kube-proxy.key'
+  kube_proxy_crt: '/etc/pki/kube-proxy.crt'
+
 paths:
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
+
+  kube_scheduler_config: '/var/lib/kubelet/kube-scheduler-config'
+
+  kube_controller_mgr_config: '/var/lib/kubelet/kube-controller-mgr-config'
+
+  kubelet_config: '/var/lib/kubelet/kubelet-config'
+
+  kube_proxy_config: '/var/lib/kubelet/kube-proxy-config'
 
 # etcd details
 # notes:

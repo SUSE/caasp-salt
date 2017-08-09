@@ -16,9 +16,3 @@ kubelet:
     - enable: False
     - require:
       - cmd: drain-kubelet
-
-kube-proxy:
-  service.dead:
-    - enable: False
-    - require:
-      - cmd: drain-kubelet

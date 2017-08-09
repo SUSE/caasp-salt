@@ -13,8 +13,8 @@ KUBE_API_PORT="--insecure-port=8080 --secure-port={{ pillar['api']['ssl_port'] }
 # Comma separated list of nodes in the etcd cluster
 {% if pillar['ssl']['enabled'] -%}
 KUBE_ETCD_SERVERS="--etcd-cafile={{ pillar['ssl']['ca_file'] }} \
-                   --etcd-certfile={{ pillar['ssl']['crt_file'] }} \
-                   --etcd-keyfile={{ pillar['ssl']['key_file'] }} \
+                   --etcd-certfile={{ pillar['ssl']['kube_apiserver_crt'] }} \
+                   --etcd-keyfile={{ pillar['ssl']['kube_apiserver_key'] }} \
                    --etcd-servers=https://{{ grains['caasp_fqdn'] }}:2379"
 {% else -%}
 KUBE_ETCD_SERVERS="--etcd-servers=http://{{ grains['caasp_fqdn'] }}:2379"

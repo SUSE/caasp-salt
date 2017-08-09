@@ -5,6 +5,6 @@
 
 # Add your own!
 KUBE_SCHEDULER_ARGS="\
-    --kubeconfig={{ pillar['paths']['kubeconfig'] }} \
+    --kubeconfig={{ pillar['paths']['kube_scheduler_config'] }} \
     --leader-elect=true \
     {{ salt['pillar.get']('components:scheduler:args', '') }}"

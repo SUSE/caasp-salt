@@ -5,7 +5,8 @@
 
 # Add your own!
 KUBE_PROXY_ARGS="\
-    --kubeconfig={{ pillar['paths']['kubeconfig'] }} \
+    --hostname-override={{ grains['caasp_fqdn'] }} \
+    --kubeconfig={{ pillar['paths']['kube_proxy_config'] }} \
     --proxy-mode=iptables \
     {{ pillar['components']['proxy']['args'] }} \
     --v=2"

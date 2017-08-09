@@ -28,4 +28,4 @@ KUBELET_ARGS="\
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
     --require-kubeconfig \
-    --kubeconfig={{ pillar['paths']['kubeconfig'] }}"
+    --kubeconfig={{ pillar['paths']['kubelet_config'] }}"

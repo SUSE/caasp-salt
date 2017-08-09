@@ -38,8 +38,6 @@ kube_master_setup:
     - tgt: {{ updates_master_target }}
     - tgt_type: compound
     - queue: True
-    - sls:
-      - kubernetes-master
     - require:
       - salt: etc_hosts_setup
 {% endif %}
