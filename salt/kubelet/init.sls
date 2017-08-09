@@ -32,13 +32,13 @@ include:
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: {{ pillar['ssl']['kubelet_key'] }}
-    - CN: {{ grains['caasp_fqdn'] }}
+    - CN: system:node:{{ grains['caasp_fqdn'] }}
     - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
     - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
-    # system:node is a kubernetes specific role identifying a node in the system.
-    - O: 'system:node'
+    # system:nodes is a kubernetes specific role identifying a node in the system.
+    - O: 'system:nodes'
     - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
     - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
     - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
@@ -125,6 +125,8 @@ kubelet:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - stateful: True
+    - require:
+      - file: {{ pillar['paths']['kubeconfig'] }}
 {% endif %}
 
 #######################

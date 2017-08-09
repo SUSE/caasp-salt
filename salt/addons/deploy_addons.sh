@@ -42,6 +42,15 @@ else
 	echo "Kube-dns service account  already there. Skipping."
 fi
 
+KUBEDNS_CRB=`eval "$KUBECTL_PATH $SRV_ARGS get clusterrolebindings | grep kube-dns | cat"`
+if [ ! "$KUBEDNS_CRB" ]; then
+	# use kubectl to create the ClusterRoleBinding allowing kube-dns access to kube-api
+	$KUBECTL_PATH $SRV_ARGS create clusterrolebinding system:kube-dns --clusterrole=cluster-admin --serviceaccount=kube-system:default
+	echo "The ClusterRoleBinding 'system:kube-dns' was successfully created."
+else
+	echo "The ClusterRoleBinding 'system:kube-dns' already exists."
+fi
+
 KUBEDNS_CM=`eval "$KUBECTL_PATH $NS_ARGS $SRV_ARGS get cm | grep kube-dns | cat"`
 if [ ! "$KUBEDNS_CM" ]; then
 	# use kubectl to create kubedns config map

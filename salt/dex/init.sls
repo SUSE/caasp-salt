@@ -91,6 +91,7 @@ dex_secrets:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - x509: /etc/pki/dex.crt
+      - file: {{ pillar['paths']['kubeconfig'] }}
 
 dex_instance:
   cmd.run:
@@ -103,6 +104,7 @@ dex_instance:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - file: /root/dex.yaml
+      - file: {{ pillar['paths']['kubeconfig'] }}
 
 roles:
   cmd.run:
@@ -115,4 +117,5 @@ roles:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - file: /root/roles.yaml
+      - file: {{ pillar['paths']['kubeconfig'] }}
       - dex_instance
