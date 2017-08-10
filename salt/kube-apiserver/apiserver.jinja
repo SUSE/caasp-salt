@@ -51,4 +51,6 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
                --oidc-client-id=caasp-cli \
                --oidc-ca-file={{ pillar['ssl']['ca_file'] }} \
                --oidc-username-claim=mail \
-               --oidc-groups-claim=groups"
+               --oidc-groups-claim=groups \
+               --storage-backend=etcd2 \
+               --storage-media-type=application/json"
