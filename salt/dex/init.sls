@@ -1,5 +1,6 @@
 include:
   - crypto
+  - repositories
 
 {% set ip_addresses = [] -%}
 {% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
@@ -96,7 +97,7 @@ dex_secrets:
 dex_instance:
   cmd.run:
     - name: |
-        until kubectl get configmap dex --namespace=kube-system && kubectl get deployment dex --namespace=kube-system && kubectl get service dex --namespace=kube-system ; do
+        until kubectl get sa dex --namespace=kube-system && kubectl get clusterrolebinding system:dex && kubectl get configmap dex --namespace=kube-system && kubectl get deployment dex --namespace=kube-system && kubectl get service dex --namespace=kube-system ; do
             kubectl create -f /root/dex.yaml
             sleep 5
         done
@@ -106,7 +107,7 @@ dex_instance:
       - file: /root/dex.yaml
       - file: {{ pillar['paths']['kubeconfig'] }}
 
-roles:
+kubernetes_roles:
   cmd.run:
     - name: |
         until kubectl get role find-dex --namespace=kube-system && kubectl get rolebinding find-dex --namespace=kube-system ; do
