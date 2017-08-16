@@ -28,7 +28,7 @@ metadata:
   namespace: kube-system
 data:
   config.yaml: |
-    issuer: "https://{{ grains['caasp_fqdn'] }}:32000"
+    issuer: "https://{{ pillar['api']['server']['external_fqdn'] }}:{{ pillar['dex']['node_port'] }}"
     storage:
       type: kubernetes
       config:
