@@ -87,7 +87,6 @@ kube-apiserver:
       - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-
   iptables.append:
     - table:      filter
     - family:     ipv4
@@ -115,3 +114,9 @@ kube-apiserver:
       - file:     kube-apiserver
       - sls:      ca-cert
       - {{ pillar['ssl']['kube_apiserver_crt'] }}
+  # wait for the API server (see k8s issue #47739) so it can be used
+  http.wait_for_successful_query:
+    - name:       'http://127.0.0.1:8080/healthz'
+    - status:     200
+    - require:
+      - service:  kube-apiserver
