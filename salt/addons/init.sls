@@ -15,6 +15,11 @@ include:
     - template:    jinja
 
 {% if salt['pillar.get']('addons:dns', 'false').lower() == 'true' %}
+/etc/kubernetes/addons/kubedns-sa.yaml:
+  file.managed:
+    - source:     salt://addons/addons/kubedns-sa.yaml.jinja
+    - template:   jinja
+
 /etc/kubernetes/addons/kubedns-cm.yaml:
   file.managed:
     - source:      salt://addons/addons/kubedns-cm.yaml.jinja
@@ -40,6 +45,7 @@ deploy_addons.sh:
     - require:
       - service:   kube-apiserver
       - file:      /etc/kubernetes/addons/namespace.yaml
+      - file:      /etc/kubernetes/addons/kubedns-sa.yaml
       - file:      /etc/kubernetes/addons/kubedns-cm.yaml
       - file:      /etc/kubernetes/addons/kubedns-svc.yaml
       - file:      /etc/kubernetes/addons/kubedns.yaml
