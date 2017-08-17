@@ -1,6 +1,7 @@
 base:
   '*':
     - params
+    - cni
     - args
     - vars
     - certificates

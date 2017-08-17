@@ -108,23 +108,6 @@ etcd:
 # [ CRITICAL, ERROR, WARNING NOTICE, INFO, DEBUG ]
   log_level:      'WARNING'
 
-# the flannel backend ('udp', 'vxlan', 'host-gw', etc)
-flannel:
-  backend:        'udp'
-  etcd_key:       '/flannel/network'
-# log level for flanneld service
-# 0 - Generally useful for this to ALWAYS be visible to an operator.
-# 1 - A reasonable default log level if you don't want verbosity.
-# 2 - Useful steady state information about the service and important log
-#     messages that may correlate to significant changes in the system.
-#     This is the recommended default log level for most systems.
-# 3 - Extended information about changes.
-# 4 - Debug level verbosity.
-# 6 - Display requested resources.
-# 7 - Display HTTP request headers.
-# 8 - Display HTTP request contents.
-  log_level:      '2'
-
 kubelet:
   port:           '10250'
 

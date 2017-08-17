@@ -1,0 +1,284 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-services
+rules:
+- apiGroups:
+  - "*"
+  resources:
+  - pods
+  - namespaces
+  - nodes
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "*"
+  resources:
+  - services
+  verbs:
+  - update
+  - list
+  - watch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: romana-services
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-services
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: romana-services
+subjects:
+- kind: ServiceAccount
+  name: romana-services
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-agent
+rules:
+- apiGroups:
+  - "*"
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: romana-agent
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: romana-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: romana-agent
+subjects:
+- kind: ServiceAccount
+  name: romana-agent
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: romana-secrets
+  namespace: kube-system
+data:
+  datastore-password: cm9tYW5h
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: romana-services
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: romana-services
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      hostNetwork: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
+      serviceAccountName: romana-services
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      initContainers:
+      - name: cleanup
+        image: alpine
+        command:
+        - sh
+        - "-c"
+        # Uncomment the following line to remove romana persistence data.
+        # It should be done when the romana bitmap has changed, or any other
+        # config is changed which affects policies/pods/networks, etc.
+        #- "rm -rf /var/lib/romana/*"
+        - "ls -ltr /var/lib/romana/"
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: romana-data
+          mountPath: "/var/lib/romana"
+      containers:
+      - name: romana-etcd
+        image: gcr.io/google_containers/etcd-amd64:3.0.17
+        command:
+        - etcd
+        - "--listen-client-urls=http://127.0.0.1:12379"
+        - "--listen-peer-urls=http://127.0.0.1:12380"
+        - "--advertise-client-urls=http://127.0.0.1:12379"
+        - "--data-dir=/var/etcd/data"
+        volumeMounts:
+        - name: etcd-data
+          mountPath: "/var/etcd/data"
+        livenessProbe:
+          httpGet:
+            path: "/health"
+            port: 12379
+            host: 127.0.0.1
+          initialDelaySeconds: 15
+          timeoutSeconds: 15
+      - name: romana-datastore
+        image: mysql:5
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: romana-secrets
+              key: datastore-password
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      - name: romana-services
+        image: quay.io/romana/services:v1.5.0
+        imagePullPolicy: Always
+        args:
+        # must match pillar:`cluster_cidr`
+        - --cidr=172.16.0.0/13
+        - --debug=true
+        env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: romana-secrets
+              key: datastore-password
+        volumeMounts:
+        - name: log-path
+          mountPath: /var/log/romana
+      volumes:
+      - name: romana-data
+        hostPath:
+          path: "/var/lib/romana"
+      - name: etcd-data
+        hostPath:
+          path: "/var/lib/romana/etcd-db"
+      - name: mysql-data
+        hostPath:
+          path: "/var/lib/romana/mysql-db"
+      - name: log-path
+        hostPath:
+          path: /var/log/romana
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: romana-root
+  namespace: kube-system
+spec:
+  ports:
+  - name: root
+    port: 9600
+    protocol: TCP
+    targetPort: 9600
+  selector:
+    app: romana-services
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: romana-agent
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        app: romana-agent
+    spec:
+      hostNetwork: true
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
+      serviceAccountName: romana-agent
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: romana-agent
+        image: quay.io/romana/agent:v1.5.0
+        imagePullPolicy: Always
+        args:
+        # This should match the `services_cidr`
+        - --cluster-ip-cidr=172.24.0.0/16
+        - --debug=true
+        env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-usr-local-bin
+          mountPath: /host/usr/local/bin
+        - name: host-etc-romana
+          mountPath: /host/etc/romana
+        - name: host-etc-rlog
+          mountPath: /host/etc/rlog
+        - name: host-cni-bin
+          mountPath: /host/opt/cni/bin
+        - name: host-cni-net-d
+          mountPath: /host/etc/cni/net.d
+        - name: run-path
+          mountPath: /var/run/romana
+        - name: log-path
+          mountPath: /var/log/romana
+      volumes:
+      - name: host-usr-local-bin
+        hostPath:
+          path: /usr/local/bin
+      - name: host-etc-romana
+        hostPath:
+          path: /etc/romana
+      - name: host-etc-rlog
+        hostPath:
+          path: /etc/rlog
+      - name: host-cni-bin
+        hostPath:
+          path: /var/lib/kubelet/cni/bin
+      - name: host-cni-net-d
+        hostPath:
+          path: /etc/cni/net.d
+      - name: run-path
+        hostPath:
+          path: /var/run/romana
+      - name: log-path
+        hostPath:
+          path: /var/log/romana
+

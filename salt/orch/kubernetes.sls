@@ -116,14 +116,6 @@ etcd_setup:
     - require:
       - salt: etcd_discovery_setup
 
-flannel_setup:
-  salt.state:
-    - tgt: {{ super_master }}
-    - sls:
-      - flannel-setup
-    - require:
-      - salt: etcd_setup
-
 admin_setup:
   salt.state:
     - tgt: 'roles:admin'
@@ -131,7 +123,7 @@ admin_setup:
     - highstate: True
     - batch: {{ default_batch }}
     - require:
-      - salt: flannel_setup
+      - salt: etcd_setup
 
 kube_master_setup:
   salt.state:
@@ -151,8 +143,18 @@ kube_minion_setup:
     - highstate: True
     - batch: {{ default_batch }}
     - require:
-      - salt: flannel_setup
       - salt: kube_master_setup
+
+# we must start CNI right after the masters/minions reach highstate,
+# as nodes will be NotReady until the CNI DaemonSet is loaded and running...
+cni_setup:
+  salt.state:
+    - tgt: {{ super_master }}
+    - sls:
+      - cni
+    - require:
+      - salt: kube_master_setup
+      - salt: kube_minion_setup
 
 reboot_setup:
   salt.state:
@@ -160,7 +162,7 @@ reboot_setup:
     - sls:
       - reboot
     - require:
-      - salt: kube_master_setup
+      - salt: cni_setup
 
 services_setup:
   salt.state:

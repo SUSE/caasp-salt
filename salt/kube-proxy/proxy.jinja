@@ -5,6 +5,7 @@
 
 # Add your own!
 KUBE_PROXY_ARGS="\
+    --cluster-cidr={{ pillar['cluster_cidr'] }} \
     --hostname-override={{ grains['caasp_fqdn'] }} \
     --kubeconfig={{ pillar['paths']['kube_proxy_config'] }} \
     --proxy-mode=iptables \
