@@ -10,7 +10,7 @@
     - source:      salt://addons/addons/namespace.yaml.jinja
     - template:    jinja
 
-apply_namespace:
+apply-namespace:
   cmd.run:
     - name: |
         kubectl apply -f /etc/kubernetes/addons/namespace.yaml
@@ -26,7 +26,7 @@ apply_namespace:
     - source:      salt://addons/addons/kubedns.yaml.jinja
     - template:    jinja
 
-apply_dns:
+apply-dns:
   cmd.run:
     - name: |
         kubectl apply -f /etc/kubernetes/addons/kubedns.yaml
@@ -42,7 +42,7 @@ apply_dns:
     - source:      salt://addons/addons/tiller.yaml.jinja
     - template:    jinja
 
-apply_tiller:
+apply-tiller:
   cmd.run:
     - name: |
         kubectl apply -f /etc/kubernetes/addons/tiller.yaml
