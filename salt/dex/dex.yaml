@@ -51,15 +51,15 @@ data:
           baseDN: ou=People,{{ pillar['ldap_internal_infra_domain'] }}
           filter: "(objectClass=inetOrgPerson)"
           username: mail
-          idAttr: uid
+          idAttr: DN
           emailAttr: mail
           nameAttr: cn          
         groupSearch:
           baseDN: ou=Groups,{{ pillar['ldap_internal_infra_domain'] }}
           filter: "(objectClass=groupOfUniqueNames)"
 
-          userAttr: uid
-          groupAttr: memberUid
+          userAttr: DN
+          groupAttr: uniqueMember
 
           nameAttr: cn       
 
@@ -89,7 +89,7 @@ spec:
     spec:
       serviceAccountName: dex
       containers:
-      - image: quay.io/coreos/dex:v2.0.0-beta.1
+      - image: quay.io/coreos/dex:v2.6.0
         name: dex
         command: ["/usr/local/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
 
