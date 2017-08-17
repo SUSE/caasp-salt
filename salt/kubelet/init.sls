@@ -37,6 +37,21 @@ kubelet-config:
         client_certificate: {{ pillar['ssl']['kubelet_crt'] }}
         client_key: {{ pillar['ssl']['kubelet_key'] }}
 
+
+{{ pillar['cni']['dirs']['bin'] }}:
+  file.directory:
+    - user:     root
+    - group:    root
+    - dir_mode: 755
+    - makedirs: True
+
+{{ pillar['cni']['dirs']['conf'] }}:
+  file.directory:
+    - user:     root
+    - group:    root
+    - dir_mode: 755
+    - makedirs: True
+
 kubelet:
   pkg.installed:
     - pkgs:
@@ -60,6 +75,8 @@ kubelet:
 {% if salt.caasp_pillar.get('cloud:provider') == 'openstack' %}
       - file:     /etc/kubernetes/openstack-config
 {% endif %}
+      - file:   {{ pillar['cni']['dirs']['bin'] }}
+      - file:   {{ pillar['cni']['dirs']['conf'] }}
     - require:
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial

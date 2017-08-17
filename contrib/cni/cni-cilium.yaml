@@ -1,0 +1,241 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: cilium
+rules:
+- apiGroups:
+  - "networking.k8s.io"
+  resources:
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - nodes
+  - endpoints
+  - componentstatuses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - extensions
+  resources:
+  - networkpolicies #FIXME remove this in k8s 1.8
+  - thirdpartyresources
+  - ingresses
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "apiextensions.k8s.io"
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cilium.io
+  resources:
+  - ciliumnetworkpolicies
+  verbs:
+  - "*"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium
+  namespace: kube-system
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: cilium
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cilium
+subjects:
+- kind: ServiceAccount
+  name: cilium
+  namespace: kube-system
+- kind: Group
+  name: system:nodes
+
+
+---
+
+# This ConfigMap can be used to configure a self-hosted Canal installation.
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: cilium-config
+  namespace: kube-system
+data:
+
+  # Etcd configuration
+  etcd.json: |
+    endpoints:
+    - https://127.0.0.1:2379
+    ca-file: '/etc/etcd/etcd.ca'
+    key-file: '/etc/etcd/etcd.key'
+    cert-file: '/etc/etcd/etcd.cert'
+
+---
+
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: cilium
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        k8s-app: cilium
+        kubernetes.io/cluster-service: "true"
+      annotations:
+        scheduler.alpha.kubernetes.io/tolerations: >-
+          [{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]
+    spec:
+      serviceAccountName: cilium
+      containers:
+      - image: cilium/cilium:stable
+        imagePullPolicy: Always
+        name: cilium-agent
+        command: [ "cilium-agent" ]
+        args:
+          - "--debug"
+          - "--kvstore"
+          - "etcd"
+          - "--kvstore-opt"
+          - "etcd.config=/etc/cilium/etcd.json"
+          - "-t"
+          - "vxlan"
+          - "--k8s-kubeconfig-path"
+          - "/var/lib/kubelet/kubeconfig"
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - "/cni-install.sh"
+          preStop:
+            exec:
+              command:
+                - "/cni-uninstall.sh"
+        env:
+          - name: "K8S_NODE_NAME"
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+        livenessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+          initialDelaySeconds: 180
+          failureThreshold: 10
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+          initialDelaySeconds: 180
+          periodSeconds: 15
+        volumeMounts:
+          - name: bpf-maps
+            mountPath: /sys/fs/bpf
+          - name: cilium-run
+            mountPath: /var/run/cilium
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+            readOnly: true
+          - name: kubeconfig-path
+            mountPath: /var/lib/kubelet/kubeconfig
+            readOnly: true
+          - name: cilium-config-vol
+            mountPath: /etc/cilium/
+            readOnly: true
+          # CNI binaries and config files
+          - name: cni-path
+            mountPath: /host/opt/cni/bin
+          - name: etc-cni-netd
+            mountPath: /host/etc/cni/net.d
+          # Mount in the etcd TLS secrets.
+          - mountPath: /etc/etcd/etcd.ca
+            name: etcd-ca
+            readOnly: true
+          - mountPath: /etc/etcd/etcd.cert
+            name: etcd-cert
+            readOnly: true
+          - mountPath: /etc/etcd/etcd.key
+            name: etcd-key
+            readOnly: true
+        securityContext:
+          capabilities:
+            add:
+              - "NET_ADMIN"
+          privileged: true
+      hostNetwork: true
+      volumes:
+        - name: cilium-run
+          hostPath:
+            path: /var/run/cilium
+        - name: bpf-maps
+          hostPath:
+            path: /sys/fs/bpf
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+        - name: kubeconfig-path
+          hostPath:
+              path: /var/lib/kubelet/kubeconfig
+        - name: cilium-config-vol
+          configMap:
+            name: cilium-config
+        # CNI binaries and config files
+        - name: cni-path
+          hostPath:
+            path: /var/lib/kubelet/cni/bin
+        - name: etc-cni-netd
+          hostPath:
+              path: /etc/cni/net.d
+        # Mount in the etcd TLS secrets.
+        - name: etcd-ca
+          hostPath:
+            path: /etc/pki/trust/anchors/SUSE_CaaSP_CA.crt
+        - name: etcd-cert
+          hostPath:
+            path: /etc/pki/minion.crt
+        - name: etcd-key
+          hostPath:
+            path: /etc/pki/minion.key
+
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: node.cloudprovider.kubernetes.io/uninitialized
+        value: "true"
+

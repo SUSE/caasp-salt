@@ -14,6 +14,9 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
     --cluster-name=kubernetes \
     --cluster-cidr={{ pillar['cluster_cidr'] }} \
     --service-account-private-key-file={{ pillar['paths']['service_account_key'] }} \
+    --service-cluster-ip-range={{ pillar['services_cidr'] }} \
+    --allocate-node-cidrs=true \
+    --node-cidr-mask-size={{ pillar['cluster_cidr_len'] }} \
     --root-ca-file={{ pillar['ssl']['ca_file'] }} \
 {% if cloud_provider -%}
                --cloud-provider={{ cloud_provider }} \
