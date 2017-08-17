@@ -42,7 +42,7 @@ data:
       id: ldap
       name: LDAP
       config:
-        host: "{{ pillar['dashboard'] }}"
+        host: "{{ pillar['dashboard'] }}:389"
         startTLS: true
         bindDN: cn=admin,{{ pillar['ldap_internal_infra_domain'] }}
         bindPW: admin
