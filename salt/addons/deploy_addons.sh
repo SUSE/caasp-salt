@@ -26,9 +26,19 @@ fi
 
 echo "Deploying DNS on Kubernetes"
 
+KUBEDNS_SA=`eval "$KUBECTL_PATH $NS_ARGS $SRV_ARGS get sa | grep kube-dns | cat"`
+if [ ! "$KUBEDNS_SA" ]; then
+	# use kubectl to create kubedns service account
+	$KUBECTL_PATH $NS_ARGS $SRV_ARGS create -f "$DIR/kubedns-sa.yaml"
+
+	echo "Kube-dns service account successfully created."
+else
+	echo "Kube-dns service account  already there. Skipping."
+fi
+
 KUBEDNS_CM=`eval "$KUBECTL_PATH $NS_ARGS $SRV_ARGS get cm | grep kube-dns | cat"`
 if [ ! "$KUBEDNS_CM" ]; then
-	# use kubectl to create kubedns service
+	# use kubectl to create kubedns config map
 	$KUBECTL_PATH $NS_ARGS $SRV_ARGS create -f "$DIR/kubedns-cm.yaml"
 
 	echo "Kube-dns config map successfully created."
