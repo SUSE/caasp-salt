@@ -31,14 +31,10 @@ include:
     - template:    jinja
 
 deploy_addons.sh:
-  # We need to wait for Kube API server to actually start, see k8s issue #47739
-  http.wait_for_successful_query:
-    - name:        'http://127.0.0.1:8080/healthz'
-    - status:      200
   cmd.script:
     - source:      salt://addons/deploy_addons.sh
     - require:
-      - service:   kube-apiserver
+      - kube-apiserver
       - file:      /etc/kubernetes/addons/namespace.yaml
       - file:      /etc/kubernetes/addons/kubedns-cm.yaml
       - file:      /etc/kubernetes/addons/kubedns-svc.yaml
