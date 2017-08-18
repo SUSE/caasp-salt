@@ -1,21 +1,28 @@
 # the CIDR for cluster IPs (internal IPs for Pods)
-cluster_cidr:     '172.20.0.0/16'
+cluster_cidr:     '172.16.0.0/13'
+
+# The min and max subnet, and length for node allocations.
+# The defaults allow for 510 pod IPs per host (/23) allowing
+# for a maximum of 1024 hosts.
+cluster_cidr_min: '172.16.0.0'
+cluster_cidr_max: '172.23.255.255'
+cluster_cidr_len: 23
+
+# the CIDR for services (virtual IPs for services)
+services_cidr:    '172.24.0.0/16'
 
 # the cluster domain name used for internal infrastructure host <-> host  communication
 internal_infra_domain: 'infra.caasp.local'
 
-# the CIDR for services (virtual IPs for services)
-services_cidr:    '172.21.0.0/16'
-
 api:
   # the API service IP (must be inside the 'services_cidr')
-  cluster_ip:     '172.21.0.1'
+  cluster_ip:     '172.24.0.1'
   # port for listening for SSL connections
   ssl_port:       '6443'
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
 dns:
-  cluster_ip:     '172.21.0.2'
+  cluster_ip:     '172.24.0.2'
   domain:         'cluster.local'
   replicas:       '1'
 
