@@ -141,6 +141,7 @@ spec:
             memory: 20Mi
             cpu: 10m
       dnsPolicy: Default  # Don't use cluster DNS.
+      serviceAccountName: kube-dns
 
 ---
 apiVersion: v1
@@ -170,3 +171,12 @@ kind: ConfigMap
 metadata:
   name: kube-dns
   namespace: kube-system
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
