@@ -1,6 +1,7 @@
 include:
   - crypto
   - repositories
+  - kubectl-config
 
 {% set ip_addresses = [] -%}
 {% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
@@ -85,14 +86,15 @@ include:
 dex_secrets:
   cmd.run:
     - name: |
-        until output=$(kubectl create secret generic dex-tls --namespace=kube-system --from-file=/etc/pki/dex.crt --from-file=/etc/pki/dex.key ) ; do
+        until kubectl get secret dex-tls --namespace=kube-system ; do
+            kubectl create secret generic dex-tls --namespace=kube-system --from-file=/etc/pki/dex.crt --from-file=/etc/pki/dex.key
             sleep 5
         done
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - x509: /etc/pki/dex.crt
-      - file: {{ pillar['paths']['kubeconfig'] }}
+      - {{ pillar['paths']['kubeconfig'] }}
 
 dex_instance:
   cmd.run:
@@ -105,7 +107,7 @@ dex_instance:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - file: /root/dex.yaml
-      - file: {{ pillar['paths']['kubeconfig'] }}
+      - {{ pillar['paths']['kubeconfig'] }}
 
 kubernetes_roles:
   cmd.run:
@@ -118,5 +120,5 @@ kubernetes_roles:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - file: /root/roles.yaml
-      - file: {{ pillar['paths']['kubeconfig'] }}
+      - {{ pillar['paths']['kubeconfig'] }}
       - dex_instance

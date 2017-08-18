@@ -45,6 +45,5 @@ deploy_addons.sh:
       - file:      /etc/kubernetes/addons/kubedns-cm.yaml
       - file:      /etc/kubernetes/addons/kubedns-svc.yaml
       - file:      /etc/kubernetes/addons/kubedns.yaml
-      - kube_apiserver_ready
 {% endif %}
 

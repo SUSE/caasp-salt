@@ -1,5 +1,6 @@
 include:
   - crypto
+  - kubernetes-common
 
 /etc/pki/kubectl-client-cert.key:
   x509.private_key_managed:
