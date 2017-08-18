@@ -41,6 +41,7 @@ spec:
         resources: {}
       nodeSelector:
         beta.kubernetes.io/os: linux
+      serviceAccountName: tiller
 status: {}
 
 ---
@@ -64,3 +65,12 @@ spec:
   type: ClusterIP
 status:
   loadBalancer: {}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tiller
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
