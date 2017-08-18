@@ -5,8 +5,6 @@ include:
   - etcd-proxy
   - kubernetes-common
 
-{% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
-
 {% set ip_addresses = [] -%}
 {% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
 
@@ -95,7 +93,7 @@ kube-apiserver:
     - match:      state
     - connstate:  NEW
     - dports:
-        - {{ api_ssl_port }}
+      - {{ pillar['api']['int_ssl_port'] }}
     - proto:      tcp
     - require:
       - sls:      kubernetes-common

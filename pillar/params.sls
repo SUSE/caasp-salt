@@ -17,8 +17,10 @@ internal_infra_domain: 'infra.caasp.local'
 api:
   # the API service IP (must be inside the 'services_cidr')
   cluster_ip:     '172.24.0.1'
-  # port for listening for SSL connections
+  # port for listening for SSL connections (load balancer)
   ssl_port:       '6443'
+  # port for listening for SSL connections (kube-api)
+  int_ssl_port:   '6444'
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
 dns:
