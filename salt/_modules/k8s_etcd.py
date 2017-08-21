@@ -38,7 +38,10 @@ def get_cluster_size():
         member_count = len(__salt__['mine.get'](
             'roles:kube-master', 'caasp_fqdn', expr_form='grain').values())
 
-        if member_count < DESIRED_MEMBER_COUNT:
+        if member_count >= DESIRED_MEMBER_COUNT:
+            # We have enough members, use this count.
+            return member_count
+        else:
             # Attempt to increase the member count to 3, however, if we don't
             # have 3 nodes in total, then match the number of nodes we have.
             increased_member_count = len(__salt__['mine.get'](
