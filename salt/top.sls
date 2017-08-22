@@ -11,6 +11,7 @@ base:
     - transactional-update
   'roles:kube-(master|minion)':
     - match: grain_pcre
+    - haproxy
     - ca-cert
     - repositories
     - motd

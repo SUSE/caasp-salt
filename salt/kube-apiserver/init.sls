@@ -5,8 +5,6 @@ include:
   - etcd-proxy
   - kubernetes-common
 
-{% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') %}
-
 {% set ip_addresses = [] -%}
 {% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
 
@@ -87,7 +85,6 @@ kube-apiserver:
       - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-
   iptables.append:
     - table:      filter
     - family:     ipv4
@@ -96,7 +93,7 @@ kube-apiserver:
     - match:      state
     - connstate:  NEW
     - dports:
-        - {{ api_ssl_port }}
+      - {{ pillar['api']['int_ssl_port'] }}
     - proto:      tcp
     - require:
       - sls:      kubernetes-common
@@ -115,3 +112,9 @@ kube-apiserver:
       - file:     kube-apiserver
       - sls:      ca-cert
       - {{ pillar['ssl']['kube_apiserver_crt'] }}
+  # wait for the API server (see k8s issue #47739) so it can be used
+  http.wait_for_successful_query:
+    - name:       'http://127.0.0.1:8080/healthz'
+    - status:     200
+    - require:
+      - service:  kube-apiserver
