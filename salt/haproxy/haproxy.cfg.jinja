@@ -1,0 +1,30 @@
+{%- if "kube-master" in salt['grains.get']('roles', []) -%}
+{%- set bind_ip = "0.0.0.0" -%}
+{%- else -%}
+{%- set bind_ip = "127.0.0.1" -%}
+{%- endif -%}
+global
+        log /dev/log    local0
+        log /dev/log    local1 notice
+        daemon
+
+defaults
+        log     global
+        mode    tcp
+        option  tcplog
+        option  dontlognull
+        timeout connect 5000
+        timeout client 50000
+        timeout server 50000
+
+# Listen on the standard Kube-API Public port, 6443 by default, and proxy to the masters on
+# the Kube-API internal port, 6444 by default.
+listen kubernetes-master
+        bind {{ bind_ip }}:{{ pillar['api']['ssl_port'] }}
+        mode tcp
+        default-server inter 10s fall 3
+        balance roundrobin
+
+{%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.ip_addrs', 'grain').items() %}
+        server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} check
+{% endfor -%}
