@@ -21,6 +21,9 @@ api:
   ssl_port:       '6443'
   # port for listening for SSL connections (kube-api)
   int_ssl_port:   '6444'
+  # etcd storage backend version for cluster
+  etcd_version:   'etcd2'
+
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
 dns:
