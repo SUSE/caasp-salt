@@ -24,3 +24,12 @@ kubernetes-common:
         user: 'default-admin'
         client_certificate: {{ pillar['ssl']['crt_file'] }}
         client_key: {{ pillar['ssl']['key_file'] }}
+
+{% if pillar['cloud']['provider'] == 'openstack' %}
+/etc/kubernetes/openstack-config:
+  file.managed:
+    - source:     salt://kubernetes-common/openstack-config.jinja
+    - template:   jinja
+    - require:
+      - pkg:      kubernetes-common
+{% endif %}

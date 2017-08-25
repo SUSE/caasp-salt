@@ -23,8 +23,11 @@ KUBELET_ARGS="\
     --pod-manifest-path=/etc/kubernetes/manifests \
     --pod-infra-container-image={{ pillar['pod_infra_container_image'] }} \
 {% endif -%}
-{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
-    --cloud-provider=aws \
+{% if salt['pillar.get']('cloud:provider', '') != '' -%}
+               --cloud-provider={{ pillar['cloud']['provider'] }} \
+  {% if salt['pillar.get']('cloud:provider', '') == 'openstack' -%}
+               --cloud-config=/etc/kubernetes/openstack-config \
+  {% endif -%}
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
     --require-kubeconfig \
