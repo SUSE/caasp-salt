@@ -11,7 +11,10 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
     --cluster-cidr={{ pillar['cluster_cidr'] }} \
     --service-account-private-key-file={{ pillar['ssl']['key_file'] }} \
     --root-ca-file={{ pillar['ssl']['ca_file'] }} \
-{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
-    --cloud-provider=aws \
+{% if salt['pillar.get']('cloud:provider', '') != '' -%}
+               --cloud-provider={{ pillar['cloud']['provider'] }} \
+  {% if salt['pillar.get']('cloud:provider', '') == 'openstack' -%}
+               --cloud-config=/etc/kubernetes/openstack-config \
+  {% endif -%}
 {% endif -%}
     {{ salt['pillar.get']('components:controller-manager:args', '') }}"

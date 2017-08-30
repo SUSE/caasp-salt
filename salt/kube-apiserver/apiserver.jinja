@@ -30,11 +30,14 @@ KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,Servi
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
                --apiserver-count={{ salt['mine.get']('roles:kube-master', 'caasp_fqdn', expr_form='grain').values()|length }} \
-{% if salt['pillar.get']('infrastructure', 'libvirt') == 'aws' -%}
-               --cloud-provider=aws \
+{% if salt['pillar.get']('cloud:provider', '') != '' -%}
+               --cloud-provider={{ pillar['cloud']['provider'] }} \
+  {% if salt['pillar.get']('cloud:provider', '') == 'openstack' -%}
+               --cloud-config=/etc/kubernetes/openstack-config \
+  {% endif -%}
 {% endif -%}
                --tls-cert-file={{ pillar['ssl']['crt_file'] }} \
                --tls-private-key-file={{ pillar['ssl']['key_file'] }} \
                {{ salt['pillar.get']('components:apiserver:args', '') }} \
                --client-ca-file={{ pillar['ssl']['ca_file'] }} \
-               --storage-backend=etcd2"
+               --storage-backend={{ pillar['api']['etcd_version'] }}"

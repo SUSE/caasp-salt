@@ -87,6 +87,9 @@ kubelet:
       - file:   /etc/kubernetes/config
       - kubelet-config
       - file:   kubelet
+{% if pillar.get('cloud:provider', '') == 'openstack' %}
+      - file:     /etc/kubernetes/openstack-config
+{% endif %}
     - require:
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial

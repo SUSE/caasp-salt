@@ -21,6 +21,9 @@ api:
   ssl_port:       '6443'
   # port for listening for SSL connections (kube-api)
   int_ssl_port:   '6444'
+  # etcd storage backend version for cluster
+  etcd_version:   'etcd2'
+
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
 dns:
@@ -137,6 +140,24 @@ proxy:
   https:          ''
   no_proxy:       ''
   systemwide:     'true'
+
+# Kubernetes is designed to work with different Clouds such as Google Compute Engine (GCE), 
+# Amazon Web Services (AWS), and OpenStack; therefore, different load balancers need to be created 
+# on the particular Cloud for the services. This is done through a plugin for each Cloud.
+# https://github.com/kubernetes/kubernetes/blob/release-1.7/pkg/cloudprovider/README.md
+cloud:
+  provider:     ''
+  openstack:
+    auth_url:       ''
+    domain:         ''
+    project:        ''
+    region:         ''
+    username:       ''
+    password:       ''
+    # OpenStack subnet UUID for the CaasP private network
+    subnet:         ''
+    # OpenStack load balancer monitor max retries
+    lb_mon_retries: '3'
 
 # Configuration for the reboot manager (https://github.com/SUSE/rebootmgr).
 # notes:
