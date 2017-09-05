@@ -176,3 +176,20 @@ transactional-update:
 
 dex:
   node_port: 32000
+
+# configuration parameters for interacting with LDAP via Dex
+# these get filled in by velum during bootstrap. they're listed
+# here for documentation purposes.
+ldap:
+  host: ''
+  port: 0
+  bind_dn: ''
+  bind_pw: ''
+  domain: ''
+  group_dn: ''
+  people_dn: ''
+  base_dn: ''
+  admin_group_dn: ''
+  admin_group_name: ''
+  tls_method: ''
+  mail_attribute: ''
