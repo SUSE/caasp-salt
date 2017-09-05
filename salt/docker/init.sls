@@ -3,6 +3,25 @@ include:
   - flannel
 
 ######################
+# additional ca.crt(s)
+#######################
+
+{%- set registries = salt['pillar.get']('registries', []) %}
+{%- for registry in registries %}
+  {%- for host_port, cert in registry.items() %}
+    {% set host = host_port.split(":")[0] %}
+/etc/docker/certs.d/{{ host_port }}/ca.crt:
+  file.managed:
+    - makedirs: True
+    - contents: |
+        {{ cert | indent(8) }}
+  {%- endfor %}
+{%- endfor %}
+
+# ... from https://docs.docker.com/registry/insecure/#using-self-signed-certificates
+# we do not need to restart docker after adding a certificate
+
+######################
 # proxy for the daemon
 #######################
 
