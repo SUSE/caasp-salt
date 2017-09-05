@@ -21,6 +21,7 @@ base:
     - flannel
     - docker
     - container-feeder
+    - kubectl-config
     - kubelet
     - kube-proxy
   'roles:kube-master':
@@ -28,5 +29,5 @@ base:
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
-    - kubectl-client-cert
     - addons
+    - dex

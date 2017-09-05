@@ -37,7 +37,7 @@ kube-scheduler:
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: {{ pillar['ssl']['kube_scheduler_key'] }}
-    - CN: {{ grains['caasp_fqdn'] }}
+    - CN: 'system:kube-scheduler'
     - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}

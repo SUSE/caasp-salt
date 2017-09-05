@@ -38,13 +38,13 @@ kube-proxy:
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: {{ pillar['ssl']['kube_proxy_key'] }}
-    - CN: {{ grains['caasp_fqdn'] }}
+    - CN: 'system:kube-proxy'
     - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
     - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
     # system:node-proxier is a kubernetes specific role identifying a proxier in the system.
-    - O: 'system:node-proxier'
+    - O: 'system:nodes'
     - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
     - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
     - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}

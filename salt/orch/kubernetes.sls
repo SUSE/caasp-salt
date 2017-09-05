@@ -131,6 +131,16 @@ reboot_setup:
     - require:
       - salt: kube_master_setup
 
+dex_setup:
+  salt.state:
+    - tgt: 'roles:kube-master'
+    - tgt_type: grain
+    - batch: 5
+    - sls:
+      - dex
+    - require:
+      - salt: reboot_setup
+
 set_bootstrap_grain:
   salt.function:
     - tgt: 'roles:(admin|kube-(master|minion))'
@@ -140,4 +150,4 @@ set_bootstrap_grain:
       - bootstrap_complete
       - true
     - require:
-      - salt: reboot_setup
+      - salt: dex_setup
