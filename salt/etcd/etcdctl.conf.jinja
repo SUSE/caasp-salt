@@ -1,4 +1,12 @@
+# etcd common flags
 ETCDCTL_ENDPOINT="https://{{ grains['caasp_fqdn'] }}:2379"
+
+# etcd v2 style flags
 ETCDCTL_CA_FILE={{ pillar['ssl']['ca_file'] }}
 ETCDCTL_CERT_FILE={{ pillar['ssl']['crt_file'] }}
 ETCDCTL_KEY_FILE={{ pillar['ssl']['key_file'] }}
+
+# etcd v3 style flags
+ETCDCTL_CACERT={{ pillar['ssl']['ca_file'] }}
+ETCDCTL_CERT={{ pillar['ssl']['crt_file'] }}
+ETCDCTL_KEY={{ pillar['ssl']['key_file'] }}
