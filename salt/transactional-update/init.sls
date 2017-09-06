@@ -7,6 +7,10 @@
     - user: root
     - group: root
     - mode: 644
+  module.run:
+    - name: service.systemctl_reload
+    - onchanges:
+      - file: /etc/systemd/system/transactional-update.service.d/10-update-rebootmgr-options.conf
 
 /etc/systemd/system/transactional-update.timer.d/10-increase-update-speed.conf:
   file.managed:
@@ -16,11 +20,9 @@
     - user: root
     - group: root
     - mode: 644
-
-service.systemctl_reload:
   module.run:
+    - name: service.systemctl_reload
     - onchanges:
-      - file: /etc/systemd/system/transactional-update.service.d/10-update-rebootmgr-options.conf
       - file: /etc/systemd/system/transactional-update.timer.d/10-increase-update-speed.conf
 
 transactional-update.timer:

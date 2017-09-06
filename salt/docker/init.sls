@@ -14,9 +14,10 @@ include:
         Environment="HTTP_PROXY={{ salt['pillar.get']('proxy:http', '') }}"
         Environment="HTTPS_PROXY={{ salt['pillar.get']('proxy:https', '') }}"
         Environment="NO_PROXY={{ salt['pillar.get']('proxy:no_proxy', '') }}"
-  cmd.run:
-    - name: systemctl daemon-reload
-    - stateful: True
+  module.run:
+    - name: service.systemctl_reload
+    - onchanges:
+      - file: /etc/systemd/system/docker.service.d/proxy.conf
 
 #######################
 # docker daemon

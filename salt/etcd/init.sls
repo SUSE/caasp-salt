@@ -59,6 +59,10 @@ etcd:
   file.managed:
     - source: salt://etcd/etcd.conf
     - makedirs: True
+  module.run:
+    - name: service.systemctl_reload
+    - onchanges:
+      - file: /etc/systemd/system/etcd.service.d/etcd.conf
 
 # note: this will be used to run etcdctl client command
 /etc/sysconfig/etcdctl:
