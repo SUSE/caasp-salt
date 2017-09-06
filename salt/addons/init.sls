@@ -33,7 +33,7 @@ apply-namespace:
     - name: |
         kubectl apply -f /etc/kubernetes/addons/namespace.yaml || kubectl apply -f /etc/kubernetes/addons/namespace.yaml
     - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}      
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - kube_apiserver_ready
       - file:      /etc/kubernetes/addons/namespace.yaml
@@ -49,10 +49,21 @@ apply-dns:
     - name: |
         kubectl apply -f /etc/kubernetes/addons/kubedns.yaml || kubectl apply -f /etc/kubernetes/addons/kubedns.yaml
     - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}    
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - kube_apiserver_ready
       - file:      /etc/kubernetes/addons/kubedns.yaml
+
+create-dns-clusterrolebinding:
+  cmd.run:
+    - name: |
+        kubectl create clusterrolebinding system:kube-dns --clusterrole=cluster-admin --serviceaccount=kube-system:default
+    - env:
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - unless:
+      - kubectl get clusterrolebindings | grep kube-dns | cat
+    - require:
+      - kube_apiserver_ready
 {% endif %}
 
 {% if salt['pillar.get']('addons:tiller', 'false').lower() == 'true' %}
@@ -66,7 +77,7 @@ apply-tiller:
     - name: |
         kubectl apply -f /etc/kubernetes/addons/tiller.yaml || kubectl apply -f /etc/kubernetes/addons/tiller.yaml
     - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}    
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - kube_apiserver_ready
       - file:      /etc/kubernetes/addons/tiller.yaml

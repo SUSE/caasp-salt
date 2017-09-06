@@ -52,7 +52,7 @@ include:
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: {{ pillar['ssl']['key_file'] }}
-    - CN: {{ grains['caasp_fqdn'] }}
+    - CN: system:node:{{ grains['caasp_fqdn'] }}
     - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}

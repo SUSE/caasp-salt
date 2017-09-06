@@ -1,0 +1,47 @@
+---
+# This role exists so that the CLI can find Dex at
+# any time. It will be in a different location in a
+# cloud provider environment.
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: find-dex
+  namespace: kube-system
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["dex"]
+  verbs: ["get"]
+---
+# Allow any authenticated *or* unauthenticated
+# user to look up Dex's service entry
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: find-dex
+  namespace: kube-system
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:unauthenticated
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: find-dex
+  apiGroup: rbac.authorization.k8s.io
+---
+# Map the LDAP Administrators role to the Kubernetes system:masters group
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: administrators-in-ldap
+subjects:
+- kind: Group
+  name: Administrators
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io

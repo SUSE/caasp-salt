@@ -6,6 +6,7 @@
 # Add your own!
 KUBE_CONTROLLER_MANAGER_ARGS="\
     --kubeconfig={{ pillar['paths']['kube_controller_mgr_config'] }} \
+    --use-service-account-credentials \
     --leader-elect=true \
     --cluster-name=kubernetes \
     --cluster-cidr={{ pillar['cluster_cidr'] }} \
