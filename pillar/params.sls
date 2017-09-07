@@ -159,6 +159,8 @@ cloud:
     subnet:         ''
     # OpenStack load balancer monitor max retries
     lb_mon_retries: '3'
+    # OpenStack Cinder Block Storage API version
+    bs_version:     'v2'
 
 # Configuration for the reboot manager (https://github.com/SUSE/rebootmgr).
 # notes:
