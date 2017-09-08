@@ -1,5 +1,5 @@
 ### service names ###
-127.0.0.1 api api.{{ pillar['internal_infra_domain'] }}
+127.0.0.1 api api.{{ pillar['internal_infra_domain'] }} {{ pillar['api']['server']['external_fqdn'] }}
 
 ### admin nodes ###
 {%- set admins = salt['mine.get']('roles:admin', 'network.ip_addrs', 'grain') %}
@@ -20,7 +20,7 @@
 	{%- else %}
 		{%- set ip = addrlist|first %}
 	{%- endif %}
-{{ ip }} {{ master_id }}.{{ pillar['internal_infra_domain'] }} {{ pillar['api']['server']['external_fqdn'] }}
+{{ ip }} {{ master_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}
 
 ### kubernetes workers ###
