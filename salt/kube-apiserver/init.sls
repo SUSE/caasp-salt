@@ -112,3 +112,17 @@ kube-apiserver:
       - file:     kube-apiserver
       - sls:      ca-cert
       - {{ pillar['ssl']['kube_apiserver_crt'] }}
+  # wait until the API server is actually up and running
+  cmd.run:
+    - name: |
+        {% set api_server = "api." + pillar['internal_infra_domain']  -%}
+        {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
+        {% set api_server_url = 'https://' + api_server + ':' + api_ssl_port -%}
+
+        ELAPSED=0
+        until curl --silent --fail -o /dev/null --cacert {{ pillar['ssl']['ca_file'] }} --cert {{ pillar['ssl']['crt_file'] }} --key {{ pillar['ssl']['key_file'] }} {{ api_server_url }}/healthz ; do
+          [ $ELAPSED -gt 300 ] && exit 1
+          sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
+        done
+        echo changed="no"
+    - stateful: True
