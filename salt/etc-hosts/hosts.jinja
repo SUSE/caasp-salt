@@ -20,7 +20,7 @@
 	{%- else %}
 		{%- set ip = addrlist|first %}
 	{%- endif %}
-{{ ip }} {{ master_id }}.{{ pillar['internal_infra_domain'] }} {{ pillar['api']['server']['external_fqdn'] }}
+{{ ip }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }} {{ pillar['api']['server']['external_fqdn'] }}
 {%- endfor %}
 
 ### kubernetes workers ###
