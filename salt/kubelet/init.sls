@@ -2,7 +2,7 @@ include:
   - repositories
   - ca-cert
   - cert
-  - etcd-proxy
+  - etcd
   - kubernetes-common
 
 /etc/kubernetes/kubelet-initial:

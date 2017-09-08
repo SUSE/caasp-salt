@@ -3,7 +3,7 @@
 ##################################################
 
 include:
-  - etcd-proxy
+  - etcd
 
 {% set reboot_uri = "http://127.0.0.1:2379/v2/keys/" + pillar['reboot']['directory'] + "/" +
          pillar['reboot']['group'] %}

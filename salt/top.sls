@@ -17,7 +17,7 @@ base:
     - motd
     - users
     - cert
-    - etcd-proxy
+    - etcd
     - flannel
     - docker
     - container-feeder
