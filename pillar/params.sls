@@ -25,6 +25,9 @@ api:
   # etcd storage backend version for cluster
   etcd_version:   'etcd3'
 
+  server:
+    # should be set from the UI
+    external_fqdn: ''
 
 # DNS service IP and some other stuff (must be inside the 'services_cidr')
 dns:
@@ -72,7 +75,7 @@ ssl:
 
   kube_controller_mgr_key: '/etc/pki/kube-controller-mgr.key'
   kube_controller_mgr_crt: '/etc/pki/kube-controller-mgr.crt'
-  
+
   kubelet_key: '/etc/pki/kubelet.key'
   kubelet_crt: '/etc/pki/kubelet.crt'
 
