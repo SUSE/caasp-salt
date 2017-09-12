@@ -17,72 +17,46 @@ update_mine:
        - salt: update_pillar
        - salt: update_grains
 
-{%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.ip_addrs', tgt_type='compound') %}
-{%- for master_id in masters.keys() %}
-
-{{ master_id }}-stop-services:
+master-stop-services:
   salt.state:
-    - tgt: {{ master_id }}
+    - tgt: roles:kube-master
     - sls:
       - kube-apiserver.stop
       - kube-controller-manager.stop
       - kube-scheduler.stop
       - etcd.stop
+    - require:
+       - salt: update_mine
 
-{% endfor %}
-
-{%- set workers = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion', fun='network.ip_addrs', tgt_type='compound') %}
-{%- for worker_id, ip in workers.items() %}
-
-{{ worker_id }}-stop-services:
+worker-stop-services:
   salt.state:
-    - tgt: {{ worker_id }}
+    - tgt: roles:kube-minion
     - sls:
       - kubelet.stop
       - kube-proxy.stop
       - etcd.stop
+    - require:
+       - salt: master-stop-services
 
-{% endfor %}
-
-{%- for master_id in masters.keys() %}
-
-{{ master_id }}-backup-etcd:
+backup-etcd:
   salt.function:
-    - tgt: {{ master_id }}
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
     - name: cmd.run
     - arg:
       - mkdir /tmp/backup; btrfs subvolume snapshot /var/lib/etcd /tmp/backup/etcd
+    - require:
+       - salt: worker-stop-services
 
-{{ master_id }}-migrate-etcd:
+migrate-etcd:
   salt.function:
-    - tgt: {{ master_id }}
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
     - name: cmd.run
     - arg:
       - if ! [ -d /var/lib/etcd/proxy ]; then set -a; source /etc/sysconfig/etcdctl; env ETCDCTL_API=3 etcdctl migrate --data-dir=/var/lib/etcd; fi
     - require:
-      - salt: {{ master_id }}-backup-etcd
-
-{% endfor %}
-
-{%- for worker_id, ip in workers.items() %}
-
-{{ worker_id }}-backup-etcd:
-  salt.function:
-    - tgt: {{ worker_id }}
-    - name: cmd.run
-    - arg:
-      - mkdir /tmp/backup; btrfs subvolume snapshot /var/lib/etcd /tmp/backup/etcd
-
-{{ worker_id }}-migrate-etcd:
-  salt.function:
-    - tgt: {{ worker_id }}
-    - name: cmd.run
-    - arg:
-      - if ! [ -d /var/lib/etcd/proxy ]; then set -a; source /etc/sysconfig/etcdctl; env ETCDCTL_API=3 etcdctl migrate --data-dir=/var/lib/etcd; fi
-    - require:
-      - salt: {{ worker_id }}-backup-etcd
-
-{% endfor %}
+      - salt: backup-etcd
 
 create-etcd-pillar:
   salt.state:
@@ -90,6 +64,8 @@ create-etcd-pillar:
     - tgt_type: grain
     - sls:
       - etcd.migrate
+    - require:
+      - salt: migrate-etcd
 
 refresh-pillars:
   salt.function:
