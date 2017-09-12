@@ -66,4 +66,15 @@ apply-tiller:
     - require:
       - kube-apiserver
       - file:      /etc/kubernetes/addons/tiller.yaml
+
+create-tiller-clusterrolebinding:
+  cmd.run:
+    - name: |
+        kubectl create clusterrolebinding system:tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    - env:
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - unless:
+      - kubectl get clusterrolebindings | grep tiller | cat
+    - require:
+      - kube-apiserver
 {% endif %}
