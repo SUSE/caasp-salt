@@ -2,6 +2,7 @@ include:
   - crypto
   - repositories
   - kubectl-config
+  - kube-apiserver
 
 {% set ip_addresses = [] -%}
 {% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
