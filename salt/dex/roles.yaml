@@ -39,7 +39,7 @@ metadata:
   name: administrators-in-ldap
 subjects:
 - kind: Group
-  name: Administrators
+  name: "{{ pillar['ldap']['admin_group_name'] }}"
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole

@@ -93,32 +93,29 @@ dex_secrets:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
+      - kube-apiserver
       - x509: /etc/pki/dex.crt
       - {{ pillar['paths']['kubeconfig'] }}
 
 dex_instance:
   cmd.run:
     - name: |
-        until kubectl get sa dex --namespace=kube-system && kubectl get clusterrolebinding system:dex && kubectl get configmap dex --namespace=kube-system && kubectl get deployment dex --namespace=kube-system && kubectl get service dex --namespace=kube-system ; do
-            kubectl create -f /root/dex.yaml
-            sleep 5
-        done
+        kubectl apply -f /root/dex.yaml || kubectl apply -f /root/dex.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
+      - kube-apiserver
       - file: /root/dex.yaml
       - {{ pillar['paths']['kubeconfig'] }}
 
 kubernetes_roles:
   cmd.run:
     - name: |
-        until kubectl get role find-dex --namespace=kube-system && kubectl get rolebinding find-dex --namespace=kube-system ; do
-            kubectl create -f /root/roles.yaml
-            sleep 5
-        done
+        kubectl apply -f /root/roles.yaml || kubectl apply -f /root/roles.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
+      - kube-apiserver
       - file: /root/roles.yaml
       - {{ pillar['paths']['kubeconfig'] }}
       - dex_instance

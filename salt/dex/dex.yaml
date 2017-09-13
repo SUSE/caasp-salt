@@ -44,25 +44,24 @@ data:
       config:
         host: "{{ pillar['dashboard'] }}:389"
         startTLS: true
-        bindDN: cn=admin,{{ pillar['ldap_internal_infra_domain'] }}
-        bindPW: admin
+        bindDN: "{{ pillar['ldap']['bind_dn'] }}"
+        bindPW: "{{ pillar['ldap']['bind_pw'] }}"
         rootCA: {{ pillar['ssl']['ca_file'] }}
         userSearch:
-          baseDN: ou=People,{{ pillar['ldap_internal_infra_domain'] }}
+          baseDN: "{{ pillar['ldap']['people_dn'] }}"
           filter: "(objectClass=inetOrgPerson)"
-          username: mail
+          username: "{{ pillar['ldap']['mail_attribute'] }}"
           idAttr: DN
-          emailAttr: mail
+          emailAttr: "{{ pillar['ldap']['mail_attribute'] }}"
           nameAttr: cn          
         groupSearch:
-          baseDN: ou=Groups,{{ pillar['ldap_internal_infra_domain'] }}
+          baseDN: "{{ pillar['ldap']['group_dn'] }}"
           filter: "(objectClass=groupOfUniqueNames)"
 
           userAttr: DN
           groupAttr: uniqueMember
 
-          nameAttr: cn       
-
+          nameAttr: cn
     oauth2:
       skipApprovalScreen: true
 
