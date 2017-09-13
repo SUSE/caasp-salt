@@ -13,4 +13,5 @@ monitor-delay=1m
 monitor-timeout=30s
 monitor-max-retries={{ pillar['cloud']['openstack']['lb_mon_retries'] }}
 [BlockStorage]
-trust-device-path = false
+trust-device-path=false
+bs-version={{ pillar['cloud']['openstack']['bs_version'] }}
