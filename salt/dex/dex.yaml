@@ -34,6 +34,7 @@ data:
       config:
         inCluster: true
     web:
+      dir: /usr/share/caasp-dex/web
       https: 0.0.0.0:5556
       tlsCert: /etc/dex/tls/dex.crt
       tlsKey: /etc/dex/tls/dex.key
@@ -90,7 +91,7 @@ spec:
       containers:
       - image: sles12/caasp-dex:2.6.1
         name: dex
-        command: ["/usr/local/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
+        command: ["/usr/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
 
         ports:
         - name: https
