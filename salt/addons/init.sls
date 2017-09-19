@@ -38,6 +38,8 @@ apply-dns:
     - require:
       - kube-apiserver
       - file:      /etc/kubernetes/addons/kubedns.yaml
+    - check_cmd:
+      - kubectl get deploy kube-dns -n kube-system | grep kube-dns
 
 create-dns-clusterrolebinding:
   cmd.run:
@@ -45,8 +47,8 @@ create-dns-clusterrolebinding:
         kubectl create clusterrolebinding system:kube-dns --clusterrole=cluster-admin --serviceaccount=kube-system:default
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - unless:
-      - kubectl get clusterrolebindings | grep kube-dns | cat
+    - check_cmd:
+      - kubectl get clusterrolebindings | grep kube-dns
     - require:
       - kube-apiserver
 {% endif %}
@@ -66,6 +68,8 @@ apply-tiller:
     - require:
       - kube-apiserver
       - file:      /etc/kubernetes/addons/tiller.yaml
+    - check_cmd:
+      - kubectl get deploy tiller -n kube-system | grep tiller
 
 create-tiller-clusterrolebinding:
   cmd.run:
@@ -73,8 +77,8 @@ create-tiller-clusterrolebinding:
         kubectl create clusterrolebinding system:tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - unless:
-      - kubectl get clusterrolebindings | grep tiller | cat
+    - check_cmd:
+      - kubectl get clusterrolebindings | grep tiller
     - require:
       - kube-apiserver
 {% endif %}
