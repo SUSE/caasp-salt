@@ -107,11 +107,13 @@ kube-apiserver:
       - iptables: kube-apiserver
       - sls:      ca-cert
       - {{ pillar['ssl']['kube_apiserver_crt'] }}
+      - x509:     {{ pillar['paths']['service_account_key'] }}
     - watch:
       - sls:      kubernetes-common
       - file:     kube-apiserver
       - sls:      ca-cert
       - {{ pillar['ssl']['kube_apiserver_crt'] }}
+      - x509:     {{ pillar['paths']['service_account_key'] }}
   # wait until the API server is actually up and running
   cmd.run:
     - name: |

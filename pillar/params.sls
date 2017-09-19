@@ -80,6 +80,8 @@ ssl:
   kube_proxy_crt: '/etc/pki/kube-proxy.crt'
 
 paths:
+  service_account_key: '/etc/pki/sa.key'
+  
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
 

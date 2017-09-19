@@ -3,7 +3,7 @@ include:
 
 generate-serviceaccount-key:
   x509.private_key_managed:
-    - name: /etc/pki/sa.key
+    - name: {{ pillar['paths']['service_account_key'] }}
     - bits: 4096
     - user: root
     - group: root
