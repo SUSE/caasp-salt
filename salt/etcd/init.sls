@@ -32,8 +32,11 @@ etcd:
     - dports:
         - 2380
     - proto: tcp
-  service.running:
+  caasp_service.running_stable:
     - name: etcd
+    - successful_retries_in_a_row: 50
+    - max_retries: 300
+    - delay_between_retries: 0.1
     - enable: True
     - require:
       - sls: ca-cert
@@ -42,6 +45,11 @@ etcd:
       - iptables: etcd
     - watch:
       - file: /etc/sysconfig/etcd
+
+etcd-running:
+  service.running:
+    - name: etcd
+    - enable: True
 
 /etc/sysconfig/etcd:
   file.managed:
