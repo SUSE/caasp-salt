@@ -86,8 +86,13 @@ spec:
     metadata:
       labels:
         app: dex
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       serviceAccountName: dex
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
       containers:
       - image: sles12/caasp-dex:2.6.1
         name: dex
