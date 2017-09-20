@@ -4,6 +4,7 @@ include:
   - cert
   - etcd
   - kubernetes-common
+  - kubernetes-common.serviceaccount-key
 
 {% set ip_addresses = [] -%}
 {% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
