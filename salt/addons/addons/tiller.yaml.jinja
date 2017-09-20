@@ -5,6 +5,7 @@ metadata:
   labels:
     app: helm
     name: tiller
+    kubernetes.io/cluster-service: "true"
   name: tiller
   namespace: kube-system
 spec:
@@ -57,6 +58,8 @@ metadata:
   labels:
     app: helm
     name: tiller
+    kubernetes.io/cluster-service: "true"
+    kubernetes.io/name: "Tiller"
   name: tiller
   namespace: kube-system
 spec:

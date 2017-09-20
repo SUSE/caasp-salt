@@ -78,6 +78,7 @@ kind: Deployment
 metadata:
   labels:
     app: dex
+    kubernetes.io/cluster-service: "true"
   name: dex
   namespace: kube-system
 spec:
@@ -129,6 +130,9 @@ kind: Service
 metadata:
   name: dex
   namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    kubernetes.io/name: "Dex"
 spec:
   type: NodePort
   ports:
