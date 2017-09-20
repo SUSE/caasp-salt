@@ -1,9 +1,20 @@
+# Ensure the node is marked as bootstrapping
+set_bootstrap_in_progress_flag:
+  salt.function:
+    - tgt: '*'
+    - name: grains.setval
+    - arg:
+      - bootstrap_in_progress
+      - true
+
 disable_rebootmgr:
   salt.state:
     - tgt: 'roles:(admin|kube-(master|minion))'
     - tgt_type: grain_pcre
     - sls:
       - rebootmgr
+    - require:
+      - salt: set_bootstrap_in_progress_flag
 
 hostname_setup:
   salt.state:
@@ -159,13 +170,25 @@ dex_setup:
     - require:
       - salt: reboot_setup
 
-set_bootstrap_grain:
+# This flag indicates at least one bootstrap has completed at some
+# point in time on this node.
+set_bootstrap_complete_flag:
   salt.function:
-    - tgt: 'roles:(admin|kube-(master|minion))'
-    - tgt_type: grain_pcre
+    - tgt: '*'
     - name: grains.setval
     - arg:
       - bootstrap_complete
       - true
     - require:
       - salt: dex_setup
+
+# Ensure the node is marked as finished bootstrapping
+clear_bootstrap_in_progress_flag:
+  salt.function:
+    - tgt: '*'
+    - name: grains.setval
+    - arg:
+      - bootstrap_in_progress
+      - false
+    - require:
+      - salt: set_bootstrap_complete_flag
