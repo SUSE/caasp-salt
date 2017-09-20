@@ -6,6 +6,11 @@ include:
 # proxy for the daemon
 #######################
 
+{% set no_proxy = ['.infra.caasp.local', '.cluster.local'] %}
+{% if salt['pillar.get']('proxy:no_proxy') %}
+  {% do no_proxy.append(pillar['proxy']['no_proxy']) %}
+{% endif %}
+
 /etc/systemd/system/docker.service.d/proxy.conf:
   file.managed:
     - makedirs: True
@@ -13,7 +18,7 @@ include:
         [Service]
         Environment="HTTP_PROXY={{ salt['pillar.get']('proxy:http', '') }}"
         Environment="HTTPS_PROXY={{ salt['pillar.get']('proxy:https', '') }}"
-        Environment="NO_PROXY={{ salt['pillar.get']('proxy:no_proxy', '') }}"
+        Environment="NO_PROXY={{ no_proxy|join(',') }}"
   module.run:
     - name: service.systemctl_reload
     - onchanges:
