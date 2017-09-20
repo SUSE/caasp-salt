@@ -1,6 +1,7 @@
 include:
   - repositories
   - kubernetes-common
+  - kubernetes-common.serviceaccount-key
 
 kube-controller-manager:
   pkg.installed:
@@ -18,8 +19,10 @@ kube-controller-manager:
       - sls:      kubernetes-common
       - file:     kube-controller-manager
       - kube-controller-mgr-config
+      - x509:     {{ pillar['paths']['service_account_key'] }}
     - require:
       - kube-controller-mgr-config
+      - x509:     {{ pillar['paths']['service_account_key'] }}
 
 {{ pillar['ssl']['kube_controller_mgr_key'] }}:
   x509.private_key_managed:    

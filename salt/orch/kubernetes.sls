@@ -59,6 +59,22 @@ ca_setup:
       - salt: etc_hosts_setup
       - salt: update_mine
 
+generate_sa_key:
+  salt.state:
+    - tgt: 'roles:ca'
+    - tgt_type: grain
+    - sls:
+      - kubernetes-common.generate-serviceaccount-key
+    - require:
+      - salt: ca_setup
+
+update_mine_again:
+  salt.function:
+    - tgt: '*'
+    - name: mine.update
+    - require:
+      - salt: generate_sa_key
+
 etcd_discovery_setup:
   salt.state:
     - tgt: 'roles:kube-master'
@@ -110,6 +126,8 @@ kube_master_setup:
     - batch: 5
     - require:
       - salt: admin_setup
+      - salt: generate_sa_key
+      - salt: update_mine_again
 
 kube_minion_setup:
   salt.state:
