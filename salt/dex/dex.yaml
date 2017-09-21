@@ -78,6 +78,7 @@ kind: Deployment
 metadata:
   labels:
     app: dex
+    kubernetes.io/cluster-service: "true"
   name: dex
   namespace: kube-system
 spec:
@@ -86,8 +87,13 @@ spec:
     metadata:
       labels:
         app: dex
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       serviceAccountName: dex
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
       containers:
       - image: sles12/caasp-dex:2.6.1
         name: dex
@@ -124,6 +130,9 @@ kind: Service
 metadata:
   name: dex
   namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    kubernetes.io/name: "Dex"
 spec:
   type: NodePort
   ports:
