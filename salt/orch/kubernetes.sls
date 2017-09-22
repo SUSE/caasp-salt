@@ -7,6 +7,11 @@ set_bootstrap_in_progress_flag:
       - bootstrap_in_progress
       - true
 
+sync_all:
+  module.run:
+    - name: saltutil.sync_all
+    - refresh: True
+
 disable_rebootmgr:
   salt.state:
     - tgt: 'roles:(admin|kube-(master|minion))'

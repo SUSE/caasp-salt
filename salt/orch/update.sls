@@ -1,4 +1,9 @@
 # Generic Updates
+sync_all:
+  module.run:
+    - name: saltutil.sync_all
+    - refresh: True
+
 update_pillar:
   salt.function:
     - tgt: '*'
