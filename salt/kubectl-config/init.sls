@@ -51,3 +51,11 @@ include:
     - makedirs: True
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
+
+/root/.alias:
+  file.managed:
+    - source:    salt://kubectl-config/alias
+    - template:  jinja
+    - user:      root
+    - group:     root
+    - mode:      644
