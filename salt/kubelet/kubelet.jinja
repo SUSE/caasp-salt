@@ -31,6 +31,12 @@ KUBELET_ARGS="\
   {% endif -%}
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
+{% if salt['pillar.get']('runtime', 'docker').lower() == 'crio' -%}
+    --experimental-cri=true \
+    --container-runtime=remote \
+    --container-runtime-endpoint=/var/run/crio.sock \
+    --runtime-request-timeout=10m \
+{% endif -%}
     --client-ca-file={{ pillar['ssl']['ca_file'] }} \
     --require-kubeconfig \
     --network-plugin=cni \

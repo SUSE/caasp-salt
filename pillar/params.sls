@@ -157,6 +157,9 @@ dex:
     kubernetes: ''
     velum: ''
 
+# the containers runtime: 'docker' or 'crio'
+runtime: 'docker'
+
 # configuration parameters for interacting with LDAP via Dex
 # these get filled in by velum during bootstrap. they're listed
 # here for documentation purposes.
