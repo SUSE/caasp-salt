@@ -182,7 +182,7 @@ transactional-update:
     on_calendar: 'daily' # See https://www.freedesktop.org/software/systemd/man/systemd.time.html#Calendar%20Events for syntax
 
 dex:
-  node_port: 32000
+  node_port: '32000'
 
 # configuration parameters for interacting with LDAP via Dex
 # these get filled in by velum during bootstrap. they're listed
