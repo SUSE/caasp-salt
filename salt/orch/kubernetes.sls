@@ -160,13 +160,13 @@ reboot_setup:
     - require:
       - salt: kube_master_setup
 
-dex_setup:
+wait_for_dex_api:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - batch: 5
     - sls:
-      - dex
+      - dex.ensure-dex-running
     - require:
       - salt: reboot_setup
 
@@ -180,7 +180,7 @@ set_bootstrap_complete_flag:
       - bootstrap_complete
       - true
     - require:
-      - salt: dex_setup
+      - salt: wait_for_dex_api
 
 # Ensure the node is marked as finished bootstrapping
 clear_bootstrap_in_progress_flag:
