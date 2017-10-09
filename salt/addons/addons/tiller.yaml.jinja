@@ -26,7 +26,7 @@ spec:
       - env:
         - name: TILLER_NAMESPACE
           value: kube-system
-        image: gcr.io/kubernetes-helm/tiller:v2.5.1
+        image: sles12/tiller:2.5.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
