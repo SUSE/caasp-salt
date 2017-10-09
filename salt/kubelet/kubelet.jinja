@@ -18,7 +18,7 @@ KUBELET_HOSTNAME="--hostname-override={{ grains['caasp_fqdn'] }}"
 KUBELET_ARGS="\
     --cluster-dns={{ pillar['dns']['cluster_ip'] }} \
     --cluster-domain={{ pillar['dns']['domain'] }} \
-    --node-ip={{ grains['ip4_interfaces']['eth0'][0] }} \
+    --node-ip={{ grains['ip4_interfaces'][grains['gateway_iface']][0] }} \
 {% if grains['lsb_distrib_id'] == "CAASP" -%}
     --pod-manifest-path=/etc/kubernetes/manifests \
     --pod-infra-container-image={{ pillar['pod_infra_container_image'] }} \
