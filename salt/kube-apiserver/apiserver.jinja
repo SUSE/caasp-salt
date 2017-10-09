@@ -28,7 +28,7 @@ KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}
 KUBE_ADMISSION_CONTROL="--admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,NodeRestriction,DefaultStorageClass,DefaultTolerationSeconds,ResourceQuota"
 
 # Add your own!
-KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
+KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces'][grains['gateway_iface']][0] }} \
                --apiserver-count={{ salt['mine.get']('roles:kube-master', 'caasp_fqdn', expr_form='grain').values()|length }} \
 {% if salt['pillar.get']('cloud:provider', '') != '' -%}
                --cloud-provider={{ pillar['cloud']['provider'] }} \

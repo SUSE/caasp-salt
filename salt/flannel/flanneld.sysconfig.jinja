@@ -1,6 +1,6 @@
 # Flanneld configuration options
 
-{% set flannel_opt = "-v " + pillar['flannel']['log_level'] + " -iface " + pillar['flannel']['iface'] + " -ip-masq" -%}
+{% set flannel_opt = "-v " + pillar['flannel']['log_level'] + " -iface " + grains['gateway_iface'] + " -ip-masq" -%}
 {% set http_protocol = 'http' -%}
 {% if pillar['ssl']['enabled'] -%}
   {% set http_protocol = 'https' -%}
