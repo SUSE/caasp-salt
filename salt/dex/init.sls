@@ -30,4 +30,3 @@ include:
 {{ kubectl_apply_template("salt://dex/roles.yaml",
                           "/root/roles.yaml",
                           watch=["dex_secrets", "/root/dex.yaml"]) }}
-
