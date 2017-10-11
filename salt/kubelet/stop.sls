@@ -1,6 +1,9 @@
 # Stop and disable the Kubernetes minion daemons, ensuring pods have been drained
 # and the node is marked as unschedulable.
 
+include:
+  - kubectl-config
+
 # If this fails we should ignore it and proceed anyway as Kubernetes will recover
 drain-kubelet:
   cmd.run:
