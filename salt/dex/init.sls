@@ -101,7 +101,7 @@ dex_secrets:
 dex_instance:
   cmd.run:
     - name: |
-        kubectl apply -f /root/dex.yaml || kubectl apply -f /root/dex.yaml
+        kubectl apply -f /root/dex.yaml || (sleep 3 && kubectl apply -f /root/dex.yaml)
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -112,7 +112,7 @@ dex_instance:
 kubernetes_roles:
   cmd.run:
     - name: |
-        kubectl apply -f /root/roles.yaml || kubectl apply -f /root/roles.yaml
+        kubectl apply -f /root/roles.yaml || (sleep 3 && kubectl apply -f /root/roles.yaml)
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:

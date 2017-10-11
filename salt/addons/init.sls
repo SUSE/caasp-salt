@@ -16,7 +16,7 @@ include:
 apply-namespace:
   cmd.run:
     - name: |
-        kubectl apply -f /etc/kubernetes/addons/namespace.yaml || kubectl apply -f /etc/kubernetes/addons/namespace.yaml
+        kubectl apply -f /etc/kubernetes/addons/namespace.yaml || (sleep 3 && kubectl apply -f /etc/kubernetes/addons/namespace.yaml)
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -32,14 +32,12 @@ apply-namespace:
 apply-dns:
   cmd.run:
     - name: |
-        kubectl apply -f /etc/kubernetes/addons/kubedns.yaml || kubectl apply -f /etc/kubernetes/addons/kubedns.yaml
+        kubectl apply -f /etc/kubernetes/addons/kubedns.yaml || (sleep 3 && kubectl apply -f /etc/kubernetes/addons/kubedns.yaml)
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - kube-apiserver
       - file:      /etc/kubernetes/addons/kubedns.yaml
-    - check_cmd:
-      - kubectl get deploy kube-dns -n kube-system | grep kube-dns
 
 create-dns-clusterrolebinding:
   cmd.run:
@@ -47,8 +45,6 @@ create-dns-clusterrolebinding:
         kubectl create clusterrolebinding system:kube-dns --clusterrole=cluster-admin --serviceaccount=kube-system:default
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - check_cmd:
-      - kubectl get clusterrolebindings | grep kube-dns
     - require:
       - kube-apiserver
 {% endif %}
@@ -62,14 +58,12 @@ create-dns-clusterrolebinding:
 apply-tiller:
   cmd.run:
     - name: |
-        kubectl apply -f /etc/kubernetes/addons/tiller.yaml || kubectl apply -f /etc/kubernetes/addons/tiller.yaml
+        kubectl apply -f /etc/kubernetes/addons/tiller.yaml || (sleep 3 && kubectl apply -f /etc/kubernetes/addons/tiller.yaml)
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - kube-apiserver
       - file:      /etc/kubernetes/addons/tiller.yaml
-    - check_cmd:
-      - kubectl get deploy tiller -n kube-system | grep tiller
 
 create-tiller-clusterrolebinding:
   cmd.run:
@@ -77,8 +71,6 @@ create-tiller-clusterrolebinding:
         kubectl create clusterrolebinding system:tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - check_cmd:
-      - kubectl get clusterrolebindings | grep tiller
     - require:
       - kube-apiserver
 {% endif %}
