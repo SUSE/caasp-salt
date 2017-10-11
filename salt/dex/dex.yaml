@@ -73,6 +73,7 @@ data:
       redirectURIs:
       - 'http://127.0.0.1'
       - 'https://{{ pillar['dashboard'] }}/oidc/done'
+      - 'https://{{ pillar['dashboard_external_fqdn'] }}/oidc/done'
       name: "CaaSP CLI"
       secret: "swac7qakes7AvucH8bRucucH"
 ---
