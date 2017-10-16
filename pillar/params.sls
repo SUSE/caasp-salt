@@ -23,7 +23,7 @@ api:
   # port for listening for SSL connections (kube-api)
   int_ssl_port:   '6444'
   # etcd storage backend version for cluster
-  etcd_version:   'etcd2'
+  etcd_version:   'etcd3'
 
   server:
     # should be set from the UI
