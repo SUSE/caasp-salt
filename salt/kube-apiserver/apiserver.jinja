@@ -43,6 +43,7 @@ KUBE_API_ARGS="--advertise-address={{ grains['ip4_interfaces']['eth0'][0] }} \
                {{ salt['pillar.get']('components:apiserver:args', '') }} \
                --client-ca-file={{ pillar['ssl']['ca_file'] }} \
                --storage-backend={{ pillar['api']['etcd_version'] }} \
+               --storage-media-type=application/json \
                --service-account-key-file={{ pillar['paths']['service_account_key'] }} \
                --service-account-lookup=true \
                --runtime-config=admissionregistration.k8s.io/v1alpha1 \
