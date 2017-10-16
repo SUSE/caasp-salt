@@ -101,6 +101,18 @@ dex_secrets:
 dex_instance:
   cmd.run:
     - name: |
+        # FIXME: workaround a limitation in our salt version to execute a command
+        # only on one master node.
+        # "kubectl apply" makes a client side decision on if it needs to issue a
+        # "CREATE" or "UPDATE" API call. When more than 1 master executes this
+        # at the same time, for the first time, the check to decide "CREATE or UPDATE"
+        # returns "CREATE" on more than 1 master, assuming the timing is right.
+        # Now, when both send the create API call, kubernetes will reject one of them
+        # with an "AlreadyExists" failure. This will cause salt to fail the bootstrap.
+        # However, if we try the command again on the machine that failed, it will
+        # this time see the resource created by the other master, and decide to issue
+        # a no-op UPDATE instead. This will pass, and all resources will be in a
+        # consistent state - at the expense of a an extra few API calls.
         kubectl apply -f /root/dex.yaml || kubectl apply -f /root/dex.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
@@ -112,6 +124,18 @@ dex_instance:
 kubernetes_roles:
   cmd.run:
     - name: |
+        # FIXME: workaround a limitation in our salt version to execute a command
+        # only on one master node.
+        # "kubectl apply" makes a client side decision on if it needs to issue a
+        # "CREATE" or "UPDATE" API call. When more than 1 master executes this
+        # at the same time, for the first time, the check to decide "CREATE or UPDATE"
+        # returns "CREATE" on more than 1 master, assuming the timing is right.
+        # Now, when both send the create API call, kubernetes will reject one of them
+        # with an "AlreadyExists" failure. This will cause salt to fail the bootstrap.
+        # However, if we try the command again on the machine that failed, it will
+        # this time see the resource created by the other master, and decide to issue
+        # a no-op UPDATE instead. This will pass, and all resources will be in a
+        # consistent state - at the expense of a an extra few API calls.
         kubectl apply -f /root/roles.yaml || kubectl apply -f /root/roles.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
