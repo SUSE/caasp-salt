@@ -28,3 +28,16 @@ listen kubernetes-master
 {%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.ip_addrs', 'grain').items() %}
         server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} check
 {% endfor -%}
+
+{%- if "admin" in salt['grains.get']('roles', []) -%}
+# Velum should be able to access Kube API and Dex service as well to get kubeconfig
+listen kubernetes-dex
+        bind {{ bind_ip }}:32000
+        mode tcp
+        default-server inter 10s fall 3
+        balance roundrobin
+
+{%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.ip_addrs', 'grain').items() %}
+        server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:32000 check
+{% endfor -%}
+{%- endif -%}

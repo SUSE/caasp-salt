@@ -9,9 +9,9 @@ base:
     - proxy
     - rebootmgr
     - transactional-update
+    - haproxy
   'roles:kube-(master|minion)':
     - match: grain_pcre
-    - haproxy
     - ca-cert
     - repositories
     - motd
