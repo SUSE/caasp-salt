@@ -13,3 +13,15 @@ dummy_step:
   cmd.run:
     - name: "echo saltstack bug 14553"
 {% endif %}
+
+{% if "admin" in salt['grains.get']('roles', []) %}
+update-velum-hosts:
+  cmd.run:
+    - name: |-
+        velum_id=$( docker ps | grep velum-dashboard | awk '{print $1}')
+        if [ -n "$velum_id" ]; then
+            docker cp /etc/hosts $velum_id:/etc/hosts
+        fi
+    - onchanges:
+      - file: /etc/hosts
+{% endif %}
