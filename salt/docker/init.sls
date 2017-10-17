@@ -38,6 +38,7 @@ include:
 
 docker:
   pkg.installed:
+    - name: docker_1_12_6
     - install_recommends: False
     - require:
       - file: /etc/zypp/repos.d/containers.repo
