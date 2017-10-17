@@ -32,6 +32,34 @@ roleRef:
   name: find-dex
   apiGroup: rbac.authorization.k8s.io
 ---
+# This role exists so that any user can call the
+# healthz endpoint
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: healthz-reader-role
+rules:
+- nonResourceURLs: ["/healthz", "/healthz/*"]
+  verbs: ["get"]
+---
+# Allow any authenticated *or* unauthenticated
+# user to look at the healthz endpoint
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: healthz-reader-role-binding
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:unauthenticated
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: healthz-reader-role
+  apiGroup: rbac.authorization.k8s.io
+---
 # Map the LDAP Administrators role to the Kubernetes system:masters group
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
