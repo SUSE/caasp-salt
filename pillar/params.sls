@@ -67,6 +67,9 @@ ssl:
   crt_dir:        '/etc/pki'
   key_dir:        '/etc/pki'
 
+  velum_key: '/etc/pki/private/velum.key'
+  velum_crt: '/etc/pki/velum.crt'
+
   kube_apiserver_key: '/etc/pki/kube-apiserver.key'
   kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
 
