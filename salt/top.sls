@@ -10,6 +10,9 @@ base:
     - rebootmgr
     - transactional-update
     - haproxy
+  'roles:admin':
+    - match: grain
+    - velum
   'roles:kube-(master|minion)':
     - match: grain_pcre
     - ca-cert
