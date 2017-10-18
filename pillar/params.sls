@@ -162,6 +162,8 @@ cloud:
     password:       ''
     # OpenStack subnet UUID for the CaasP private network
     subnet:         ''
+    # OpenStack floating network UUID
+    floating:       ''
     # OpenStack load balancer monitor max retries
     lb_mon_retries: '3'
     # OpenStack Cinder Block Storage API version

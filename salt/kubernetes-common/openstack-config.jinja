@@ -8,6 +8,7 @@ region="{{ pillar['cloud']['openstack']['region'] }}"
 [LoadBalancer]
 lb-version=v2
 subnet-id="{{ pillar['cloud']['openstack']['subnet'] }}"
+floating-network-id="{{ pillar['cloud']['openstack']['floating'] }}"
 create-monitor=yes
 monitor-delay=1m
 monitor-timeout=30s
