@@ -53,13 +53,16 @@ include:
 # TODO: We should not restart the Velum container, but this is required for the new certificates to
 #       be loaded. Soon, we should stop serving content directly with Puma and it should be done
 #       by web servers instead of application servers (apache, nginx...).
-velum_restart:
-  cmd.run:
-    - name: |-
-        velum_id=$(docker ps | grep "velum-dashboard" | awk '{print $1}')
-        if [ -n "$velum_id" ]; then
-            docker restart $velum_id
-        fi
-    - onchanges:
-      - x509: {{ pillar['ssl']['velum_key'] }}
-      - x509: {{ pillar['ssl']['velum_crt'] }}
+# TODO: This has been disabled, as the reload means a new cert warning is presented - breaking Velum's
+#       background polling. Velum's polling needs to be adapted to handle this, and once done, this can
+#       enabled again.
+# velum_restart:
+#   cmd.run:
+#     - name: |-
+#         velum_id=$(docker ps | grep "velum-dashboard" | awk '{print $1}')
+#         if [ -n "$velum_id" ]; then
+#             docker restart $velum_id
+#         fi
+#     - onchanges:
+#       - x509: {{ pillar['ssl']['velum_key'] }}
+#       - x509: {{ pillar['ssl']['velum_crt'] }}
