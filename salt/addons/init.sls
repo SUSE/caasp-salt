@@ -14,9 +14,12 @@ include:
     - template:    jinja
 
 apply-namespace:
-  cmd.run:
+  caasp_cmd.run:
     - name: |
-        kubectl apply -f /etc/kubernetes/addons/namespace.yaml || kubectl apply -f /etc/kubernetes/addons/namespace.yaml
+        kubectl apply -f /etc/kubernetes/addons/namespace.yaml
+    - retry:
+        attempts: 10
+        interval: 1
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -30,9 +33,12 @@ apply-namespace:
     - template:    jinja
 
 apply-dns:
-  cmd.run:
+  caasp_cmd.run:
     - name: |
-        kubectl apply -f /etc/kubernetes/addons/kubedns.yaml || kubectl apply -f /etc/kubernetes/addons/kubedns.yaml
+        kubectl apply -f /etc/kubernetes/addons/kubedns.yaml
+    - retry:
+        attempts: 10
+        interval: 1
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -42,9 +48,12 @@ apply-dns:
       - kubectl get deploy kube-dns -n kube-system | grep kube-dns
 
 create-dns-clusterrolebinding:
-  cmd.run:
+  caasp_cmd.run:
     - name: |
         kubectl create clusterrolebinding system:kube-dns --clusterrole=cluster-admin --serviceaccount=kube-system:default
+    - retry:
+        attempts: 10
+        interval: 1
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - check_cmd:
@@ -60,9 +69,12 @@ create-dns-clusterrolebinding:
     - template:    jinja
 
 apply-tiller:
-  cmd.run:
+  caasp_cmd.run:
     - name: |
-        kubectl apply -f /etc/kubernetes/addons/tiller.yaml || kubectl apply -f /etc/kubernetes/addons/tiller.yaml
+        kubectl apply -f /etc/kubernetes/addons/tiller.yaml
+    - retry:
+        attempts: 10
+        interval: 1
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -72,9 +84,12 @@ apply-tiller:
       - kubectl get deploy tiller -n kube-system | grep tiller
 
 create-tiller-clusterrolebinding:
-  cmd.run:
+  caasp_cmd.run:
     - name: |
         kubectl create clusterrolebinding system:tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    - retry:
+        attempts: 10
+        interval: 1
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - check_cmd:

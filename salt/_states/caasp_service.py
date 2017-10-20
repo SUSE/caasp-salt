@@ -49,13 +49,17 @@ def running_stable(name, enable=None, sig=None, init_delay=None, successful_retr
            'result': False,
            'comment': ''}
 
-    __states__['service.running'](name, enable, sig, init_delay)
+    __states__['service.running'](name=name,
+                                  enable=enable,
+                                  sig=sig,
+                                  init_delay=init_delay)
 
     latest_pid = None
     current_successful_retries_in_a_row = 0
     max_current_successful_retries_in_a_row = 0
     for retry in xrange(max_retries):
-        pid = __salt__['service.status'](name, sig)
+        pid = __salt__['service.status'](name=name,
+                                         sig=sig)
 
         if pid and (not latest_pid or latest_pid == pid):
             current_successful_retries_in_a_row += 1

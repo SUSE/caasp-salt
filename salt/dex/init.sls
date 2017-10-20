@@ -99,9 +99,12 @@ dex_secrets:
       - {{ pillar['paths']['kubeconfig'] }}
 
 dex_instance:
-  cmd.run:
+  caasp_cmd.run:
     - name: |
-        kubectl apply -f /root/dex.yaml || kubectl apply -f /root/dex.yaml
+        kubectl apply -f /root/dex.yaml
+    - retry:
+        attempts: 10
+        interval: 1
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -110,9 +113,12 @@ dex_instance:
       - {{ pillar['paths']['kubeconfig'] }}
 
 kubernetes_roles:
-  cmd.run:
+  caasp_cmd.run:
     - name: |
-        kubectl apply -f /root/roles.yaml || kubectl apply -f /root/roles.yaml
+        kubectl apply -f /root/roles.yaml
+    - retry:
+        attempts: 10
+        interval: 1
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
