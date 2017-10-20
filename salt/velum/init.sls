@@ -2,8 +2,14 @@ include:
   - ca-cert
   - cert
 
-{% set ip_addresses = ["IP: " + pillar['dashboard']] -%}
+{% set ip_addresses = [] -%}
 {% set extra_names = ["DNS: " + grains['caasp_fqdn'], "DNS: " + pillar['dashboard_external_fqdn']] -%}
+
+{% if salt['caasp_filters.is_ip'](pillar['dashboard']) %}
+{% do ip_addresses.append("IP: " + pillar['dashboard']) %}
+{% else %}
+{% do extra_names.append("DNS: " + pillar['dashboard']) %}
+{% endif %}
 
 {{ pillar['ssl']['velum_key'] }}:
   x509.private_key_managed:
