@@ -33,6 +33,17 @@ etc_hosts_setup:
     - require:
       - salt: update_mine
 
+# Ensure that /etc/hosts on velum is updated, bsc#1062728
+update_velum_etc_hosts:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: compound
+    - queue: True
+    - sls:
+      - etc-hosts.velum
+    - require:
+      - salt: etc_hosts_setup
+
 kube_master_setup:
   salt.state:
     - tgt: {{ updates_master_target }}

@@ -192,3 +192,13 @@ clear_bootstrap_in_progress_flag:
       - false
     - require:
       - salt: set_bootstrap_complete_flag
+
+# Ensure that /etc/hosts on velum is updated, bsc#1062728
+update_velum_etc_hosts:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - sls:
+      - etc-hosts.velum
+    - require:
+      - salt: clear_bootstrap_in_progress_flag
