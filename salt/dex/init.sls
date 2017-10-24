@@ -85,12 +85,16 @@ include:
       - file: /root/dex.yaml
 
 dex_secrets:
-  cmd.run:
+  caasp_cmd.run:
     - name: |
-        until kubectl get secret dex-tls --namespace=kube-system ; do
-            kubectl create secret generic dex-tls --namespace=kube-system --from-file=/etc/pki/dex.crt --from-file=/etc/pki/dex.key
-            sleep 5
-        done
+        kubectl create secret generic dex-tls --namespace=kube-system --from-file=/etc/pki/dex.crt --from-file=/etc/pki/dex.key
+    - unless: |
+        kubectl get secret dex-tls --namespace=kube-system
+    - retry:
+        until: |
+          kubectl get secret dex-tls --namespace=kube-system
+        attempts: 10
+        interval: 3
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:

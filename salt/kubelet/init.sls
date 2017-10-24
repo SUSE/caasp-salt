@@ -114,17 +114,18 @@ kubelet:
   # bootstrap - it takes more than 60 seconds before kube-apiserver is running.
   # DO NOT uncordon the "master" nodes, this makes them schedulable.
 {% if not "kube-master" in salt['grains.get']('roles', []) %}
-  cmd.run:
+  caasp_cmd.run:
     - name: |
-        ELAPSED=0
-        until output=$(kubectl uncordon {{ grains['caasp_fqdn'] }}) ; do
-            [ $ELAPSED -gt 300 ] && exit 1
-            sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
-        done
-        echo changed="$(echo $output | grep 'already uncordoned' &> /dev/null && echo no || echo yes)"
+        kubectl uncordon {{ grains['caasp_fqdn'] }}
+    - onlyif:
+        test "$(kubectl get nodes {{ grains['caasp_fqdn'] }} -o=jsonpath="{.spec.unschedulable}" 2>/dev/null)" = "true"
+    - retry:
+        attempts: 10
+        interval: 3
+        until: |
+          test "$(kubectl get nodes {{ grains['caasp_fqdn'] }} -o=jsonpath="{.spec.unschedulable}" 2>/dev/null)" != "true"
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - stateful: True
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
 {% endif %}
