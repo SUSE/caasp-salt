@@ -51,16 +51,11 @@ kube-apiserver:
       - x509:     {{ pillar['ssl']['kube_apiserver_crt'] }}
       - x509:     {{ pillar['paths']['service_account_key'] }}
   # wait until the API server is actually up and running
-  cmd.run:
-    - name: |
-        {% set api_server = "api." + pillar['internal_infra_domain']  -%}
-        {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
-        {% set api_server_url = 'https://' + api_server + ':' + api_ssl_port -%}
-
-        ELAPSED=0
-        until curl --silent --fail -o /dev/null --cacert {{ pillar['ssl']['ca_file'] }} --cert {{ pillar['ssl']['crt_file'] }} --key {{ pillar['ssl']['key_file'] }} {{ api_server_url }}/healthz ; do
-          [ $ELAPSED -gt 300 ] && exit 1
-          sleep 1 && ELAPSED=$(( $ELAPSED + 1 ))
-        done
-        echo changed="no"
-    - stateful: True
+  http.wait_for_successful_query:
+    {% set api_server = "api." + pillar['internal_infra_domain']  -%}
+    {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
+    - name:       {{ 'https://' + api_server + ':' + api_ssl_port }}/healthz
+    - wait_for:   300
+    - cert:       [{{ pillar['ssl']['crt_file'] }}, {{ pillar['ssl']['key_file'] }}]
+    - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
+    - status:     200
