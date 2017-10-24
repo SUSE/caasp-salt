@@ -42,8 +42,8 @@ kube_group:       'kube'
 # set log level for kubernetes services
 # 0 - Generally useful for this to ALWAYS be visible to an operator.
 # 1 - A reasonable default log level if you don't want verbosity.
-# 2 - Useful steady state information about the service and important log 
-#     messages that may correlate to significant changes in the system. 
+# 2 - Useful steady state information about the service and important log
+#     messages that may correlate to significant changes in the system.
 #     This is the recommended default log level for most systems.
 # 3 - Extended information about changes.
 # 4 - Debug level verbosity.
@@ -57,36 +57,9 @@ addons:
   dns:    'true'
   tiller: 'false'
 
-ssl:
-  ca_dir:         '/etc/pki/trust/anchors'
-  ca_file:        '/etc/pki/trust/anchors/SUSE_CaaSP_CA.crt'
-  crt_file:       '/etc/pki/minion.crt'
-  key_file:       '/etc/pki/minion.key'
-
-  crt_dir:        '/etc/pki'
-  key_dir:        '/etc/pki'
-
-  velum_key: '/etc/pki/private/velum.key'
-  velum_crt: '/etc/pki/velum.crt'
-
-  kube_apiserver_key: '/etc/pki/kube-apiserver.key'
-  kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
-
-  kube_scheduler_key: '/etc/pki/kube-scheduler.key'
-  kube_scheduler_crt: '/etc/pki/kube-scheduler.crt'
-
-  kube_controller_mgr_key: '/etc/pki/kube-controller-mgr.key'
-  kube_controller_mgr_crt: '/etc/pki/kube-controller-mgr.crt'
-
-  kubelet_key: '/etc/pki/kubelet.key'
-  kubelet_crt: '/etc/pki/kubelet.crt'
-
-  kube_proxy_key: '/etc/pki/kube-proxy.key'
-  kube_proxy_crt: '/etc/pki/kube-proxy.crt'
-
 paths:
   service_account_key: '/etc/pki/sa.key'
-  
+
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
 
@@ -130,8 +103,8 @@ flannel:
 # log level for flanneld service
 # 0 - Generally useful for this to ALWAYS be visible to an operator.
 # 1 - A reasonable default log level if you don't want verbosity.
-# 2 - Useful steady state information about the service and important log 
-#     messages that may correlate to significant changes in the system. 
+# 2 - Useful steady state information about the service and important log
+#     messages that may correlate to significant changes in the system.
 #     This is the recommended default log level for most systems.
 # 3 - Extended information about changes.
 # 4 - Debug level verbosity.
