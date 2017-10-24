@@ -152,7 +152,9 @@ def run(name,
 
     retry
         This allows you to provide `attempts` and `interval`, what will retry the command as much
-        ``attempts`` times, separated by `interval` seconds.
+        ``attempts`` times, separated by `interval` seconds. If 'until' is provided,
+        verify we must not try again after running the command successfully
+        by runing the `until` condition.
 
     '''
     ### NOTE: The keyword arguments in **kwargs are passed directly to the
@@ -161,7 +163,8 @@ def run(name,
     ###       ``caasp_cmd.run`` state will result in a traceback.
 
     retry_ = {'attempts': 1,
-              'interval': 1}
+              'interval': 1,
+              'until': None}
     retry_.update(retry)
 
     ret = None
@@ -185,10 +188,33 @@ def run(name,
                                     **kwargs)
 
         if ret['result']:
-            return {'name': name,
-                    'changes': ret['changes'],
-                    'result': True,
-                    'comment': "Command executed succesfully after {0} retries. Last output: {1}".format(attempt + 1, ret['comment'])}
+            ret_success = {'name': name,
+                           'changes': ret['changes'],
+                           'result': True,
+                           'comment': "Command executed succesfully after {0} retries. Last output: {1}".format(attempt + 1, ret['comment'])}
+
+            # command run successful
+            if not retry_['until']:
+                return ret_success
+
+            # check if we are really done
+            retry_until_ret = __states__['cmd.run'](name=retry_['until'],
+                                                    cwd=cwd,
+                                                    runas=runas,
+                                                    shell=shell,
+                                                    env=env,
+                                                    umask=umask,
+                                                    output_loglevel=output_loglevel,
+                                                    quiet=quiet,
+                                                    timeout=timeout,
+                                                    ignore_timeout=ignore_timeout,
+                                                    use_vt=use_vt,
+                                                    **kwargs)
+            if retry_until_ret['result']:
+                return ret_success
+
+            # append the 'until' command output, so we can have some debugging info...
+            ret['comment'] = ret['comment'] + "(until: " + retry_until_ret['comment'] + ")"
 
         if attempt + 1 == retry_['attempts']:
             break
