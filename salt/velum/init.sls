@@ -1,4 +1,5 @@
 include:
+  - etc-hosts
   - ca-cert
   - cert
 
@@ -53,6 +54,8 @@ include:
 # TODO: We should not restart the Velum container, but this is required for the new certificates to
 #       be loaded. Soon, we should stop serving content directly with Puma and it should be done
 #       by web servers instead of application servers (apache, nginx...).
+# bsc#1062728: Add onchanges_in cmd: update-velum-hosts. After velum restart /etc/hosts will be recreated,
+#       we have to sync this file again with Admin node.
 velum_restart:
   cmd.run:
     - name: |-
@@ -63,3 +66,5 @@ velum_restart:
     - onchanges:
       - x509: {{ pillar['ssl']['velum_key'] }}
       - x509: {{ pillar['ssl']['velum_crt'] }}
+    - onchanges_in:
+      - cmd: update-velum-hosts
