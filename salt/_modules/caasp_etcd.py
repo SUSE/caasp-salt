@@ -7,7 +7,7 @@ DESIRED_MEMBER_COUNT = 3
 
 
 def __virtual__():
-    return "k8s_etcd"
+    return "caasp_etcd"
 
 def get_cluster_size():
     """
