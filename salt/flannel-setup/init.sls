@@ -3,16 +3,11 @@ include:
   - cert
   - etcd
 
-{% if pillar['ssl']['enabled'] -%}
-  {% set ca = '--ca-file ' + pillar['ssl']['ca_file'] -%}
-  {% set key = '--key-file ' + pillar['ssl']['key_file'] -%}
-  {% set crt = '--cert-file ' + pillar['ssl']['crt_file'] -%}
-  {% set endpoint = '--endpoints https://' + grains['caasp_fqdn'] + ':2379' -%}
-  {% set etcd_opt = ca + ' ' + key + ' ' + crt + ' ' + endpoint -%}
-{% else -%}
-  {% set endpoint = '--endpoints http://' + grains['caasp_fqdn'] + ':2379' -%}
-  {% set etcd_opt = endpoint -%}
-{% endif -%}
+{% set ca = '--ca-file ' + pillar['ssl']['ca_file'] -%}
+{% set key = '--key-file ' + pillar['ssl']['key_file'] -%}
+{% set crt = '--cert-file ' + pillar['ssl']['crt_file'] -%}
+{% set endpoint = '--endpoints https://' + grains['caasp_fqdn'] + ':2379' -%}
+{% set etcd_opt = ca + ' ' + key + ' ' + crt + ' ' + endpoint -%}
 
 /root/flannel-config.json:
   file.managed:
