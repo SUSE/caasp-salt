@@ -17,13 +17,16 @@ include:
 load_flannel_cfg:
   pkg.installed:
     - name: etcdctl
-  cmd.run:
+  caasp_cmd.run:
     - name: /usr/bin/etcdctl {{ etcd_opt }}
                              --no-sync
                              set {{ pillar['flannel']['etcd_key'] }}/config < /root/flannel-config.json
+    - retry:
+        attempts: 10
+        interval: 4
     - require:
       - sls: ca-cert
       - sls: cert
-      - service: etcd
+      - etcd # this will be removed when CNI is in
     - onchanges:
       - file: /root/flannel-config.json
