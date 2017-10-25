@@ -2,13 +2,11 @@
 
 {% set flannel_opt = "-v " + pillar['flannel']['log_level'] + " -iface " + grains['gateway_iface'] + " -ip-masq" -%}
 {% set http_protocol = 'http' -%}
-{% if pillar['ssl']['enabled'] -%}
-  {% set http_protocol = 'https' -%}
-  {% set etcd_ca = "-etcd-cafile " + pillar['ssl']['ca_file'] -%}
-  {% set etcd_key = "-etcd-keyfile " + pillar['ssl']['key_file'] -%}
-  {% set etcd_crt = "-etcd-certfile " + pillar['ssl']['crt_file'] -%}
-  {% set flannel_opt = flannel_opt + " " + etcd_ca + " " + etcd_key + " " + etcd_crt -%}
-{% endif -%}
+{% set http_protocol = 'https' -%}
+{% set etcd_ca = "-etcd-cafile " + pillar['ssl']['ca_file'] -%}
+{% set etcd_key = "-etcd-keyfile " + pillar['ssl']['key_file'] -%}
+{% set etcd_crt = "-etcd-certfile " + pillar['ssl']['crt_file'] -%}
+{% set flannel_opt = flannel_opt + " " + etcd_ca + " " + etcd_key + " " + etcd_crt -%}
 
 # etcd url location.  Point this to the server where etcd runs
 FLANNEL_ETCD_ENDPOINTS="{{ http_protocol }}://{{ grains['caasp_fqdn'] }}:2379"

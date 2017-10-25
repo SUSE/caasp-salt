@@ -58,7 +58,6 @@ addons:
   tiller: 'false'
 
 ssl:
-  enabled:        true
   ca_dir:         '/etc/pki/trust/anchors'
   ca_file:        '/etc/pki/trust/anchors/SUSE_CaaSP_CA.crt'
   crt_file:       '/etc/pki/minion.crt'
