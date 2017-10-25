@@ -38,5 +38,5 @@ flannel:
       - pkg: flannel
       - iptables: flannel
     - watch:
-      - service: etcd
+      - etcd  # this will be removed when CNI is in
       - file: /etc/sysconfig/flanneld

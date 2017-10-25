@@ -40,16 +40,27 @@ etcd:
     - enable: True
     - require:
       - sls: ca-cert
-      - sls: cert
       - pkg: etcd
       - iptables: etcd
     - watch:
+      - {{ pillar['ssl']['crt_file'] }}
+      - {{ pillar['ssl']['key_file'] }}
+      - {{ pillar['ssl']['ca_file'] }}
+    - watch:
       - file: /etc/sysconfig/etcd
-
-etcd-running:
-  service.running:
-    - name: etcd
-    - enable: True
+  # wait until etcd is actually up and running
+  caasp_cmd.run:
+    - name: |
+        etcdctl --key-file {{ pillar['ssl']['key_file'] }} \
+                --cert-file {{ pillar['ssl']['crt_file'] }} \
+                --ca-file {{ pillar['ssl']['ca_file'] }} \
+                --endpoints https://{{ grains['caasp_fqdn'] }}:2379 \
+                cluster-health | grep "cluster is healthy"
+    - retry:
+        attempts: 10
+        interval: 4
+    - watch:
+      - caasp_service: etcd
 
 /etc/sysconfig/etcd:
   file.managed:
