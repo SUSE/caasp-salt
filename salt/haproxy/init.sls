@@ -38,10 +38,7 @@ haproxy:
 # kubernetes/kubernetes#24957
 haproxy_restart:
   cmd.run:
-    - name: |-
-        haproxy_id=$(docker ps | grep -E "k8s_haproxy.*\.{{ pillar['internal_infra_domain'] | replace(".", "\.") }}_kube-system_" | awk '{print $1}')
-        if [ -n "$haproxy_id" ]; then
-            docker kill -s HUP $haproxy_id
-        fi
+    - name: docker kill -s HUP {{ salt['grains.get']('containers:haproxy', '') }}
+    - onlyif: test -n "{{ salt['grains.get']('containers:haproxy', '') }}"
     - onchanges:
       - file: /etc/haproxy/haproxy.cfg

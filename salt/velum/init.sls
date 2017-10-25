@@ -27,11 +27,8 @@ include:
 #       we have to sync this file again with Admin node.
 velum_restart:
   cmd.run:
-    - name: |-
-        velum_id=$(docker ps | grep "velum-dashboard" | awk '{print $1}')
-        if [ -n "$velum_id" ]; then
-            docker restart $velum_id
-        fi
+    - name: docker restart {{ salt['grains.get']('containers:velum', '') }}
+    - onlyif: test -n "{{ salt['grains.get']('containers:velum', '') }}"
     - onchanges:
       - x509: {{ pillar['ssl']['velum_key'] }}
       - x509: {{ pillar['ssl']['velum_crt'] }}
