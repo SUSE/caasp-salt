@@ -32,7 +32,9 @@ etc_hosts_setup:
       - etc-hosts
     - require:
       - salt: update_mine
+{% endif %}
 
+{%- if salt.saltutil.runner('mine.get', tgt=updates_master_target, fun='caasp_fqdn', tgt_type='compound')|length > 0 %}
 kube_master_setup:
   salt.state:
     - tgt: {{ updates_master_target }}
