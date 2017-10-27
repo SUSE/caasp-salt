@@ -94,7 +94,11 @@ kubelet:
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial
       - kubelet-config
-  iptables.append:
+  caasp_retriable.retry:
+    - name: iptables-kubelet
+    - target: iptables.append
+    - retry:
+        attempts: 2
     - table:     filter
     - family:    ipv4
     - chain:     INPUT

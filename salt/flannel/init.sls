@@ -9,7 +9,11 @@ flannel:
       - flannel
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-  iptables.append:
+  caasp_retriable.retry:
+    - name: iptables-flannel
+    - target: iptables.append
+    - retry:
+        attempts: 2
     - table: filter
     - family: ipv4
     - chain: INPUT
@@ -36,7 +40,7 @@ flannel:
     - enable: True
     - require:
       - pkg: flannel
-      - iptables: flannel
+      - caasp_retriable: iptables-flannel
     - watch:
       - etcd  # this will be removed when CNI is in
       - file: /etc/sysconfig/flanneld
