@@ -1,0 +1,58 @@
+from __future__ import absolute_import
+import time
+
+import salt.exceptions
+import salt.utils
+
+
+def retry(name, target, retry={}, **kwargs):
+    '''
+    Wraps an existing salt state into a retriable form.
+
+    name
+        A user-defined name.
+
+    target
+        Name of the salt state to invoke.
+
+    retry
+        This allows you to provide `attempts` and `interval`, what will retry
+        the command as much ``attempts`` times, separated by `interval`
+        seconds. By default performs 1 attempt with a 1 second interval.
+
+    All other arguments are passed to the orginal salt state.
+
+    '''
+
+    retry_ = {'attempts': 1, 'interval': 1}
+    retry_.update(retry)
+
+    ret = None
+
+    for attempt in xrange(retry_['attempts']):
+        ret = __states__[target](name=name, **kwargs)
+
+        if ret['result']:
+            return {
+                'name': "caasp_retriable.{0}.{1}".format(name, target),
+                'changes': ret['changes'],
+                'result': True,
+                'comment': "Command executed succesfully after {0} retries. "
+                "Last output: {1}".format(attempt + 1, ret['comment'])}
+
+        if attempt + 1 == retry_['attempts']:
+            break
+
+        if retry_['interval'] > 0:
+            time.sleep(retry_['interval'])
+
+    return {
+        'name': "caasp_retriable.{0}.{1}".format(name, target),
+        'changes': ret['changes'],
+        'result': False,
+        'comment': "Command failed after {0} retries. "
+                   "Last output: {1} "
+                   "Params: {2}".format(
+                       retry_['attempts'],
+                       ret['comment'],
+                       kwargs)}
