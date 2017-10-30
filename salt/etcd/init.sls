@@ -21,7 +21,11 @@ etcd:
       - etcd
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-  iptables.append:
+  caasp_retriable.retry:
+    - name: iptables-etcd
+    - target: iptables.append
+    - retry:
+        attempts: 2
     - table: filter
     - family: ipv4
     - chain: INPUT
@@ -42,7 +46,7 @@ etcd:
       - sls: ca-cert
       - sls: cert
       - pkg: etcd
-      - iptables: etcd
+      - caasp_retriable: iptables-etcd
     - watch:
       - file: /etc/sysconfig/etcd
 

@@ -18,11 +18,15 @@ haproxy:
     - mode: 644
     - makedirs: True
     - dir_mode: 755
+  caasp_retriable.retry:
+    - name: iptables-haproxy
 {% if "kube-master" in salt['grains.get']('roles', []) %}
-  iptables.append:
+    - target: iptables.append
 {% else %}
-  iptables.delete:
+    - target: iptables.delete
 {% endif %}
+    - retry:
+        attempts: 2
     - table:      filter
     - family:     ipv4
     - chain:      INPUT

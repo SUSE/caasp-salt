@@ -86,7 +86,11 @@ kube-apiserver:
       - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-  iptables.append:
+  caasp_retriable.retry:
+    - name: iptables-kube-apiserver
+    - target: iptables.append
+    - retry:
+        attempts: 2
     - table:      filter
     - family:     ipv4
     - chain:      INPUT
@@ -105,7 +109,7 @@ kube-apiserver:
   service.running:
     - enable:     True
     - require:
-      - iptables: kube-apiserver
+      - caasp_retriable: iptables-kube-apiserver
       - sls:      ca-cert
       - {{ pillar['ssl']['kube_apiserver_crt'] }}
       - x509:     {{ pillar['paths']['service_account_key'] }}
