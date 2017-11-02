@@ -64,69 +64,19 @@ include:
       - sls:  crypto
       - x509: /etc/pki/dex.key
 
-/root/dex.yaml:
-  file.managed:
-    - source: salt://dex/dex.yaml
-    - template: jinja
-    - user: root
-    - group: root
-    - mode: 644
-    - require:
-      - x509: /etc/pki/dex.crt
+{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_template with context %}
 
-/root/roles.yaml:
-  file.managed:
-    - source: salt://dex/roles.yaml
-    - template: jinja
-    - user: root
-    - group: root
-    - mode: 644
-    - require:
-      - file: /root/dex.yaml
+{{ kubectl("dex_secrets",
+           "create secret generic dex-tls --namespace=kube-system --from-file=/etc/pki/dex.crt --from-file=/etc/pki/dex.key",
+           unless="kubectl get secret dex-tls --namespace=kube-system",
+           check_cmd="kubectl get secret dex-tls --namespace=kube-system",
+           require=["/etc/pki/dex.crt"]) }}
 
-dex_secrets:
-  caasp_cmd.run:
-    - name: |
-        kubectl create secret generic dex-tls --namespace=kube-system --from-file=/etc/pki/dex.crt --from-file=/etc/pki/dex.key
-    - unless: |
-        kubectl get secret dex-tls --namespace=kube-system
-    - retry:
-        until: |
-          kubectl get secret dex-tls --namespace=kube-system
-        attempts: 10
-        interval: 3
-    - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - require:
-      - kube-apiserver
-      - x509: /etc/pki/dex.crt
-      - {{ pillar['paths']['kubeconfig'] }}
+{{ kubectl_apply_template("salt://dex/dex.yaml",
+                          "/root/dex.yaml",
+                          watch=["dex_secrets", "/etc/pki/dex.crt"]) }}
 
-dex_instance:
-  caasp_cmd.run:
-    - name: |
-        kubectl apply -f /root/dex.yaml
-    - retry:
-        attempts: 10
-        interval: 1
-    - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - require:
-      - kube-apiserver
-      - file: /root/dex.yaml
-      - {{ pillar['paths']['kubeconfig'] }}
+{{ kubectl_apply_template("salt://dex/roles.yaml",
+                          "/root/roles.yaml",
+                          watch=["dex_secrets", "/root/dex.yaml"]) }}
 
-kubernetes_roles:
-  caasp_cmd.run:
-    - name: |
-        kubectl apply -f /root/roles.yaml
-    - retry:
-        attempts: 10
-        interval: 1
-    - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - require:
-      - kube-apiserver
-      - file: /root/roles.yaml
-      - {{ pillar['paths']['kubeconfig'] }}
-      - dex_instance
