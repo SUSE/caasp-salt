@@ -33,4 +33,6 @@ base:
     - kube-controller-manager
     - kube-scheduler
     - addons
+    - addons.dns
+    - addons.tiller
     - dex
