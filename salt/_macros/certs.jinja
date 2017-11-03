@@ -47,21 +47,10 @@
 
 {% macro certs(name, crt, key, cn='', o='', extra=[]) -%}
 
-{{ key }}:
-  x509.private_key_managed:
-    - bits: 4096
-    - user: root
-    - group: root
-    - mode: 444
-    - require:
-      - sls:  crypto
-      - file: /etc/pki
-
 {{ crt }}:
   x509.certificate_managed:
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
-    - public_key: {{ key }}
   {%- if cn|length > 0 %}
     - CN: {{ cn|yaml_dquote }}
   {%- else %}
@@ -91,9 +80,15 @@
     - user: root
     - group: root
     - mode: 644
+    - managed_private_key:
+      - name: {{ key }}
+      - bits: 4096
+      - user: root
+      - group: root
+      - mode: 444
     - require:
       - sls: crypto
-      - x509: {{ key }}
+      - file: /etc/pki
 
 {{ crt }}-bundle:
   file.managed:
