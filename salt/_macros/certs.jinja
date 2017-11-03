@@ -49,6 +49,7 @@
 
 {{ crt }}:
   x509.certificate_managed:
+    - overwrite: False
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
   {%- if cn|length > 0 %}
@@ -81,11 +82,11 @@
     - group: root
     - mode: 644
     - managed_private_key:
-      - name: {{ key }}
-      - bits: 4096
-      - user: root
-      - group: root
-      - mode: 444
+        name: {{ key }}
+        bits: 4096
+        user: root
+        group: root
+        mode: 444
     - require:
       - sls: crypto
       - file: /etc/pki
