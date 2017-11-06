@@ -99,7 +99,6 @@ etcd:
 flannel:
   backend:        'udp'
   etcd_key:       '/flannel/network'
-  iface:          'eth0'
 # log level for flanneld service
 # 0 - Generally useful for this to ALWAYS be visible to an operator.
 # 1 - A reasonable default log level if you don't want verbosity.
