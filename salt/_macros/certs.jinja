@@ -47,6 +47,16 @@
 
 {% macro certs(name, crt, key, cn='', o='', extra=[]) -%}
 
+{% if salt['file.file_exists'](crt) and
+      not salt['x509.expired'](crt)['expired'] %}
+
+{{ crt }}:
+  file.exists:
+    - require:
+      - {{ pillar['ssl']['ca_file'] }}
+
+{% else %}
+
 {{ crt }}:
   x509.certificate_managed:
     - overwrite: False
@@ -90,6 +100,9 @@
     - require:
       - sls: crypto
       - file: /etc/pki
+      - {{ pillar['ssl']['ca_file'] }}
+
+{% endif %}
 
 {{ crt }}-bundle:
   file.managed:

@@ -19,10 +19,10 @@ kube-controller-manager:
       - sls:      kubernetes-common
       - file:     kube-controller-manager
       - kube-controller-mgr-config
-      - x509:     {{ pillar['paths']['service_account_key'] }}
+      - {{ pillar['paths']['service_account_key'] }}
     - require:
       - kube-controller-mgr-config
-      - x509:     {{ pillar['paths']['service_account_key'] }}
+      - {{ pillar['paths']['service_account_key'] }}
 
 {% from '_macros/certs.jinja' import certs with context %}
 {{ certs("kube-controller-manager", pillar['ssl']['kube_controller_mgr_crt'], pillar['ssl']['kube_controller_mgr_key']) }}
