@@ -63,3 +63,5 @@ kube-apiserver:
     - cert:       [{{ pillar['ssl']['crt_file'] }}, {{ pillar['ssl']['key_file'] }}]
     - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
     - status:     200
+    - watch:
+      - service:  kube-apiserver

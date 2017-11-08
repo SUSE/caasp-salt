@@ -1,6 +1,8 @@
 # Flanneld configuration options
 
-{% set flannel_opt = "-v " + pillar['flannel']['log_level'] + " -iface " + grains['gateway_iface'] + " -ip-masq" -%}
+{% from '_macros/network.jinja' import get_primary_iface with context %}
+
+{% set flannel_opt = "-v " + pillar['flannel']['log_level'] + " -iface " + get_primary_iface() + " -ip-masq" -%}
 {% set http_protocol = 'http' -%}
 {% set http_protocol = 'https' -%}
 {% set etcd_ca = "-etcd-cafile " + pillar['ssl']['ca_file'] -%}
