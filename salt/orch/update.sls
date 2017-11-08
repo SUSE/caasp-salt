@@ -27,7 +27,7 @@ update_modules:
       - salt: update_mine
 
 # Get list of masters needing reboot
-{%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.ip_addrs', tgt_type='compound') %}
+{%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
 
 # Ensure the node is marked as upgrading
@@ -108,7 +108,7 @@ update_modules:
 
 {% endfor %}
 
-{%- set workers = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion and G@tx_update_reboot_needed:true', fun='network.ip_addrs', tgt_type='compound') %}
+{%- set workers = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for worker_id, ip in workers.items() %}
 
 # Ensure the node is marked as upgrading

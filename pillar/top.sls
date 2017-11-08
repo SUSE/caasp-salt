@@ -4,7 +4,7 @@ base:
     - args
     - vars
     - certificates
-    - ip_addrs
+    - mine
     - fqdn
     - schedule
   'roles:ca':

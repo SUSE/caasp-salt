@@ -25,7 +25,7 @@ listen kubernetes-master
         default-server inter 10s fall 3
         balance roundrobin
 
-{%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.ip_addrs', 'grain').items() %}
+{%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.interfaces', 'grain').items() %}
         server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} check
 {% endfor -%}
 
@@ -37,7 +37,7 @@ listen kubernetes-dex
         default-server inter 10s fall 3
         balance roundrobin
 
-{%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.ip_addrs', 'grain').items() %}
+{%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.interfaces', 'grain').items() %}
         server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:32000 check
 {% endfor -%}
 {%- endif -%}
