@@ -1,0 +1,22 @@
+#
+# note: in order to use these macros we must add some mine_functions:
+#       network.default_route, network_interfaces
+#
+
+{# given an iface_name (and a list of ifaces), return the IP address associated with that iface #}
+{% macro get_iface_ip(iface) -%}
+  {%- set host = kwargs.pop('host', salt['grains.get']('id')) -%}
+  {%- set ifaces = kwargs.pop('ifaces', salt['mine.get'](host, 'network.interfaces')[host]) -%}
+  {{- ifaces.get(iface).get('inet', [{}])[0].get('address') -}}
+{%- endmacro %}
+
+{# return the name of the primary iface (the iface associated with the default route) (at some host). #}
+{% macro get_primary_iface() -%}
+  {%- set host = kwargs.pop('host', salt['grains.get']('id')) -%}
+  {{- salt['mine.get'](host, 'network.default_route')[host][0]['interface'] -}}
+{%- endmacro %}
+
+{# (given a minion hostname and a list of its network interfaces), return the primary IP #}
+{% macro get_primary_ip() -%}
+  {{- get_iface_ip(get_primary_iface(**kwargs), **kwargs) -}}
+{%- endmacro %}
