@@ -1,35 +1,22 @@
+{% from '_macros/network.jinja' import get_primary_ip with context %}
+
 ### service names ###
 127.0.0.1 api api.{{ pillar['internal_infra_domain'] }} {{ pillar['api']['server']['external_fqdn'] }}
 
 ### admin nodes ###
-{%- set admins = salt['mine.get']('roles:admin', 'network.ip_addrs', 'grain') %}
-{%- for admin_id, addrlist in admins.items() %}
-	{%- if addrlist is string %}
-		{%- set ip = addrlist %}
-	{%- else %}
-		{%- set ip = addrlist|first %}
-	{%- endif %}
-{{ ip }} {{ admin_id }} {{ admin_id }}.{{ pillar['internal_infra_domain'] }}
+{%- set admins = salt['mine.get']('roles:admin', 'network.interfaces', 'grain') %}
+{%- for admin_id, ifaces in admins.items() %}
+{{ get_primary_ip(host=admin_id, ifaces=ifaces) }} {{ admin_id }} {{ admin_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}
 
 ### kubernetes masters ###
-{%- set masters = salt['mine.get']('roles:kube-master', 'network.ip_addrs', 'grain') %}
-{%- for master_id, addrlist in masters.items() %}
-	{%- if addrlist is string %}
-		{%- set ip = addrlist %}
-	{%- else %}
-		{%- set ip = addrlist|first %}
-	{%- endif %}
-{{ ip }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }}
+{%- set masters = salt['mine.get']('roles:kube-master', 'network.interfaces', 'grain') %}
+{%- for master_id, ifaces in masters.items() %}
+{{ get_primary_ip(host=master_id, ifaces=ifaces) }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}
 
 ### kubernetes workers ###
-{%- set minions = salt['mine.get']('roles:kube-minion', 'network.ip_addrs', 'grain') %}
-{%- for minion_id, addrlist in minions.items() %}
-	{%- if addrlist is string %}
-		{%- set ip = addrlist %}
-	{%- else %}
-		{%- set ip = addrlist|first %}
-	{%- endif %}
-{{ ip }} {{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}
+{%- set minions = salt['mine.get']('roles:kube-minion', 'network.interfaces', 'grain') %}
+{%- for minion_id, ifaces in minions.items() %}
+{{ get_primary_ip(host=minion_id, ifaces=ifaces) }} {{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}
