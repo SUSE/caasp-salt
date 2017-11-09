@@ -1,5 +1,11 @@
 ### service names ###
+# set the apiserver for 127.0.0.1 on all hosts as haproxy is listening on all nodes
+# and forwarding connections to the real master
+{% if "kube-master" in salt['grains.get']('roles', []) %}
 127.0.0.1 api api.{{ pillar['internal_infra_domain'] }} {{ pillar['api']['server']['external_fqdn'] }}
+{% else %}
+127.0.0.1 api api.{{ pillar['internal_infra_domain'] }}
+{% endif %}
 
 ### admin nodes ###
 {%- set admins = salt['mine.get']('roles:admin', 'network.ip_addrs', 'grain') %}
