@@ -1,8 +1,19 @@
+# Generate sa key (we should refactor this as part of the ca highstate along with its counterpart
+# in orch/kubernetes.sls)
+generate_sa_key:
+  salt.state:
+    - tgt: 'roles:ca'
+    - tgt_type: grain
+    - sls:
+      - kubernetes-common.generate-serviceaccount-key
+
 # Generic Updates
 update_pillar:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_pillar
+    - require:
+      - salt: generate_sa_key
 
 update_grains:
   salt.function:
