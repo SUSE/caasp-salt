@@ -56,6 +56,7 @@ update_modules:
   salt.state:
     - tgt: {{ master_id }}
     - sls:
+      - container-feeder.stop
       - kube-apiserver.stop
       - kube-controller-manager.stop
       - kube-scheduler.stop
@@ -135,8 +136,9 @@ update_modules:
   salt.state:
     - tgt: {{ worker_id }}
     - sls:
+      - container-feeder.stop
       - kubelet.stop
-      - kube-proxy.stop      
+      - kube-proxy.stop
       - docker.stop
       - flannel.stop
       - etcd.stop

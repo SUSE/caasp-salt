@@ -12,4 +12,5 @@ container-feeder:
     - reload: True
     - require:
       - cmd: docker
+    - watch:
       - service: docker
