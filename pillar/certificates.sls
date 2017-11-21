@@ -27,6 +27,9 @@ ssl:
   velum_key: '/etc/pki/private/velum.key'
   velum_crt: '/etc/pki/velum.crt'
 
+  ldap_key: '/etc/pki/private/ldap.key'
+  ldap_crt: '/etc/pki/ldap.crt'
+
   dex_key: '/etc/pki/dex.key'
   dex_crt: '/etc/pki/dex.crt'
 
