@@ -42,8 +42,8 @@ kube_group:       'kube'
 # set log level for kubernetes services
 # 0 - Generally useful for this to ALWAYS be visible to an operator.
 # 1 - A reasonable default log level if you don't want verbosity.
-# 2 - Useful steady state information about the service and important log 
-#     messages that may correlate to significant changes in the system. 
+# 2 - Useful steady state information about the service and important log
+#     messages that may correlate to significant changes in the system.
 #     This is the recommended default log level for most systems.
 # 3 - Extended information about changes.
 # 4 - Debug level verbosity.
@@ -70,6 +70,9 @@ ssl:
   velum_key: '/etc/pki/private/velum.key'
   velum_crt: '/etc/pki/velum.crt'
 
+  ldap_key: '/etc/pki/private/ldap.key'
+  ldap_crt: '/etc/pki/ldap.crt'
+
   kube_apiserver_key: '/etc/pki/kube-apiserver.key'
   kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
 
@@ -87,7 +90,7 @@ ssl:
 
 paths:
   service_account_key: '/etc/pki/sa.key'
-  
+
   var_kubelet:    '/var/lib/kubelet'
   kubeconfig:     '/var/lib/kubelet/kubeconfig'
 
@@ -131,8 +134,8 @@ flannel:
 # log level for flanneld service
 # 0 - Generally useful for this to ALWAYS be visible to an operator.
 # 1 - A reasonable default log level if you don't want verbosity.
-# 2 - Useful steady state information about the service and important log 
-#     messages that may correlate to significant changes in the system. 
+# 2 - Useful steady state information about the service and important log
+#     messages that may correlate to significant changes in the system.
 #     This is the recommended default log level for most systems.
 # 3 - Extended information about changes.
 # 4 - Debug level verbosity.
@@ -150,8 +153,8 @@ proxy:
   no_proxy:       ''
   systemwide:     'true'
 
-# Kubernetes is designed to work with different Clouds such as Google Compute Engine (GCE), 
-# Amazon Web Services (AWS), and OpenStack; therefore, different load balancers need to be created 
+# Kubernetes is designed to work with different Clouds such as Google Compute Engine (GCE),
+# Amazon Web Services (AWS), and OpenStack; therefore, different load balancers need to be created
 # on the particular Cloud for the services. This is done through a plugin for each Cloud.
 # https://github.com/kubernetes/kubernetes/blob/release-1.7/pkg/cloudprovider/README.md
 cloud:

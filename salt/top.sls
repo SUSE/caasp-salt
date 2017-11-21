@@ -13,6 +13,7 @@ base:
   'roles:admin':
     - match: grain
     - velum
+    - ldap
   'roles:kube-(master|minion)':
     - match: grain_pcre
     - ca-cert
