@@ -8,6 +8,11 @@ generate_sa_key:
       - kubernetes-common.generate-serviceaccount-key
 
 # Generic Updates
+sync_all:
+  module.run:
+    - name: saltutil.sync_all
+    - refresh: True
+
 update_pillar:
   salt.function:
     - tgt: '*'
