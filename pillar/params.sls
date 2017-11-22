@@ -73,6 +73,12 @@ ssl:
   ldap_key: '/etc/pki/private/ldap.key'
   ldap_crt: '/etc/pki/ldap.crt'
 
+  dex_key: '/etc/pki/dex.key'
+  dex_crt: '/etc/pki/dex.crt'
+
+  kubectl_key: '/etc/pki/kubectl-client-cert.key'
+  kubectl_crt: '/etc/pki/kubectl-client-cert.crt'
+
   kube_apiserver_key: '/etc/pki/kube-apiserver.key'
   kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
 

@@ -1,0 +1,121 @@
+
+{% macro alt_names(lst=[]) -%}
+  {#- add all the names and IPs we know about -#}
+  {%- set altNames = ["DNS: " + grains['caasp_fqdn'] ] -%}
+  {%- for _, interface_addresses in grains['ip4_interfaces'].items() -%}
+    {%- for interface_address in interface_addresses -%}
+      {%- do altNames.append("IP: " + interface_address) -%}
+    {%- endfor -%}
+  {%- endfor -%}
+  {#- append all the names/IPs provided (if not empty) -#}
+  {%- for name in lst -%}
+    {%- if name and name|length > 0 -%}
+      {%- if salt['caasp_filters.is_ip'](name) -%}
+        {%- do altNames.append("IP: " + name) -%}
+      {%- else -%}
+        {%- do altNames.append("DNS: " + name) -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {{ ", ".join(altNames) }}
+{%- endmacro %}
+
+#####################################################################
+
+# a list of alternative names for a kubernetes master
+{% macro alt_master_names(lst=[]) -%}
+  {%- set names_lst = ["kubernetes",
+                       "kubernetes.default",
+                       "kubernetes.default.svc",
+                       "api",
+                       "api." + pillar['internal_infra_domain'],
+                       salt['pillar.get']('api:server:external_fqdn', ''),
+                       salt['pillar.get']('api:cluster_ip', '')] +
+                       salt['pillar.get']('api:server:extra_names', []) +
+                       salt['pillar.get']('api:server:extra_ips', []) +
+                       lst -%}
+  {#- add some standard extra names from the DNS domain -#}
+  {%- if salt['pillar.get']('dns:domain') -%}
+    {%- do names_lst.append("kubernetes.default.svc." + pillar['dns']['domain']) -%}
+  {%- endif -%}
+  {{ alt_names(names_lst) }}
+{%- endmacro %}
+
+#####################################################################
+
+{% macro certs(name, crt, key, cn='', o='', extra_alt_names=None) -%}
+
+{%- if extra_alt_names == None -%}
+  {#- calculate automatically the altNames depending on the role -#}
+  {%- if "kube-master" in salt['grains.get']('roles', []) -%}
+    {%- set extra_alt_names = alt_master_names() -%}
+  {%- else -%}
+    {%- set extra_alt_names = alt_names() -%}
+  {%- endif -%}
+{%- endif -%}
+
+{{ key }}:
+  x509.private_key_managed:
+    - bits: 4096
+    - user: root
+    - group: root
+    - mode: 444
+    - require:
+      - sls:  crypto
+      - file: /etc/pki
+
+{{ crt }}:
+  x509.certificate_managed:
+    - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
+    - signing_policy: minion
+    - public_key: {{ key }}
+  {%- if cn|length > 0 %}
+    - CN: {{ cn|yaml_dquote }}
+  {%- else %}
+    - CN: {{ ("system:" + name)|yaml_dquote }}
+  {%- endif %}
+    - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
+    - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
+    - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
+    - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
+    {# "system:{{ name }}" is a kubernetes specific role identifying a {{ name }} in th system #}
+  {%- if o|length > 0 %}
+    - O: {{ o|yaml_dquote }}
+  {%- else -%}
+    - O: {{ ("system:" + name)|yaml_dquote }}
+  {%- endif %}
+    - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
+    - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
+    - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
+    - basicConstraints: "critical CA:false"
+    - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
+  {%- if extra_alt_names|length > 0 %}
+    - subjectAltName: {{ extra_alt_names|yaml_dquote }}
+  {%- endif %}
+    - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
+    - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
+    - backup: True
+    - user: root
+    - group: root
+    - mode: 644
+    - require:
+      - sls: crypto
+      - x509: {{ key }}
+
+{{ crt }}-bundle:
+  file.managed:
+    - name: /etc/pki/private/{{ name }}-bundle.pem
+    - source: salt://cert/cert-bundle.jinja
+    - template: jinja
+    - user: root
+    - group: root
+    - mode: 600
+    - makedirs: True
+    - context:
+        certificate: {{ crt }}
+        key:         {{ key }}
+    - onchanges:
+        - x509: {{ crt }}
+        - x509: {{ key }}
+
+{%- endmacro %}

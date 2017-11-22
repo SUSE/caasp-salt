@@ -17,42 +17,11 @@ include:
       schedulable: "false"
 {% endif %}
 
-{{ pillar['ssl']['kubelet_key'] }}:
-  x509.private_key_managed:    
-    - bits: 4096
-    - user: root
-    - group: root
-    - mode: 444
-    - require:
-      - sls:  crypto
-      - file: /etc/pki
-
-{{ pillar['ssl']['kubelet_crt'] }}:
-  x509.certificate_managed:
-    - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
-    - signing_policy: minion
-    - public_key: {{ pillar['ssl']['kubelet_key'] }}
-    - CN: system:node:{{ grains['caasp_fqdn'] }}
-    - C: {{ pillar['certificate_information']['subject_properties']['C']|yaml_dquote }}
-    - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
-    - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
-    - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
-    # system:nodes is a kubernetes specific role identifying a node in the system.
-    - O: 'system:nodes'
-    - OU: {{ pillar['certificate_information']['subject_properties']['OU']|yaml_dquote }}
-    - SN: {{ pillar['certificate_information']['subject_properties']['SN']|yaml_dquote }}
-    - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
-    - basicConstraints: "critical CA:false"
-    - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
-    - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
-    - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
-    - backup: True
-    - user: root
-    - group: root
-    - mode: 644
-    - require:
-      - sls:  crypto
-      - {{ pillar['ssl']['kubelet_key'] }}
+{% from '_macros/certs.jinja' import certs with context %}
+{{ certs('node:' + grains['caasp_fqdn'],
+         pillar['ssl']['kubelet_crt'],
+         pillar['ssl']['kubelet_key'],
+         o = 'system:nodes') }}
 
 kubelet-config:
   file.managed:

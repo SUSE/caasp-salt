@@ -4,65 +4,17 @@ include:
   - kubectl-config
   - kube-apiserver
 
-{% set ip_addresses = [] -%}
-{% set extra_names = ["DNS: " + grains['caasp_fqdn'] ] -%}
-{% if "kube-master" in salt['grains.get']('roles', []) %}
-  {% do ip_addresses.append("IP: " + pillar['api']['cluster_ip']) %}
-  {% for _, interface_addresses in grains['ip4_interfaces'].items() %}
-    {% for interface_address in interface_addresses %}
-      {% do ip_addresses.append("IP: " + interface_address) %}
-    {% endfor %}
-  {% endfor %}
-  {% for extra_ip in pillar['api']['server']['extra_ips'] %}
-    {% do ip_addresses.append("IP: " + extra_ip) %}
-  {% endfor %}
-  # add some extra names the API server could have
-  {% set extra_names = extra_names + ["DNS: dex",
-                                      "DNS: dex.kube-system",
-                                      "DNS: dex.kube-system.svc",
-                                      "DNS: dex.kube-system.svc." + pillar['internal_infra_domain'],
-                                      "DNS: api." + pillar['internal_infra_domain']] %}
-  {% for extra_name in pillar['api']['server']['extra_names'] %}
-    {% do extra_names.append("DNS: " + extra_name) %}
-  {% endfor %}
+{% from '_macros/certs.jinja' import alt_master_names, certs with context %}
 
-  # add the fqdn provided by the user
-  # this will be the name used by the kubeconfig generated file
-  {% if salt['pillar.get']('api:server:external_fqdn') %}
-    {% do extra_names.append("DNS: " + pillar['api']['server']['external_fqdn']) %}
-  {% endif %}
-{% endif %}
-
-/etc/pki/dex.key:
-  x509.private_key_managed:
-    - bits: 4096
-    - user: root
-    - group: root
-    - mode: 444
-    - require:
-      - sls:  crypto
-      - file: /etc/pki
-
-/etc/pki/dex.crt:
-  x509.certificate_managed:
-    - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
-    - signing_policy: minion
-    - public_key: /etc/pki/dex.key
-    - CN: Dex
-    {% if (ip_addresses|length > 0) or (extra_names|length > 0) %}
-    - subjectAltName: "{{ ", ".join(extra_names + ip_addresses) }}"
-    {% endif %}
-    - basicConstraints: "critical CA:false"
-    - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
-    - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
-    - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}
-    - backup: True
-    - user: root
-    - group: root
-    - mode: 644
-    - require:
-      - sls:  crypto
-      - x509: /etc/pki/dex.key
+{% set dex_alt_names = ["dex",
+                        "dex.kube-system",
+                        "dex.kube-system.svc",
+                        "dex.kube-system.svc." + pillar['internal_infra_domain']] %}
+{{ certs('dex',
+         pillar['ssl']['dex_crt'],
+         pillar['ssl']['dex_key'],
+         cn = 'Dex',
+         extra_alt_names = alt_master_names(dex_alt_names)) }}
 
 /root/dex.yaml:
   file.managed:
