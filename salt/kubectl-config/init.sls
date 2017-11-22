@@ -2,13 +2,12 @@ include:
   - crypto
   - kubernetes-common
 
-{% from '_macros/certs.jinja' import extra_names, certs with context %}
+{% from '_macros/certs.jinja' import certs with context %}
 {{ certs('kubectl',
          pillar['ssl']['kubectl_crt'],
          pillar['ssl']['kubectl_key'],
          cn = 'cluster-admin',
-         o = 'system:masters',
-         extra = extra_names()) }}
+         o = 'system:masters') }}
 
 {{ pillar['paths']['kubeconfig'] }}:
 # this kubeconfig file is used by kubectl for administrative functions
