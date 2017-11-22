@@ -2,12 +2,11 @@ include:
   - repositories
   - kubernetes-common
 
-{% from '_macros/certs.jinja' import extra_names, certs with context %}
+{% from '_macros/certs.jinja' import certs with context %}
 {{ certs('kube-proxy',
          pillar['ssl']['kube_proxy_crt'],
          pillar['ssl']['kube_proxy_key'],
-         o = 'system:nodes',
-         extra = extra_names()) }}
+         o = 'system:nodes') }}
 
 {{ pillar['paths']['kube_proxy_config'] }}:
   file.managed:

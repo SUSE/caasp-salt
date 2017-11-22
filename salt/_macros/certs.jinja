@@ -1,51 +1,58 @@
 
-{% macro extra_names(names=[], ips=[]) -%}
+{% macro alt_names(lst=[]) -%}
   {#- add all the names and IPs we know about -#}
-  {%- set extra = ["DNS: " + grains['caasp_fqdn'] ] -%}
+  {%- set altNames = ["DNS: " + grains['caasp_fqdn'] ] -%}
   {%- for _, interface_addresses in grains['ip4_interfaces'].items() -%}
     {%- for interface_address in interface_addresses -%}
-      {%- do extra.append("IP: " + interface_address) -%}
+      {%- do altNames.append("IP: " + interface_address) -%}
     {%- endfor -%}
   {%- endfor -%}
   {#- append all the names/IPs provided (if not empty) -#}
-  {%- for name in names -%}
+  {%- for name in lst -%}
     {%- if name|length > 0 -%}
-      {%- do extra.append("DNS: " + name) -%}
+      {%- if salt['caasp_filters.is_ip'](name) -%}
+        {%- do altNames.append("IP: " + name) -%}
+      {%- else -%}
+        {%- do altNames.append("DNS: " + name) -%}
+      {%- endif -%}
     {%- endif -%}
   {%- endfor -%}
-  {%- for ip in ips -%}
-    {%- if ip|length > 0 -%}
-      {%- do extra.append("IP: " + ip) -%}
-    {%- endif -%}
-  {%- endfor -%}
-  {{ ", ".join(extra) }}
+  {{ ", ".join(altNames) }}
 {%- endmacro %}
 
 #####################################################################
 
-# a list of extra names for a kubernetes master
-{% macro extra_master_names(names=[], ips=[]) -%}
+# a list of alternative names for a kubernetes master
+{% macro alt_master_names(lst=[]) -%}
   {%- set names_lst = ["kubernetes",
-                      "kubernetes.default",
-                      "kubernetes.default.svc",
-                      "api",
-                      "api." + pillar['internal_infra_domain'],
-                      salt['pillar.get']('api:server:external_fqdn', '')] +
-                      salt['pillar.get']('api:server:extra_names', []) +
-                      names -%}
-  {%- set ips_lst   = [pillar['api']['cluster_ip']] +
-                      salt['pillar.get']('api:server:extra_ips', []) +
-                      ips -%}
+                       "kubernetes.default",
+                       "kubernetes.default.svc",
+                       "api",
+                       "api." + pillar['internal_infra_domain'],
+                       salt['pillar.get']('api:server:external_fqdn', ''),
+                       salt['pillar.get']('api:cluster_ip', '')] +
+                       salt['pillar.get']('api:server:extra_names', []) +
+                       salt['pillar.get']('api:server:extra_ips', []) +
+                       lst -%}
   {#- add some standard extra names from the DNS domain -#}
   {%- if salt['pillar.get']('dns:domain') -%}
     {%- do names_lst.append("kubernetes.default.svc." + pillar['dns']['domain']) -%}
   {%- endif -%}
-  {{ extra_names(names_lst, ips_lst) }}
+  {{ alt_names(names_lst) }}
 {%- endmacro %}
 
 #####################################################################
 
-{% macro certs(name, crt, key, cn='', o='', extra=[]) -%}
+{% macro certs(name, crt, key, cn='', o='', extra_alt_names=None) -%}
+
+{%- if extra_alt_names == None -%}
+  {#- calculate automatically the altNames depending on the role -#}
+  {%- if "kube-master" in salt['grains.get']('roles', []) -%}
+    {%- set extra_alt_names = alt_master_names() -%}
+  {%- else -%}
+    {%- set extra_alt_names = alt_names() -%}
+  {%- endif -%}
+{%- endif -%}
 
 {{ key }}:
   x509.private_key_managed:
@@ -82,8 +89,8 @@
     - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
     - basicConstraints: "critical CA:false"
     - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
-  {%- if extra|length > 0 %}
-    - subjectAltName: {{ extra|yaml_dquote }}
+  {%- if extra_alt_names|length > 0 %}
+    - subjectAltName: {{ extra_alt_names|yaml_dquote }}
   {%- endif %}
     - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}
     - days_remaining: {{ pillar['certificate_information']['days_remaining']['certificate'] }}

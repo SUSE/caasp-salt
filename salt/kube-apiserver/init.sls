@@ -6,13 +6,12 @@ include:
   - kubernetes-common
   - kubernetes-common.serviceaccount-key
 
-{% from '_macros/certs.jinja' import extra_master_names, certs with context %}
+{% from '_macros/certs.jinja' import certs with context %}
 {{ certs("kube-apiserver",
          pillar['ssl']['kube_apiserver_crt'],
          pillar['ssl']['kube_apiserver_key'],
          cn = grains['caasp_fqdn'],
-         o = pillar['certificate_information']['subject_properties']['O'],
-         extra = extra_master_names()) }}
+         o = pillar['certificate_information']['subject_properties']['O']) }}
 
 kube-apiserver:
   pkg.installed:

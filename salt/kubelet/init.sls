@@ -17,12 +17,11 @@ include:
       schedulable: "false"
 {% endif %}
 
-{% from '_macros/certs.jinja' import extra_names, certs with context %}
+{% from '_macros/certs.jinja' import certs with context %}
 {{ certs('node:' + grains['caasp_fqdn'],
          pillar['ssl']['kubelet_crt'],
          pillar['ssl']['kubelet_key'],
-         o = 'system:nodes',
-         extra = extra_names()) }}
+         o = 'system:nodes') }}
 
 kubelet-config:
   file.managed:

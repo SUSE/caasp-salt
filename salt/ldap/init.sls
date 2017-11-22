@@ -2,22 +2,14 @@ include:
   - ca-cert
   - cert
 
-{% set names = [] %}
-{% set ips = [] %}
+{% set names = [salt['pillar.get']('dashboard', '')] %}
 
-{% set dashboard = salt['pillar.get']('dashboard', '') %}
-{% if salt['caasp_filters.is_ip'](dashboard) %}
-  {% do ips.append(dashboard) %}
-{% else %}
-  {% do names.append(dashboard) %}
-{% endif %}
-
-{% from '_macros/certs.jinja' import extra_names, certs with context %}
+{% from '_macros/certs.jinja' import alt_names, certs with context %}
 {{ certs("ldap:" + grains['caasp_fqdn'],
          pillar['ssl']['ldap_crt'],
          pillar['ssl']['ldap_key'],
          cn = grains['caasp_fqdn'],
-         extra = extra_names(names, ips)) }}
+         extra_alt_names = alt_names(names)) }}
 
 openldap_restart:
   cmd.run:
@@ -27,5 +19,4 @@ openldap_restart:
             docker restart $openldap_id
         fi
     - onchanges:
-      - x509: {{ pillar['ssl']['ldap_key'] }}
       - x509: {{ pillar['ssl']['ldap_crt'] }}
