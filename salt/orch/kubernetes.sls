@@ -53,6 +53,7 @@ update_modules:
   salt.function:
     - tgt: '*'
     - name: saltutil.sync_all
+    - batch: 3
     - kwarg:
         refresh: True
 

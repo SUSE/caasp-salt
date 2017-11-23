@@ -60,6 +60,5 @@ kube-apiserver:
     {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
     - name:       {{ 'https://' + api_server + ':' + api_ssl_port }}/healthz
     - wait_for:   300
-    - cert:       [{{ pillar['ssl']['crt_file'] }}, {{ pillar['ssl']['key_file'] }}]
     - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
     - status:     200

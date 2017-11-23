@@ -22,9 +22,18 @@ dummy_step:
 update-velum-hosts:
   cmd.run:
     - name: |-
-        velum_id=$( docker ps | grep velum-dashboard | awk '{print $1}')
+        velum_id=$(docker ps | grep velum-dashboard | awk '{print $1}')
         if [ -n "$velum_id" ]; then
             docker cp /etc/hosts $velum_id:/etc/hosts
+        fi
+    - onchanges:
+      - file: /etc/hosts
+update-haproxy-hosts:
+  cmd.run:
+    - name: |-
+        haproxy_id=$(docker ps | grep -E "k8s_haproxy.*\.{{ pillar['internal_infra_domain'] | replace(".", "\.") }}_kube-system_" | awk '{print $1}')
+        if [ -n "$haproxy_id" ]; then
+            docker cp /etc/hosts $haproxy_id:/etc/hosts
         fi
     - onchanges:
       - file: /etc/hosts
