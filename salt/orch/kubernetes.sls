@@ -7,10 +7,9 @@ set_bootstrap_in_progress_flag:
       - bootstrap_in_progress
       - true
 
-sync_all:
-  module.run:
-    - name: saltutil.sync_all
-    - refresh: True
+sync_pillar:
+  salt.runner:
+    - name: saltutil.sync_pillar
 
 disable_rebootmgr:
   salt.state:
