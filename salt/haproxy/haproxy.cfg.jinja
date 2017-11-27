@@ -29,7 +29,7 @@ listen kubernetes-master
         server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} check
 {% endfor -%}
 
-{%- if "admin" in salt['grains.get']('roles', []) -%}
+{%- if "admin" in salt['grains.get']('roles', []) %}
 # Velum should be able to access Kube API and Dex service as well to get kubeconfig
 listen kubernetes-dex
         bind {{ bind_ip }}:32000
@@ -39,5 +39,26 @@ listen kubernetes-dex
 
 {%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.interfaces', 'grain').items() %}
         server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:32000 check
-{% endfor -%}
-{%- endif -%}
+{% endfor %}
+
+listen velum
+        bind 0.0.0.0:80
+        bind 0.0.0.0:443 ssl crt /etc/pki/velum.pem ca-file /etc/pki/ca.crt
+        mode http
+        acl path_autoyast path_reg ^/autoyast$
+        option forwardfor
+        http-request set-header X-Forwarded-Proto https
+        redirect scheme https code 302 if !{ ssl_fc } !path_autoyast
+        default-server inter 10s fall 3
+        balance roundrobin
+        server velum unix@/var/run/puma/dashboard.sock
+
+listen velum-api
+        bind 127.0.0.1:443 ssl crt /etc/pki/velum.pem ca-file /etc/pki/ca.crt
+        mode http
+        option forwardfor
+        http-request set-header X-Forwarded-Proto https
+        default-server inter 10s fall 3
+        balance roundrobin
+        server velum unix@/var/run/puma/api.sock
+{% endif -%}

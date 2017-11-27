@@ -11,7 +11,7 @@
 haproxy:
   file.managed:
     - name: /etc/kubernetes/manifests/haproxy.yaml
-    - source: salt://haproxy/haproxy.manifest
+    - source: salt://haproxy/haproxy.yaml.jinja
     - template: jinja
     - user: root
     - group: root

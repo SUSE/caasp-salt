@@ -95,4 +95,20 @@
       - sls: crypto
       - x509: {{ key }}
 
+{{ crt }}-bundle:
+  file.managed:
+    - name: /etc/pki/private/{{ name }}-bundle.pem
+    - source: salt://cert/cert-bundle.jinja
+    - template: jinja
+    - user: root
+    - group: root
+    - mode: 600
+    - makedirs: True
+    - context:
+        certificate: {{ crt }}
+        key:         {{ key }}
+    - onchanges:
+        - x509: {{ crt }}
+        - x509: {{ key }}
+
 {%- endmacro %}
