@@ -1,7 +1,7 @@
 
 {% macro extra_names(names=[], ips=[]) -%}
   {#- add all the names and IPs we know about -#}
-  {%- set extra = ["DNS: " + grains['caasp_fqdn'] ] -%}
+  {%- set extra = ["DNS: " + grains['caasp_fqdn'], "DNS: " + grains['nodename'] ] -%}
   {%- for _, interface_addresses in grains['ip4_interfaces'].items() -%}
     {%- for interface_address in interface_addresses -%}
       {%- do extra.append("IP: " + interface_address) -%}

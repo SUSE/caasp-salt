@@ -1,3 +1,5 @@
+{%- set hostnames = salt['mine.get']('*', 'hostname', 'glob') %}
+
 ### service names ###
 # set the apiserver for 127.0.0.1 on all hosts as haproxy is listening on all nodes
 # and forwarding connections to the real master
@@ -15,7 +17,7 @@
 	{%- else %}
 		{%- set ip = addrlist|first %}
 	{%- endif %}
-{{ ip }} {{ admin_id }} {{ admin_id }}.{{ pillar['internal_infra_domain'] }}
+{{ ip }} {{ admin_id }} {{ admin_id }}.{{ pillar['internal_infra_domain'] }} {{ hostnames[admin_id] }}
 {%- endfor %}
 
 ### kubernetes masters ###
@@ -26,7 +28,7 @@
 	{%- else %}
 		{%- set ip = addrlist|first %}
 	{%- endif %}
-{{ ip }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }}
+{{ ip }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }} {{ hostnames[master_id] }}
 {%- endfor %}
 
 ### kubernetes workers ###
@@ -37,5 +39,5 @@
 	{%- else %}
 		{%- set ip = addrlist|first %}
 	{%- endif %}
-{{ ip }} {{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}
+{{ ip }} {{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }} {{ hostnames[minion_id] }}
 {%- endfor %}
