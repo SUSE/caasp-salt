@@ -1,10 +1,11 @@
-{% from '_macros/network.jinja' import get_primary_ip with context %}
+{% from '_macros/network.jinja' import get_primary_ip with context -%}
+{% set external_fqdn = pillar['api']['server']['external_fqdn'] -%}
 
 ### service names ###
 # set the apiserver for 127.0.0.1 on all hosts as haproxy is listening on all nodes
 # and forwarding connections to the real master
 {% if "kube-master" in salt['grains.get']('roles', []) %}
-127.0.0.1 api api.{{ pillar['internal_infra_domain'] }} {{ pillar['api']['server']['external_fqdn'] }}
+127.0.0.1 api api.{{ pillar['internal_infra_domain'] }}{% if not salt['caasp_filters.is_ip'](external_fqdn) %} {{ external_fqdn }}{% endif %}
 {% else %}
 127.0.0.1 api api.{{ pillar['internal_infra_domain'] }}
 {% endif %}
