@@ -16,8 +16,8 @@ include:
     - makedirs: True
     - contents: |
         [Service]
-        Environment="HTTP_PROXY={{ salt['pillar.get']('proxy:http', '') }}"
-        Environment="HTTPS_PROXY={{ salt['pillar.get']('proxy:https', '') }}"
+        Environment="HTTP_PROXY={{ salt['pillar.get']('proxy:http', '') or '' }}"
+        Environment="HTTPS_PROXY={{ salt['pillar.get']('proxy:https', '') or '' }}"
         Environment="NO_PROXY={{ no_proxy|join(',') }}"
   module.run:
     - name: service.systemctl_reload

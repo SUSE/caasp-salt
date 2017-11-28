@@ -1,7 +1,7 @@
 {% if salt['pillar.get']('proxy:systemwide', '').lower() == 'true' %}
 
-{% set proxy_http  = salt['pillar.get']('proxy:http', '') %}
-{% set proxy_https = salt['pillar.get']('proxy:https', '') %}
+{% set proxy_http  = salt['pillar.get']('proxy:http', '') or '' %}
+{% set proxy_https = salt['pillar.get']('proxy:https', '') or '' %}
 
 {% set no_proxy = [pillar['dashboard'], '.infra.caasp.local', '.cluster.local'] %}
 {% if salt['pillar.get']('proxy:no_proxy') %}
