@@ -1,3 +1,6 @@
+{%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set super_master = masters|first %}
+
 # Ensure the node is marked as bootstrapping
 set_bootstrap_in_progress_flag:
   salt.function:
@@ -93,8 +96,7 @@ update_mine_again:
 
 etcd_discovery_setup:
   salt.state:
-    - tgt: 'roles:kube-master'
-    - tgt_type: grain
+    - tgt: {{ super_master }}
     - sls:
       - etcd-discovery
     - require:
@@ -117,9 +119,7 @@ etcd_setup:
 
 flannel_setup:
   salt.state:
-    - tgt: 'roles:kube-master'
-    - tgt_type: grain
-    - batch: 5
+    - tgt: {{ super_master }}
     - sls:
       - flannel-setup
     - require:
@@ -157,21 +157,20 @@ kube_minion_setup:
 
 reboot_setup:
   salt.state:
-    - tgt: 'roles:kube-master'
-    - tgt_type: grain
-    - batch: 5
+    - tgt: {{ super_master }}
     - sls:
       - reboot
     - require:
       - salt: kube_master_setup
 
-wait_for_dex_api:
+services_setup:
   salt.state:
-    - tgt: 'roles:kube-master'
-    - tgt_type: grain
-    - batch: 5
+    - tgt: {{ super_master }}
     - sls:
-      - dex.ensure-dex-running
+      - addons
+      - addons.dns
+      - addons.tiller
+      - dex
     - require:
       - salt: reboot_setup
 
@@ -185,7 +184,7 @@ set_bootstrap_complete_flag:
       - bootstrap_complete
       - true
     - require:
-      - salt: wait_for_dex_api
+      - salt: services_setup
 
 # Ensure the node is marked as finished bootstrapping
 clear_bootstrap_in_progress_flag:
