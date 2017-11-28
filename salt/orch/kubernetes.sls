@@ -1,6 +1,10 @@
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set super_master = masters|first %}
 
+{%- set default_batch = 5 %}
+
+{%- set num_etcd_masters = salt.caasp_etcd.get_cluster_size() %}
+
 # Ensure the node is marked as bootstrapping
 set_bootstrap_in_progress_flag:
   salt.function:
@@ -56,7 +60,6 @@ update_modules:
   salt.function:
     - tgt: '*'
     - name: saltutil.sync_all
-    - batch: 3
     - kwarg:
         refresh: True
 
@@ -102,18 +105,14 @@ etcd_discovery_setup:
     - require:
       - salt: update_modules
 
+# setup {{ num_etcd_masters }} etcd masters
 etcd_setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
     - tgt_type: grain_pcre
     - sls:
       - etcd
-    # Currently, we never ask for more than 3 members. Setting this to 3 ensures
-    # we don't let more than 3 members attempt etcd discovery before a cluster
-    # has been fully formed. If we have less this 3, this will still succeed, as
-    # the exact number of members we expect will also end up attempting discovery
-    # at the same time.
-    - batch: 3
+    - batch: {{ num_etcd_masters }}
     - require:
       - salt: etcd_discovery_setup
 
@@ -130,7 +129,7 @@ admin_setup:
     - tgt: 'roles:admin'
     - tgt_type: grain
     - highstate: True
-    - batch: 5
+    - batch: {{ default_batch }}
     - require:
       - salt: flannel_setup
 
@@ -139,7 +138,7 @@ kube_master_setup:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
-    - batch: 5
+    - batch: {{ default_batch }}
     - require:
       - salt: admin_setup
       - salt: generate_sa_key
@@ -150,7 +149,7 @@ kube_minion_setup:
     - tgt: 'roles:kube-minion'
     - tgt_type: grain
     - highstate: True
-    - batch: 5
+    - batch: {{ default_batch }}
     - require:
       - salt: flannel_setup
       - salt: kube_master_setup
