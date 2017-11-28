@@ -2,8 +2,16 @@
 
 {% set proxy_http  = salt['pillar.get']('proxy:http', '') %}
 {% set proxy_https = salt['pillar.get']('proxy:https', '') %}
-
 {% set no_proxy = [pillar['dashboard'], '.infra.caasp.local', '.cluster.local'] %}
+
+{% if proxy_http is none %}
+  {% set proxy_http = '' %}
+{% endif %}
+
+{% if proxy_https is none %}
+  {% set proxy_https = '' %}
+{% endif %}
+
 {% if salt['pillar.get']('proxy:no_proxy') %}
   {% do no_proxy.append(pillar['proxy']['no_proxy']) %}
 {% endif %}
