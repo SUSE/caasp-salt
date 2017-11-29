@@ -9,7 +9,7 @@
   {%- endfor -%}
   {#- append all the names/IPs provided (if not empty) -#}
   {%- for name in lst -%}
-    {%- if name|length > 0 -%}
+    {%- if name and name|length > 0 -%}
       {%- if salt['caasp_filters.is_ip'](name) -%}
         {%- do altNames.append("IP: " + name) -%}
       {%- else -%}
