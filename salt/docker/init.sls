@@ -30,11 +30,14 @@ include:
 
 {% set docker_args = salt['pillar.get']('docker:args', '') %}
 {% set docker_logs = salt['pillar.get']('docker:log_level', '') %}
-{% set docker_reg  = salt['pillar.get']('docker:registry', '') %}
+{% set registries  = salt['pillar.get']('docker:registries', []) %}
 {% set docker_opts = docker_args + " --log-level=" + docker_logs %}
-{% if docker_reg|length > 0 %}
-  {% set docker_opts = docker_opts + " --insecure-registry=" + docker_reg + " --registry-mirror=http://" + docker_reg  %}
-{% endif %}
+{% for registry in registries.values() %}
+  {% set docker_opts = docker_opts + " --insecure-registry=" + registry.get("name") %}
+  {% if registry.get("mirror") %}
+    {% set docker_opts = docker_opts + " --registry-mirror=http://" + registry.get("name") %}
+  {% endif %}
+{% endfor %}
 
 docker:
   pkg.installed:
