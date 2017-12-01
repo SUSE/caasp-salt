@@ -1,6 +1,4 @@
-{% set proxy_systemwide  = salt.caasp_pillar.get('proxy:systemwide', False) %}
-
-{% if proxy_systemwide %}
+{% if salt.caasp_pillar.get('proxy:systemwide') %}
   {% set proxy_http  = salt.caasp_pillar.get('proxy:http') %}
   {% set proxy_https = salt.caasp_pillar.get('proxy:https') %}
 
