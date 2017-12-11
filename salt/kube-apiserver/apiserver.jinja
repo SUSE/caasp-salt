@@ -6,6 +6,8 @@
 
 {% from '_macros/network.jinja' import get_primary_ip with context %}
 
+{% set cloud_provider = salt.caasp_pillar.get('cloud:provider') %}
+
 # The address on the local server to listen to.
 KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 
@@ -28,9 +30,9 @@ KUBE_ADMISSION_CONTROL="--admission-control=Initializers,NamespaceLifecycle,Limi
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ get_primary_ip() }} \
                --apiserver-count={{ salt['mine.get']('roles:kube-master', 'caasp_fqdn', expr_form='grain').values()|length }} \
-{%- if salt['pillar.get']('cloud:provider', '') != '' %}
+{%- if cloud_provider %}
                --cloud-provider={{ pillar['cloud']['provider'] }} \
-  {%- if salt['pillar.get']('cloud:provider', '') == 'openstack' %}
+  {%- if cloud_provider == 'openstack' %}
                --cloud-config=/etc/kubernetes/openstack-config \
   {%- endif -%}
 {% endif %}
@@ -38,7 +40,7 @@ KUBE_API_ARGS="--advertise-address={{ get_primary_ip() }} \
                --tls-private-key-file={{ pillar['ssl']['kube_apiserver_key'] }} \
                --tls-ca-file={{ pillar['ssl']['ca_file'] }} \
                --cert-dir=/etc/pki \
-               {{ salt['pillar.get']('components:apiserver:args', '') }} \
+               {{ salt.caasp_pillar.get('components:apiserver:args') }} \
                --client-ca-file={{ pillar['ssl']['ca_file'] }} \
                --storage-backend={{ pillar['api']['etcd_version'] }} \
                --storage-media-type=application/json \

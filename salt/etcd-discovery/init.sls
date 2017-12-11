@@ -1,7 +1,8 @@
-{% if salt['pillar.get']('etcd:disco:id', '')|length > 0 %}
+{% set disco = salt.caasp_pillar.get('etcd:disco:id') %}
+{% if disco %}
 
-{% set etcd_base = "http://" + pillar['dashboard'] + ":" + pillar['etcd']['disco']['port'] %}
-{% set etcd_size_uri = etcd_base + "/v2/keys/_etcd/registry/" + pillar['etcd']['disco']['id'] + "/_config/size" %}
+  {% set etcd_base = "http://" + pillar['dashboard'] + ":" + pillar['etcd']['disco']['port'] %}
+  {% set etcd_size_uri = etcd_base + "/v2/keys/_etcd/registry/" + pillar['etcd']['disco']['id'] + "/_config/size" %}
 
 # set the cluster size in the private Discovery registry
 etcd-discovery-setup:

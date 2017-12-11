@@ -56,7 +56,7 @@ kubelet:
       - file:   /etc/kubernetes/config
       - kubelet-config
       - file:   kubelet
-{% if pillar.get('cloud:provider', '') == 'openstack' %}
+{% if salt.caasp_pillar.get('cloud:provider') == 'openstack' %}
       - file:     /etc/kubernetes/openstack-config
 {% endif %}
     - require:
@@ -114,7 +114,7 @@ kubelet:
     - dir_mode: 755
     - makedirs: True
 
-{% if pillar.get('e2e', '').lower() == 'true' %}
+{% if salt.caasp_pillar.get('e2e', False) %}
 /etc/kubernetes/manifests/e2e-image-puller.manifest:
   file.managed:
     - source:    salt://kubelet/e2e-image-puller.manifest

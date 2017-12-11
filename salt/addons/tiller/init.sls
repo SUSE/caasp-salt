@@ -1,4 +1,4 @@
-{% if salt['pillar.get']('addons:tiller', 'false').lower() == 'true' %}
+{% if salt.caasp_pillar.get('addons:tiller', False) %}
 
 include:
   - kube-apiserver
