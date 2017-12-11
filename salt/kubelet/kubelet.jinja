@@ -1,6 +1,7 @@
 {% set api_server = "api." + pillar['internal_infra_domain']  -%}
 {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
 {% set api_server_url = 'https://' + api_server + ':' + api_ssl_port -%}
+{% set cloud_provider = salt.caasp_pillar.get('cloud:provider') %}
 
 {% from '_macros/network.jinja' import get_primary_ip with context %}
 
@@ -25,9 +26,9 @@ KUBELET_ARGS="\
     --pod-manifest-path=/etc/kubernetes/manifests \
     --pod-infra-container-image={{ pillar['pod_infra_container_image'] }} \
 {% endif -%}
-{% if salt['pillar.get']('cloud:provider', '') != '' -%}
+{% if cloud_provider -%}
                --cloud-provider={{ pillar['cloud']['provider'] }} \
-  {% if salt['pillar.get']('cloud:provider', '') == 'openstack' -%}
+  {% if cloud_provider == 'openstack' -%}
                --cloud-config=/etc/kubernetes/openstack-config \
   {% endif -%}
 {% endif -%}

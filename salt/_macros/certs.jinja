@@ -29,13 +29,13 @@
                        "kubernetes.default.svc",
                        "api",
                        "api." + pillar['internal_infra_domain'],
-                       salt['pillar.get']('api:server:external_fqdn', ''),
-                       salt['pillar.get']('api:cluster_ip', '')] +
-                       salt['pillar.get']('api:server:extra_names', []) +
-                       salt['pillar.get']('api:server:extra_ips', []) +
+                       salt.caasp_pillar.get('api:server:external_fqdn'),
+                       salt.caasp_pillar.get('api:cluster_ip')] +
+                       salt.caasp_pillar.get('api:server:extra_names', []) +
+                       salt.caasp_pillar.get('api:server:extra_ips', []) +
                        lst -%}
   {#- add some standard extra names from the DNS domain -#}
-  {%- if salt['pillar.get']('dns:domain') -%}
+  {%- if salt.caasp_pillar.get('dns:domain') -%}
     {%- do names_lst.append("kubernetes.default.svc." + pillar['dns']['domain']) -%}
   {%- endif -%}
   {{ alt_names(names_lst) }}
@@ -69,7 +69,7 @@
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: {{ key }}
-  {%- if cn|length > 0 %}
+  {%- if cn %}
     - CN: {{ cn|yaml_dquote }}
   {%- else %}
     - CN: {{ ("system:" + name)|yaml_dquote }}
@@ -79,7 +79,7 @@
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
     - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
     {# "system:{{ name }}" is a kubernetes specific role identifying a {{ name }} in th system #}
-  {%- if o|length > 0 %}
+  {%- if o %}
     - O: {{ o|yaml_dquote }}
   {%- else -%}
     - O: {{ ("system:" + name)|yaml_dquote }}
@@ -89,7 +89,7 @@
     - ST: {{ pillar['certificate_information']['subject_properties']['ST']|yaml_dquote }}
     - basicConstraints: "critical CA:false"
     - keyUsage: nonRepudiation, digitalSignature, keyEncipherment
-  {%- if extra_alt_names|length > 0 %}
+  {%- if extra_alt_names %}
     - subjectAltName: {{ extra_alt_names|yaml_dquote }}
   {%- endif %}
     - days_valid: {{ pillar['certificate_information']['days_valid']['certificate'] }}

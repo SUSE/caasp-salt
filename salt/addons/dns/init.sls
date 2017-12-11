@@ -1,4 +1,4 @@
-{% if salt['pillar.get']('addons:dns', 'false').lower() == 'true' %}
+{% if salt.caasp_pillar.get('addons:dns', False) %}
 
 include:
   - kube-apiserver
@@ -23,4 +23,3 @@ dummy:
     - name: echo "DNS addon not enabled in config"
 
 {% endif %}
-

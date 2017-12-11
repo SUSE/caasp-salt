@@ -1,10 +1,10 @@
 {
-  "Network":   "{{ pillar['cluster_cidr'] }}",
-  "SubnetLen": {{ pillar['cluster_cidr_len'] }},
-  "SubnetMin": "{{ pillar['cluster_cidr_min'] }}",
-  "SubnetMax": "{{ pillar['cluster_cidr_max'] }}",
+  "Network":   "{{ salt.caasp_pillar.get('cluster_cidr') }}",
+  "SubnetLen": {{ salt.caasp_pillar.get('cluster_cidr_len') }},
+  "SubnetMin": "{{ salt.caasp_pillar.get('cluster_cidr_min') }}",
+  "SubnetMax": "{{ salt.caasp_pillar.get('cluster_cidr_max') }}",
   "Backend":
   {
-    "Type": "{{ pillar['flannel']['backend'] }}"
+    "Type": "{{ salt.caasp_pillar.get('flannel:backend') }}"
   }
 }

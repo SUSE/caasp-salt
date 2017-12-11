@@ -2,7 +2,7 @@ include:
   - ca-cert
   - cert
 
-{% set names = [salt['pillar.get']('dashboard', '')] %}
+{% set names = [salt.caasp_pillar.get('dashboard')] %}
 
 {% from '_macros/certs.jinja' import alt_names, certs with context %}
 {{ certs("ldap:" + grains['caasp_fqdn'],
