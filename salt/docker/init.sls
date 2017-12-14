@@ -5,56 +5,27 @@ include:
 # additional ca.crt(s)
 #######################
 
-{% set registries = salt['pillar.get']('docker:registries', []) %}
-{% for registry in registries %}
-  {% set cert = registry.get("cert", "") %}
-  {% if cert|length > 0 -%}
-    {% set host_port = registry.get("name") %}
-
-/etc/docker/certs.d/{{ host_port }}/ca.crt:
-  file.managed:
-    - makedirs: True
-    - contents: |
-        {{ cert | indent(8) }}
-
-  # When using the standar port (443), Docker is not very smart:
-  # if the user introduces "my-registry:443" as a trusted registry,
-  # we must also create the "ca.crt" for "my-registry"
-  # as he/she could just access "docker pull my-registry/some/image",
-  # and Docker would fail to find "my-registry/ca.crt"
-    {% set host_port_lst = host_port.split(':') %}
-    {% if host_port_lst|length > 1 %}
-      {% set host = host_port_lst[0] %}
-      {% set port = host_port_lst[1] %}
-      {% if port == '443' %}
-/etc/docker/certs.d/{{ host }}/ca.crt:
-  file.symlink:
-    - target: /etc/docker/certs.d/{{ host_port }}/ca.crt
-    - force: True
-    - makedirs: True
-    - require:
-      - file: /etc/docker/certs.d/{{ host_port }}/ca.crt
-      {% endif %}
-    {% else %}
-  # the same happens if the user introduced a certificate for
-  # "my-registry": we must fix the "docker pull my-registry:443/some/image" case.
-/etc/docker/certs.d/{{ host_port }}:443/ca.crt:
-  file.symlink:
-    - target: /etc/docker/certs.d/{{ host_port }}/ca.crt
-    - force: True
-    - makedirs: True
-    - require:
-      - file: /etc/docker/certs.d/{{ host_port }}/ca.crt
-    {% endif %}
-  {% endif %}
-{% endfor %}
-
+# collect all the certificates
 # Notes:
 # - from https://docs.docker.com/registry/insecure/#using-self-signed-certificates
 #   we do not need to restart docker after adding/removing certificates
 # - after a certificate is removed from the pillar by the user, the certifcate
 #   will remain there. Maybe we should consider to wipe the certificates
 #   directory if we are the only ones managing them...
+
+{% set certs = salt.caasp_docker.get_registries_certs(salt.caasp_pillar.get('registries', [])) %}
+{% for cert_tuple in certs.items() %}
+  {% set name, cert = cert_tuple %}
+
+/etc/docker/certs.d/{{ name }}/ca.crt:
+  file.managed:
+    - makedirs: True
+    - contents: |
+        {{ cert | indent(8) }}
+    - require_in:
+      - docker
+
+{% endfor %}
 
 ######################
 # proxy for the daemon
@@ -83,13 +54,11 @@ include:
 # docker daemon
 #######################
 
-{% set docker_args = salt.caasp_pillar.get('docker:args') %}
-{% set docker_logs = salt.caasp_pillar.get('docker:log_level') %}
-{% set docker_reg  = salt.caasp_pillar.get('docker:registry') %}
-{% set docker_opts = docker_args + " --log-level=" + docker_logs %}
-{% if docker_reg %}
-  {% set docker_opts = docker_opts + " --insecure-registry=" + docker_reg + " --registry-mirror=http://" + docker_reg  %}
-{% endif %}
+/etc/docker/daemon.json:
+  file.managed:
+    - source: salt://docker/daemon.json.jinja
+    - template: jinja
+    - makedirs: True
 
 docker:
   pkg.installed:
@@ -104,7 +73,7 @@ docker:
     #  drop-in unit and we wouldn't get into troubles because of precedences...
     - name: /etc/sysconfig/docker
     - pattern: '^DOCKER_OPTS.*$'
-    - repl:
+    - repl: 'DOCKER_OPTS=""'
     - flags: ['IGNORECASE', 'MULTILINE']
     - append_if_not_found: True
     - require:
@@ -114,8 +83,10 @@ docker:
     - onlyif: systemctl status docker.service
     - onchanges:
       - /etc/systemd/system/docker.service.d/proxy.conf
+      - /etc/docker/daemon.json
     - require:
       - file: /etc/sysconfig/docker
+      - file: /etc/docker/daemon.json
   service.running:
     - enable: True
     - watch:
