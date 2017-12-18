@@ -47,6 +47,8 @@ create-dns-clusterrolebinding:
         kubectl create clusterrolebinding system:kube-dns --clusterrole=cluster-admin --serviceaccount=kube-system:default
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - unless:
+      - kubectl get clusterrolebindings | grep kube-dns
     - check_cmd:
       - kubectl get clusterrolebindings | grep kube-dns
     - require:
@@ -77,6 +79,8 @@ create-tiller-clusterrolebinding:
         kubectl create clusterrolebinding system:tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - unless:
+      - kubectl get clusterrolebindings | grep tiller
     - check_cmd:
       - kubectl get clusterrolebindings | grep tiller
     - require:
