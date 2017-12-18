@@ -56,7 +56,7 @@ data:
           username: "{{ pillar['ldap']['mail_attribute'] }}"
           idAttr: DN
           emailAttr: "{{ pillar['ldap']['mail_attribute'] }}"
-          nameAttr: cn          
+          nameAttr: cn
         groupSearch:
           baseDN: "{{ pillar['ldap']['group_dn'] }}"
           filter: "(objectClass=groupOfUniqueNames)"
@@ -99,7 +99,7 @@ spec:
       - key: "CriticalAddonsOnly"
         operator: "Exists"
       containers:
-      - image: sles12/caasp-dex:2.6.1
+      - image: sles12/caasp-dex:2.7.1
         name: dex
         command: ["/usr/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
 
@@ -146,4 +146,4 @@ spec:
     targetPort: 5556
     nodePort: {{ pillar['dex']['node_port'] }}
   selector:
-    app: dex    
+    app: dex
