@@ -1,12 +1,25 @@
 # the CIDR for cluster IPs (internal IPs for Pods)
 cluster_cidr:     '172.16.0.0/13'
 
-# The min and max subnet, and length for node allocations.
-# The defaults allow for 510 pod IPs per host (/23) allowing
-# for a maximum of 1024 hosts.
-cluster_cidr_min: '172.16.0.0'
-cluster_cidr_max: '172.23.255.255'
+# The size of the subnet allocated to each host.
+# Defaults to 23 (i.e. /23) unless Network was configured to
+# be smaller than a /23 in which case it is one less than the
+# network.
+# The defaults allow for
+# * 2^(23-13)     = 10 bits for hosts = 1024 hosts
+# * 2^(32-23) - 2 = 9 bits - 2 for pods = 510 pod IPs per host,
+#   (with IPs from '172.16.0.1' to '172.16.1.254')
+# TODO: we currently have 19 bits for hosts|pods, so we should ask
+#       users in the UI about the "max number of hosts"
+#       showing all the powers of 2 (ie, 256, 512, 1024), and then
+#       calculate and show the max number of pods...
 cluster_cidr_len: 23
+
+# These are automatically calculated by Flannel or
+# k8s's Network Manager.
+# WARNING: do not uncomment these unless you really know what you are doing!
+# cluster_cidr_min: '172.16.0.0'
+# cluster_cidr_max: '172.23.254.0'
 
 # the CIDR for services (virtual IPs for services)
 services_cidr:    '172.24.0.0/16'
@@ -121,8 +134,8 @@ proxy:
   no_proxy:       ''
   systemwide:     'true'
 
-# Kubernetes is designed to work with different Clouds such as Google Compute Engine (GCE), 
-# Amazon Web Services (AWS), and OpenStack; therefore, different load balancers need to be created 
+# Kubernetes is designed to work with different Clouds such as Google Compute Engine (GCE),
+# Amazon Web Services (AWS), and OpenStack; therefore, different load balancers need to be created
 # on the particular Cloud for the services. This is done through a plugin for each Cloud.
 # https://github.com/kubernetes/kubernetes/blob/release-1.7/pkg/cloudprovider/README.md
 cloud:
