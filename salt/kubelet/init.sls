@@ -4,6 +4,7 @@ include:
   - cert
   - etcd
   - kubernetes-common
+  - kubectl-config
 
 /etc/kubernetes/kubelet-initial:
   file.managed:
@@ -91,14 +92,12 @@ kubelet:
     - name: |
         kubectl uncordon {{ grains['caasp_fqdn'] }}
     - onlyif:
-        test "$(kubectl get nodes {{ grains['caasp_fqdn'] }} -o=jsonpath="{.spec.unschedulable}" 2>/dev/null)" = "true"
+        test "$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['caasp_fqdn'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" = "true"
     - retry:
         attempts: 10
         interval: 3
         until: |
-          test "$(kubectl get nodes {{ grains['caasp_fqdn'] }} -o=jsonpath="{.spec.unschedulable}" 2>/dev/null)" != "true"
-    - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+          test "$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['caasp_fqdn'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" != "true"
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
 {% endif %}
