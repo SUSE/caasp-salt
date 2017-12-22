@@ -81,18 +81,10 @@ kubelet:
     - require:
       - service: kubelet
 
-  # TODO: This needs to wait for the node to register, which takes a few seconds.
-  # Salt doesn't seem to have a retry mechanism in the version were using, so I'm
-  # doing a horrible hack right now.
-  # RAR: Increasing the timeout to 5 minutes, since this now occurs during the initial
-  # bootstrap - it takes more than 60 seconds before kube-apiserver is running.
-  # DO NOT uncordon the "master" nodes, this makes them schedulable.
 {% if not "kube-master" in salt['grains.get']('roles', []) %}
   caasp_cmd.run:
     - name: |
         kubectl uncordon {{ grains['caasp_fqdn'] }}
-    - onlyif:
-        test "$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['caasp_fqdn'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" = "true"
     - retry:
         attempts: 10
         interval: 3
