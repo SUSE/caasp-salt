@@ -81,7 +81,7 @@ kubelet:
     - require:
       - service: kubelet
 
-{% if not "kube-master" in salt['grains.get']('roles', []) %}
+{% if not "kube-master" in salt['grains.get']('roles', []) and salt['grains.get']('kubelet:should_uncordon', false) %}
   caasp_cmd.run:
     - name: |
         kubectl uncordon {{ grains['caasp_fqdn'] }}
@@ -93,6 +93,11 @@ kubelet:
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
 {% endif %}
+
+remove-should-uncordon-grain:
+  grains.absent:
+    - name: kubelet:should_uncordon
+    - destructive: True
 
 #######################
 # config files
