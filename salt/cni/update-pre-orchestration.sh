@@ -22,7 +22,7 @@ get_node_cidr() {
 }
 
 patch_node() {
-	kubectl patch node $NODE_ID -p $@ 2>/dev/null
+	kubectl patch node $NODE_ID -p "$@" 2>/dev/null
 }
 
 ##########################################################
@@ -36,16 +36,16 @@ log "flannel state file found with node CIDR=$old_node_cidr"
 
 curr_node_cidr=$(get_node_cidr)
 if [ -n "$curr_node_cidr" ] && [ "$curr_node_cidr" != "<no value>" ] ; then
-	exit_changes "no" "node already has a podCIDR:$curr_node_cidr"
+       exit_changes "no" "node already has a podCIDR:$curr_node_cidr"
 fi
 
 log "$NODE_ID does not have a CIDR assigned: setting $old_node_cidr"
-patch_node '{"spec":{"podCIDR":"'$old_node_cidr'"}}'
+patch_node "{\"spec\":{\"podCIDR\":\"$old_node_cidr\"}}"
 curr_node_cidr=$(get_node_cidr)
 
 log "adding some annotations..."
-patch_node '{"metadata":{"annotations":{"alpha.kubernetes.io/provided-node-ip": '$EXTERNAL_IP'}}}'
-patch_node '{"metadata":{"annotations":{"flannel.alpha.coreos.com/public-ip": '$EXTERNAL_IP'}}}'
-patch_node '{"metadata":{"annotations":{"flannel.alpha.coreos.com/kube-subnet-manager": 'true'}}}'
-patch_node '{"metadata":{"annotations":{"flannel.alpha.coreos.com/backend-type": '$BACKEND_TYPE'}}}'
+patch_node "{\"metadata\":{\"annotations\":{\"alpha.kubernetes.io/provided-node-ip\": \"$EXTERNAL_IP\"}}}"
+patch_node "{\"metadata\":{\"annotations\":{\"flannel.alpha.coreos.com/public-ip\": \"$EXTERNAL_IP\"}}}"
+patch_node "{\"metadata\":{\"annotations\":{\"flannel.alpha.coreos.com/kube-subnet-manager\": true}}}"
+patch_node "{\"metadata\":{\"annotations\":{\"flannel.alpha.coreos.com/backend-type\": \"$BACKEND_TYPE\"}}}"
 exit_changes "yes" "new CIDR set for $NODE_ID podCIDR:$curr_node_cidr"

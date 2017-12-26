@@ -41,6 +41,19 @@ update_modules:
     - require:
       - salt: update_mine
 
+# Perform any migrations necessary before starting the update orchestration. All services and
+# machines should be running and we can migrate some data on the whole cluster and then proceed
+# with the real update.
+pre-orchestration-migration:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
+    - batch: 3
+    - sls:
+      - cni.update-pre-orchestration
+    - require:
+      - salt: update_modules
+
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
@@ -56,15 +69,6 @@ update_modules:
     - require:
       - salt: update_modules
 
-# Perform any migratrions necessary before services are shutdown
-{{ master_id }}-pre-shutdown:
-  salt.state:
-    - tgt: {{ master_id }}
-    - sls:
-      - cni.update-pre-shutdown
-    - require:
-      - salt: {{ master_id }}-set-update-grain
-
 {{ master_id }}-clean-shutdown:
   salt.state:
     - tgt: {{ master_id }}
@@ -76,7 +80,7 @@ update_modules:
       - docker.stop
       - etcd.stop
     - require:
-      - salt: {{ master_id }}-pre-shutdown
+      - salt: {{ master_id }}-set-update-grain
 
 # Perform any migratrions necessary before services are shutdown
 {{ master_id }}-pre-reboot:
@@ -166,15 +170,6 @@ update_modules:
       - salt: {{ master_id }}-remove-update-grain
 {%- endfor %}
 
-# Perform any migrations necessary before shutting down services
-{{ worker_id }}-pre-shutdown:
-  salt.state:
-    - tgt: {{ worker_id }}
-    - sls:
-      - cni.update-pre-shutdown
-    - require:
-      - salt: {{ worker_id }}-set-update-grain
-
 # Call the node clean shutdown script
 {{ worker_id }}-clean-shutdown:
   salt.state:
@@ -186,7 +181,7 @@ update_modules:
       - docker.stop
       - etcd.stop
     - require:
-      - salt: {{ worker_id }}-pre-shutdown
+      - salt: {{ worker_id }}-set-update-grain
 
 # Perform any migrations necessary before rebooting
 {{ worker_id }}-pre-reboot:
