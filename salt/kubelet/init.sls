@@ -86,7 +86,7 @@ kubelet:
   # RAR: Increasing the timeout to 5 minutes, since this now occurs during the initial
   # bootstrap - it takes more than 60 seconds before kube-apiserver is running.
   # DO NOT uncordon the "master" nodes, this makes them schedulable.
-{% if not "kube-master" in salt['grains.get']('roles', []) %}
+{% if not "kube-master" in salt['grains.get']('roles', []) and salt['grains.get']('kubelet:should_uncordon', false) %}
   cmd.run:
     - name: |
         ELAPSED=0
@@ -101,6 +101,11 @@ kubelet:
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
 {% endif %}
+
+remove-should-uncordon-grain:
+  grains.absent:
+    - name: kubelet:should_uncordon
+    - destructive: True
 
 #######################
 # config files
