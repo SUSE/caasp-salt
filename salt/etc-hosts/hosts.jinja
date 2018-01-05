@@ -12,17 +12,17 @@
 ### admin nodes ###
 {%- set admins = salt['mine.get']('roles:admin', 'network.interfaces', 'grain') %}
 {%- for admin_id, ifaces in admins.items() %}
-{{ salt.caasp_net.get_primary_ip(host=admin_id, ifaces=ifaces) }} {{ admin_id }} {{ admin_id }}.{{ pillar['internal_infra_domain'] }}
+{{ salt.caasp_net.get_primary_ip(host=admin_id, ifaces=ifaces) }} {{ salt.caasp_net.get_nodename(host=admin_id) }} {{ salt.caasp_net.get_nodename(host=admin_id) }}.{{ pillar['internal_infra_domain'] }} {{ admin_id }} {{ admin_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}
 
 ### kubernetes masters ###
 {%- set masters = salt['mine.get']('roles:kube-master', 'network.interfaces', 'grain') %}
 {%- for master_id, ifaces in masters.items() %}
-{{ salt.caasp_net.get_primary_ip(host=master_id, ifaces=ifaces) }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }}
+{{ salt.caasp_net.get_primary_ip(host=master_id, ifaces=ifaces) }} {{ salt.caasp_net.get_nodename(host=master_id) }} {{ salt.caasp_net.get_nodename(host=master_id) }}.{{ pillar['internal_infra_domain'] }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}
 
 ### kubernetes workers ###
 {%- set minions = salt['mine.get']('roles:kube-minion', 'network.interfaces', 'grain') %}
 {%- for minion_id, ifaces in minions.items() %}
-{{ salt.caasp_net.get_primary_ip(host=minion_id, ifaces=ifaces) }} {{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}
+{{ salt.caasp_net.get_primary_ip(host=minion_id, ifaces=ifaces) }} {{ salt.caasp_net.get_nodename(host=minion_id) }} {{ salt.caasp_net.get_nodename(host=minion_id) }}.{{ pillar['internal_infra_domain'] }} {{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}
 {%- endfor %}

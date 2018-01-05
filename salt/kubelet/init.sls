@@ -19,7 +19,7 @@ include:
 {% endif %}
 
 {% from '_macros/certs.jinja' import certs with context %}
-{{ certs('node:' + grains['caasp_fqdn'],
+{{ certs('node:' + grains['nodename'],
          pillar['ssl']['kubelet_crt'],
          pillar['ssl']['kubelet_key'],
          o = 'system:nodes') }}
@@ -101,12 +101,12 @@ kubelet:
 {% if not "kube-master" in salt['grains.get']('roles', []) and salt['grains.get']('kubelet:should_uncordon', false) %}
   caasp_cmd.run:
     - name: |
-        kubectl uncordon {{ grains['caasp_fqdn'] }}
+        kubectl uncordon {{ grains['nodename'] }}
     - retry:
         attempts: 10
         interval: 3
         until: |
-          test "$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['caasp_fqdn'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" != "true"
+          test "$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['nodename'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" != "true"
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
 {% endif %}

@@ -12,8 +12,8 @@ KUBELET_ADDRESS="--address=0.0.0.0"
 # The port for the info server to serve on
 KUBELET_PORT="--port={{ pillar['kubelet']['port'] }}"
 
-# Use <machine_id>.<internal_infra_domain> matching the SSL certificates
-KUBELET_HOSTNAME="--hostname-override={{ grains['caasp_fqdn'] }}"
+# Ensure we match the machine hostname
+KUBELET_HOSTNAME="--hostname-override={{ grains['nodename'] }}"
 
 # Add your own!
 KUBELET_ARGS="\
