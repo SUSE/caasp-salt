@@ -4,6 +4,8 @@
 include:
   - kubectl-config
 
+{% set should_uncordon = salt['cmd.run']("kubectl --kubeconfig=" + pillar['paths']['kubeconfig'] + " get nodes " + grains['caasp_fqdn'] + " -o=jsonpath='{.spec.unschedulable}' 2>/dev/null") != "true" %}
+
 # If this fails we should ignore it and proceed anyway as Kubernetes will recover
 drain-kubelet:
   cmd.run:
@@ -13,6 +15,10 @@ drain-kubelet:
       - /bin/true
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
+  grains.present:
+    - name: kubelet:should_uncordon
+    - value: {{ should_uncordon }}
+    - force: True
 
 kubelet:
   service.dead:
