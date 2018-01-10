@@ -2,11 +2,6 @@
 {% macro alt_names(lst=[]) -%}
   {#- add all the names and IPs we know about -#}
   {%- set altNames = ["DNS: " + grains['caasp_fqdn'] ] -%}
-  {%- for _, interface_addresses in grains['ip4_interfaces'].items() -%}
-    {%- for interface_address in interface_addresses -%}
-      {%- do altNames.append("IP: " + interface_address) -%}
-    {%- endfor -%}
-  {%- endfor -%}
   {#- append all the names/IPs provided (if not empty) -#}
   {%- for name in lst -%}
     {%- if name and name|length > 0 -%}
