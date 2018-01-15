@@ -5,6 +5,7 @@ base:
   'roles:(admin|kube-(master|minion))':
     - match: grain_pcre
     - hostname
+    - swap
     - etc-hosts
     - proxy
     - rebootmgr
