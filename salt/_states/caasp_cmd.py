@@ -1,8 +1,10 @@
 from __future__ import absolute_import
+
 import time
 
 import salt.exceptions
 import salt.utils
+
 
 def run(name,
         onlyif=None,
@@ -157,10 +159,10 @@ def run(name,
         by runing the `until` condition.
 
     '''
-    ### NOTE: The keyword arguments in **kwargs are passed directly to the
-    ###       ``cmd.run_all`` function and cannot be removed from the function
-    ###       definition, otherwise the use of unsupported arguments in a
-    ###       ``caasp_cmd.run`` state will result in a traceback.
+    # NOTE: The keyword arguments in **kwargs are passed directly to the
+    # ``cmd.run_all`` function and cannot be removed from the function
+    # definition, otherwise the use of unsupported arguments in a
+    # ``caasp_cmd.run`` state will result in a traceback.
 
     retry_ = {'attempts': 1,
               'interval': 1,
@@ -214,13 +216,14 @@ def run(name,
                 return ret_success
 
             # append the 'until' command output, so we can have some debugging info...
-            ret['comment'] = ret['comment'] + "(until: " + retry_until_ret['comment'] + ")"
+            ret['comment'] = ret['comment'] + \
+                "(until: " + retry_until_ret['comment'] + ")"
 
         if attempt + 1 == retry_['attempts']:
             break
 
         if retry_['interval'] > 0:
-          time.sleep(retry_['interval'])
+            time.sleep(retry_['interval'])
 
     return {'name': name,
             'changes': ret['changes'],

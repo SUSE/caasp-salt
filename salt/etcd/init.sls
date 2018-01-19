@@ -3,6 +3,26 @@ include:
   - ca-cert
   - cert
 
+{%- set addition_in_progress = salt['grains.get']('addition_in_progress', False) %}
+{%- if addition_in_progress %}
+
+# add the member to the cluster _before_ `etcd` is started
+# then `etcd` will have to be started with the `existing` flag
+add-etcd-to-cluster:
+  pkg.installed:
+    - name: etcdctl
+    - require:
+      - file: /etc/zypp/repos.d/containers.repo
+  caasp_etcd.member_add:
+    - require:
+      - {{ pillar['ssl']['crt_file'] }}
+      - {{ pillar['ssl']['key_file'] }}
+      - {{ pillar['ssl']['ca_file'] }}
+    - require_in:
+      - etcd
+
+{%- endif %}
+
 etcd:
   group.present:
     - name: etcd
@@ -39,9 +59,9 @@ etcd:
     - proto: tcp
   caasp_service.running_stable:
     - name: etcd
-    - successful_retries_in_a_row: 50
-    - max_retries: 300
-    - delay_between_retries: 0.1
+    - successful_retries_in_a_row: 10
+    - max_retries: 30
+    - delay_between_retries: 1
     - enable: True
     - require:
       - sls: ca-cert
@@ -51,19 +71,12 @@ etcd:
       - {{ pillar['ssl']['crt_file'] }}
       - {{ pillar['ssl']['key_file'] }}
       - {{ pillar['ssl']['ca_file'] }}
-    - watch:
       - file: /etc/sysconfig/etcd
+    {%- if addition_in_progress %}
+      - add-etcd-to-cluster
+    {%- endif %}
   # wait until etcd is actually up and running
-  caasp_cmd.run:
-    - name: |
-        etcdctl --key-file {{ pillar['ssl']['key_file'] }} \
-                --cert-file {{ pillar['ssl']['crt_file'] }} \
-                --ca-file {{ pillar['ssl']['ca_file'] }} \
-                --endpoints https://{{ grains['nodename'] }}:2379 \
-                cluster-health | grep "cluster is healthy"
-    - retry:
-        attempts: 10
-        interval: 4
+  caasp_etcd.healthy:
     - watch:
       - caasp_service: etcd
 
@@ -78,15 +91,6 @@ etcd:
       - pkg: etcd
       - user: etcd
       - group: etcd
-
-/etc/systemd/system/etcd.service.d/etcd.conf:
-  file.managed:
-    - source: salt://etcd/etcd.conf
-    - makedirs: True
-  module.run:
-    - name: service.systemctl_reload
-    - onchanges:
-      - file: /etc/systemd/system/etcd.service.d/etcd.conf
 
 # note: this will be used to run etcdctl client command
 /etc/sysconfig/etcdctl:
