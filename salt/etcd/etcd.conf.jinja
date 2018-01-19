@@ -24,17 +24,14 @@ ETCD_PEER_TRUSTED_CA_FILE={{ pillar['ssl']['ca_file'] }}
 ETCD_PEER_CLIENT_CERT_AUTH="true"
 # ETCD_PEER_AUTO_TLS=on
 
-{%- set etcd_members_tuples = salt['mine.get']('G@roles:etcd', 'nodename', expr_form='compound').items() %}
-{%- set etcd_members_urls = [] %}
-{%- for id, addr in etcd_members_tuples %}
-  {%- do etcd_members_urls.append(id + "=https://" + addr + ":2380") %}
-{%- endfor %}
-
-ETCD_INITIAL_CLUSTER="{{ etcd_members_urls|join(',') }}"
-# ETCD_INITIAL_CLUSTER_STATE="existing"
-
+ETCD_INITIAL_CLUSTER="{{ salt.caasp_etcd.get_endpoints(with_id=True, port=2380) }}"
 ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
 ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ this_addr }}:2380"
+
+{#- we will not use "existing" unless we are adding a new node to the cluster  #}
+{%- if salt['grains.get']('addition_in_progress', False) %}
+ETCD_INITIAL_CLUSTER_STATE="existing"
+{%- endif %}
 
 # set log level
 {% if pillar['etcd']['log_level'] == 'DEBUG' -%}

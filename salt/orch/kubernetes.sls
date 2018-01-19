@@ -226,9 +226,10 @@ set-bootstrap-complete-flag:
 clear-bootstrap-in-progress-flag:
   salt.function:
     - tgt: '*'
-    - name: grains.setval
+    - name: grains.delval
     - arg:
       - bootstrap_in_progress
-      - false
+    - kwarg:
+        destructive: True
     - require:
       - set-bootstrap-complete-flag
