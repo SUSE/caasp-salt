@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   creationTimestamp: null
@@ -9,6 +9,10 @@ metadata:
   name: tiller
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: helm
+      name: tiller
   strategy: {}
   template:
     metadata:
