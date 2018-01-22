@@ -27,7 +27,6 @@ etc_hosts_setup:
   salt.state:
     - tgt: {{ updates_all_target }}
     - tgt_type: compound
-    - queue: True
     - sls:
       - etc-hosts
     - require:

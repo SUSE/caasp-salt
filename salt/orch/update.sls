@@ -1,3 +1,14 @@
+# Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
+# the update-etc-hosts orchestration can run in between machine restarts.
+set-update-grain:
+  salt.function:
+    - tgt: G@roles:kube-* and G@tx_update_reboot_needed:true
+    - tgt_type: compound
+    - name: grains.setval
+    - arg:
+      - update_in_progress
+      - true
+
 # Generic Updates
 update_pillar:
   salt.function:
@@ -30,17 +41,6 @@ update_modules:
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
 
-# Ensure the node is marked as upgrading
-{{ master_id }}-set-update-grain:
-  salt.function:
-    - tgt: {{ master_id }}
-    - name: grains.setval
-    - arg:
-      - update_in_progress
-      - true
-    - require:
-      - salt: update_modules
-
 {{ master_id }}-clean-shutdown:
   salt.state:
     - tgt: {{ master_id }}
@@ -52,8 +52,6 @@ update_modules:
       - docker.stop
       - flannel.stop
       - etcd.stop
-    - require:
-      - salt: {{ master_id }}-set-update-grain
 
 # Reboot the node
 {{ master_id }}-reboot:
@@ -99,10 +97,11 @@ update_modules:
 {{ master_id }}-remove-update-grain:
   salt.function:
     - tgt: {{ master_id }}
-    - name: grains.setval
+    - name: grains.delval
     - arg:
       - update_in_progress
-      - false
+    - kwarg:
+        destructive: True
     - require:
       - salt: {{ master_id }}-update-reboot-needed-grain
 
@@ -110,15 +109,6 @@ update_modules:
 
 {%- set workers = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for worker_id, ip in workers.items() %}
-
-# Ensure the node is marked as upgrading
-{{ worker_id }}-set-update-grain:
-  salt.function:
-    - tgt: {{ worker_id }}
-    - name: grains.setval
-    - arg:
-      - update_in_progress
-      - true
 
 # Call the node clean shutdown script
 {{ worker_id }}-clean-shutdown:
@@ -131,8 +121,13 @@ update_modules:
       - docker.stop
       - flannel.stop
       - etcd.stop
+{% if masters|length > 0 %}
     - require:
-      - salt: {{ worker_id }}-set-update-grain
+      # wait until all the masters have been updated
+{%- for master_id in masters.keys() %}
+      - salt: {{ master_id }}-remove-update-grain
+{%- endfor %}
+{% endif %}
 
 # Reboot the node
 {{ worker_id }}-reboot:
@@ -178,10 +173,11 @@ update_modules:
 {{ worker_id }}-remove-update-grain:
   salt.function:
     - tgt: {{ worker_id }}
-    - name: grains.setval
+    - name: grains.delval
     - arg:
       - update_in_progress
-      - false
+    - kwarg:
+        destructive: True
     - require:
       - salt: {{ worker_id }}-update-reboot-needed-grain
 
