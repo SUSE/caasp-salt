@@ -1,3 +1,9 @@
+patch-salt:
+  salt.state:
+    - tgt: '*'
+    - sls:
+      - patch-salt
+
 # Ensure the node is marked as bootstrapping
 set_bootstrap_in_progress_flag:
   salt.function:
