@@ -69,7 +69,7 @@ kube-scheduler-config:
     - template: jinja
     - require:
       - pkg: kubernetes-common
-      - {{ pillar['ssl']['kube_scheduler_crt'] }}
+      - caasp_retriable: {{ pillar['ssl']['kube_scheduler_crt'] }}
     - defaults:
         user: 'default-admin'
         client_certificate: {{ pillar['ssl']['kube_scheduler_crt'] }}
