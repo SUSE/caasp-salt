@@ -19,4 +19,4 @@ openldap_restart:
             docker restart $openldap_id
         fi
     - onchanges:
-      - x509: {{ pillar['ssl']['ldap_crt'] }}
+      - caasp_retriable: {{ pillar['ssl']['ldap_crt'] }}
