@@ -30,7 +30,7 @@ kubelet-config:
     - template: jinja
     - require:
       - pkg: kubernetes-common
-      - {{ pillar['ssl']['kubelet_crt'] }}
+      - caasp_retriable: {{ pillar['ssl']['kubelet_crt'] }}
     - defaults:
         user: 'default-admin'
         client_certificate: {{ pillar['ssl']['kubelet_crt'] }}
