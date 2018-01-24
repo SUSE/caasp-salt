@@ -8,9 +8,3 @@ remove-docker-iface:
     - check_cmd:
       - /bin/true
     # TODO: maybe we should restart dockerd...
-
-remove-flannel-iface:
-  cmd.run:
-    - name: ip link delete flannel.1
-    - check_cmd:
-      - /bin/true
