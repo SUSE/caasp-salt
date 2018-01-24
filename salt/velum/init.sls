@@ -27,6 +27,6 @@ velum_restart:
         fi
     - onchanges:
       - x509: {{ pillar['ssl']['velum_key'] }}
-      - x509: {{ pillar['ssl']['velum_crt'] }}
+      - caasp_retriable: {{ pillar['ssl']['velum_crt'] }}
     - onchanges_in:
       - cmd: update-velum-hosts
