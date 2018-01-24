@@ -24,7 +24,7 @@ include:
     - group: root
     - mode: 644
     - require:
-      - x509: /etc/pki/dex.crt
+      - caasp_retriable: /etc/pki/dex.crt
 
 /root/roles.yaml:
   file.managed:
@@ -47,7 +47,7 @@ dex_secrets:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
       - kube-apiserver
-      - x509: /etc/pki/dex.crt
+      - caasp_retriable: /etc/pki/dex.crt
       - {{ pillar['paths']['kubeconfig'] }}
 
 dex_instance:

@@ -44,15 +44,15 @@ kube-apiserver:
     - enable:     True
     - require:
       - caasp_retriable: iptables-kube-apiserver
-      - sls:      ca-cert
-      - {{ pillar['ssl']['kube_apiserver_crt'] }}
-      - x509:     {{ pillar['paths']['service_account_key'] }}
+      - sls:             ca-cert
+      - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
+      - x509:            {{ pillar['paths']['service_account_key'] }}
     - watch:
-      - sls:      kubernetes-common
-      - file:     kube-apiserver
-      - sls:      ca-cert
-      - {{ pillar['ssl']['kube_apiserver_crt'] }}
-      - x509:     {{ pillar['paths']['service_account_key'] }}
+      - sls:             kubernetes-common
+      - file:            kube-apiserver
+      - sls:             ca-cert
+      - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
+      - x509:            {{ pillar['paths']['service_account_key'] }}
   # wait until the API server is actually up and running
   http.wait_for_successful_query:
     {% set api_server = "api." + pillar['internal_infra_domain']  -%}

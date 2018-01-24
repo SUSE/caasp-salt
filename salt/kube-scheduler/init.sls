@@ -23,7 +23,7 @@ kube-scheduler:
       - kube-scheduler-config
 
 {{ pillar['ssl']['kube_scheduler_key'] }}:
-  x509.private_key_managed:    
+  x509.private_key_managed:
     - bits: 4096
     - user: root
     - group: root
@@ -33,7 +33,8 @@ kube-scheduler:
       - file: /etc/pki
 
 {{ pillar['ssl']['kube_scheduler_crt'] }}:
-  x509.certificate_managed:
+  caasp_retriable.retry:
+    - target: x509.certificate_managed
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: {{ pillar['ssl']['kube_scheduler_key'] }}
@@ -55,6 +56,8 @@ kube-scheduler:
     - user: root
     - group: root
     - mode: 644
+    - retry:
+        attempts: 5
     - require:
       - sls:  crypto
       - {{ pillar['ssl']['kube_scheduler_key'] }}

@@ -65,7 +65,8 @@
       - file: /etc/pki
 
 {{ crt }}:
-  x509.certificate_managed:
+  caasp_retriable.retry:
+    - target: x509.certificate_managed
     - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
     - signing_policy: minion
     - public_key: {{ key }}
@@ -98,6 +99,8 @@
     - user: root
     - group: root
     - mode: 644
+    - retry:
+        attempts: 5
     - require:
       - sls: crypto
       - x509: {{ key }}
@@ -115,7 +118,7 @@
         certificate: {{ crt }}
         key:         {{ key }}
     - onchanges:
-        - x509: {{ crt }}
+        - caasp_retriable: {{ crt }}
         - x509: {{ key }}
 
 {%- endmacro %}
