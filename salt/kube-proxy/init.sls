@@ -14,7 +14,7 @@ include:
     - template: jinja
     - require:
       - pkg: kubernetes-common
-      - {{ pillar['ssl']['kube_proxy_crt'] }}
+      - caasp_retriable: {{ pillar['ssl']['kube_proxy_crt'] }}
     - defaults:
         user: 'default-admin'
         client_certificate: {{ pillar['ssl']['kube_proxy_crt'] }}
