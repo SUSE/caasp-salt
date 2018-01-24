@@ -30,7 +30,10 @@ def retry(name, target, retry={}, **kwargs):
     ret = None
 
     for attempt in xrange(retry_['attempts']):
-        ret = __states__[target](name=name, **kwargs)
+        try:
+            ret = __states__[target](name=name, **kwargs)
+        except BaseException as e:
+            ret = {'result': False, 'changes': False, 'comment': 'Exception raised: {0}'.format(e)}
 
         if ret['result']:
             return {

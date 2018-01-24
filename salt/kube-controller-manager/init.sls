@@ -71,7 +71,7 @@ kube-controller-mgr-config:
     - template: jinja
     - require:
       - pkg: kubernetes-common
-      - {{ pillar['ssl']['kube_controller_mgr_crt'] }}
+      - caasp_retriable: {{ pillar['ssl']['kube_controller_mgr_crt'] }}
     - defaults:
         user: 'default-admin'
         client_certificate: {{ pillar['ssl']['kube_controller_mgr_crt'] }}
