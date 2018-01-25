@@ -2,7 +2,7 @@
 
 {# machine IDs that have the master roles assigned #}
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set super_master = masters|first %}
+{%- set super_master = masters|sort|first %}
 
 {# the number of etcd masters that should be in the cluster #}
 {%- set num_etcd_members = salt.caasp_etcd.get_cluster_size() %}

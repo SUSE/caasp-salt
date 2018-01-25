@@ -64,7 +64,19 @@
     - name:        {{ manifest }}
     - source:      {{ src }}
     - template:    jinja
+
+kubectl-apply-{{ manifest }}:
   {{ _kubectl_run("apply -f " + manifest,
                   watch=["file: " + manifest] + kwargs.pop('watch', []),
                   **kwargs) }}
+    {# make this idempotent by using a 'onchanges' on the file #}
+    - onchanges:
+      - file: {{ manifest }}
+
+cleanup-{{ manifest }}:
+  cmd.run:
+    - name: rm -f {{ manifest }}
+    - onfail:
+      - kubectl-apply-{{ manifest }}
+
 {%- endmacro %}

@@ -328,7 +328,7 @@ kubelet-setup:
 {%- endfor %}
 
 {%- set all_masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set super_master = all_masters|first %}
+{%- set super_master = all_masters|sort|first %}
 
 # we must start CNI right after the masters/minions reach highstate,
 # as nodes will be NotReady until the CNI DaemonSet is loaded and running...
