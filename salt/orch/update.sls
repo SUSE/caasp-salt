@@ -63,6 +63,7 @@ pre-orchestration-migration:
     - sls:
       - cni.update-pre-orchestration
       - kubelet.update-pre-orchestration
+      - etcd.update-pre-orchestration
     - require:
       - update-modules
 
