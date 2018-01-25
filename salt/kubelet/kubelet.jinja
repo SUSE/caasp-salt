@@ -3,8 +3,6 @@
 {% set api_server_url = 'https://' + api_server + ':' + api_ssl_port -%}
 {% set cloud_provider = salt.caasp_pillar.get('cloud:provider') %}
 
-{% from '_macros/network.jinja' import get_primary_ip with context %}
-
 ###
 # kubernetes kubelet (minion) config
 
@@ -21,7 +19,7 @@ KUBELET_HOSTNAME="--hostname-override={{ grains['caasp_fqdn'] }}"
 KUBELET_ARGS="\
     --cluster-dns={{ pillar['dns']['cluster_ip'] }} \
     --cluster-domain={{ pillar['dns']['domain'] }} \
-    --node-ip={{ get_primary_ip() }} \
+    --node-ip={{ salt.caasp_net.get_primary_ip() }} \
 {% if grains['lsb_distrib_id'] == "CAASP" -%}
     --pod-manifest-path=/etc/kubernetes/manifests \
     --pod-infra-container-image={{ pillar['pod_infra_container_image'] }} \
