@@ -4,8 +4,6 @@
 # The following values are used to configure the kube-apiserver
 #
 
-{% from '_macros/network.jinja' import get_primary_ip with context %}
-
 # The address on the local server to listen to.
 KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 
@@ -30,7 +28,7 @@ KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}
 KUBE_ADMISSION_CONTROL="--admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,NodeRestriction,DefaultStorageClass,DefaultTolerationSeconds,ResourceQuota"
 
 # Add your own!
-KUBE_API_ARGS="--advertise-address={{ get_primary_ip() }} \
+KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --apiserver-count={{ salt['mine.get']('roles:kube-master', 'caasp_fqdn', expr_form='grain').values()|length }} \
 {% if salt['pillar.get']('cloud:provider', '') != '' -%}
                --cloud-provider={{ pillar['cloud']['provider'] }} \
