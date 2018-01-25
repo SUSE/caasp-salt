@@ -40,7 +40,7 @@ def retry(name, target, retry={}, **kwargs):
                 'name': "caasp_retriable.{0}.{1}".format(name, target),
                 'changes': ret['changes'],
                 'result': True,
-                'comment': "Command executed succesfully after {0} retries. "
+                'comment': "Command executed succesfully after {0} attempts. "
                 "Last output: {1}".format(attempt + 1, ret['comment'])}
 
         if attempt + 1 == retry_['attempts']:
@@ -53,7 +53,7 @@ def retry(name, target, retry={}, **kwargs):
         'name': "caasp_retriable.{0}.{1}".format(name, target),
         'changes': ret['changes'],
         'result': False,
-        'comment': "Command failed after {0} retries. "
+        'comment': "Command failed after {0} attempts. "
                    "Last output: {1} "
                    "Params: {2}".format(
                        retry_['attempts'],
