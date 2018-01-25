@@ -34,6 +34,7 @@ etcd:
     - connstate: NEW
     # TODO: add "- source: <local-subnet>"
     - dports:
+        - 2379
         - 2380
     - proto: tcp
   caasp_service.running_stable:

@@ -2,7 +2,6 @@ include:
   - repositories
   - ca-cert
   - cert
-  - etcd
   - kubernetes-common
   - kubectl-config
 

@@ -90,7 +90,7 @@ paths:
 # - the discovery id is also unique for all the machines in the
 #   cluster (in fact, it can be the same as the token)
 # - if masters is null, we will determine the number of etcd members
-#   based on the number of nodes with the kube-master role applied
+#   based on the recommended member count (currently, 3)
 # - For an etcd cluster to be effective, the number of cluster members
 #   must be both odd and reasonably small, for example - 1,3,5 are
 #   valid while 2,4,6 are not. In addition, clusters larger than 5 are
@@ -100,9 +100,6 @@ paths:
 etcd:
   masters:        null
   token:          'k8s'
-  disco:
-    port:         '2379'
-    id:           'k8s'
 # set log level for etcd service
 # potential log levels are:
 # [ CRITICAL, ERROR, WARNING NOTICE, INFO, DEBUG ]

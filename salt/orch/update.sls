@@ -87,6 +87,7 @@ pre-orchestration-migration:
     - tgt: {{ master_id }}
     - sls:
       - cni.update-pre-reboot
+      - etcd.update-pre-reboot
     - require:
       - {{ master_id }}-clean-shutdown
 
