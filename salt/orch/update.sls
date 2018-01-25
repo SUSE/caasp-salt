@@ -1,3 +1,14 @@
+# Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
+# the update-etc-hosts orchestration can run in between machine restarts.
+set-update-grain:
+  salt.function:
+    - tgt: G@roles:kube-* and G@tx_update_reboot_needed:true
+    - tgt_type: compound
+    - name: grains.setval
+    - arg:
+      - update_in_progress
+      - true
+
 # Generate sa key (we should refactor this as part of the ca highstate along with its counterpart
 # in orch/kubernetes.sls)
 generate_sa_key:
@@ -58,17 +69,6 @@ pre-orchestration-migration:
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
 
-# Ensure the node is marked as upgrading
-{{ master_id }}-set-update-grain:
-  salt.function:
-    - tgt: {{ master_id }}
-    - name: grains.setval
-    - arg:
-      - update_in_progress
-      - true
-    - require:
-      - salt: update_modules
-
 {{ master_id }}-clean-shutdown:
   salt.state:
     - tgt: {{ master_id }}
@@ -79,8 +79,6 @@ pre-orchestration-migration:
       - kube-scheduler.stop
       - docker.stop
       - etcd.stop
-    - require:
-      - salt: {{ master_id }}-set-update-grain
 
 # Perform any migratrions necessary before services are shutdown
 {{ master_id }}-pre-reboot:
@@ -140,35 +138,10 @@ pre-orchestration-migration:
     - require:
       - salt: {{ master_id }}-post-start-services
 
-# Ensure the node is marked as finished upgrading
-{{ master_id }}-remove-update-grain:
-  salt.function:
-    - tgt: {{ master_id }}
-    - name: grains.setval
-    - arg:
-      - update_in_progress
-      - false
-    - require:
-      - salt: {{ master_id }}-reboot-needed-grain
-
 {% endfor %}
 
 {%- set workers = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for worker_id, ip in workers.items() %}
-
-# Ensure the node is marked as upgrading
-{{ worker_id }}-set-update-grain:
-  salt.function:
-    - tgt: {{ worker_id }}
-    - name: grains.setval
-    - arg:
-      - update_in_progress
-      - true
-    - require:
-      # wait until all the masters have been updated
-{%- for master_id in masters.keys() %}
-      - salt: {{ master_id }}-remove-update-grain
-{%- endfor %}
 
 # Call the node clean shutdown script
 {{ worker_id }}-clean-shutdown:
@@ -180,8 +153,13 @@ pre-orchestration-migration:
       - kube-proxy.stop
       - docker.stop
       - etcd.stop
+{% if masters|length > 0 %}
     - require:
-      - salt: {{ worker_id }}-set-update-grain
+      # wait until all the masters have been updated
+{%- for master_id in masters.keys() %}
+      - salt: {{ master_id }}-reboot-needed-grain
+{%- endfor %}
+{% endif %}
 
 # Perform any migrations necessary before rebooting
 {{ worker_id }}-pre-reboot:
@@ -245,17 +223,24 @@ pre-orchestration-migration:
 {{ worker_id }}-remove-update-grain:
   salt.function:
     - tgt: {{ worker_id }}
-    - name: grains.setval
+    - name: grains.delval
     - arg:
       - update_in_progress
-      - false
+    - kwarg:
+        destructive: True
     - require:
       - salt: {{ worker_id }}-update-reboot-needed-grain
 
 {% endfor %}
 
-{%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set super_master = masters|first %}
+# At this point in time, all workers have been removed the `update_in_progress` grain, so the
+# update-etc-hosts orchestration can potentially run on them. We need to keep the masters locked
+# (at least the one that we will use to run other tasks in [super_master]). In any case, for the
+# sake of simplicity we keep all of them locked until the very end of the orchestration, when we'll
+# release all of them (removing the `update_in_progress` grain).
+
+{%- set all_masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set super_master = all_masters|first %}
 
 # we must start CNI right after the masters/minions reach highstate,
 # as nodes will be NotReady until the CNI DaemonSet is loaded and running...
@@ -264,11 +249,13 @@ cni_setup:
     - tgt: {{ super_master }}
     - sls:
       - cni
+{% if workers|length > 0 %}
     - require:
 # wait until all the machines in the cluster have been upgraded
 {%- for worker_id in workers.keys() %}
       - salt: {{ worker_id }}-remove-update-grain
 {%- endfor %}
+{% endif %}
 
 # (re-)apply all the manifests
 # this will perform a rolling-update for existing daemonsets
@@ -282,3 +269,15 @@ services_setup:
       - dex
     - require:
       - cni_setup
+
+masters-remove-update-grain:
+  salt.function:
+    - tgt: G@roles:kube-master and G@update_in_progress:true
+    - tgt_type: compound
+    - name: grains.delval
+    - arg:
+      - update_in_progress
+    - kwarg:
+        destructive: True
+    - require:
+      - salt: services_setup
