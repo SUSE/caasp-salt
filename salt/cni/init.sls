@@ -7,44 +7,23 @@ include:
 # flannel CNI plugin
 #######################
 
+{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_template with context %}
+
 {% set plugin = salt['pillar.get']('cni:plugin', 'flannel').lower() %}
 {% if plugin == "flannel" %}
 
-/etc/kubernetes/addons/kube-flannel-rbac.yaml:
-  file.managed:
-    - source:      salt://cni/kube-flannel-rbac.yaml.jinja
-    - template:    jinja
-    - makedirs:    true
-    - require:
-      - file:      /etc/kubernetes/addons
-  cmd.run:
-    - name: |
-        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/kube-flannel-rbac.yaml
-    - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - require:
-      - kube-apiserver
-      - file:      {{ pillar['paths']['kubeconfig'] }}
-    - watch:
-      - file:       /etc/kubernetes/addons/kube-flannel-rbac.yaml
+{{ kubectl_apply_template("salt://cni/kube-flannel-rbac.yaml.jinja",
+                          "/etc/kubernetes/addons/kube-flannel-rbac.yaml",
+                          kubectl_args="--namespace kube-system",
+                          require=['/etc/kubernetes/addons',
+                                   'kube-apiserver',
+                                   pillar['paths']['kubeconfig']]) }}
 
-/etc/kubernetes/addons/kube-flannel.yaml:
-  file.managed:
-    - source:      salt://cni/kube-flannel.yaml.jinja
-    - template:    jinja
-    - makedirs:    true
-    - require:
-      - file:      /etc/kubernetes/addons
-  cmd.run:
-    - name: |
-        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/kube-flannel.yaml
-    - env:
-      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
-    - require:
-      - kube-apiserver
-      - file:      {{ pillar['paths']['kubeconfig'] }}
-    - watch:
-      - /etc/kubernetes/addons/kube-flannel-rbac.yaml
-      - file:      /etc/kubernetes/addons/kube-flannel-rbac.yaml
+{{ kubectl_apply_template("salt://cni/kube-flannel.yaml.jinja",
+                          "/etc/kubernetes/addons/kube-flannel.yaml",
+                          kubectl_args="--namespace kube-system",
+                          require=['/etc/kubernetes/addons',
+                                   '/etc/kubernetes/addons/kube-flannel-rbac.yaml',
+                                   pillar['paths']['kubeconfig']]) }}
 
 {% endif %}

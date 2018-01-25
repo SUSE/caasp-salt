@@ -5,6 +5,7 @@ coreutils:
 unmount-swaps:
   cmd.run:
     - name: /sbin/swapoff -a
+    - onlyif: test `tail -n +2 /proc/swaps | wc -l` != 0
 
 remove-swap-from-fstab:
   file.line:

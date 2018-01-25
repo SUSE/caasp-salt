@@ -11,7 +11,7 @@
 
 {% macro _kubectl_run(args) -%}
   caasp_cmd.run:
-    - name: kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} {{ args }}
+    - name: kubectl {{ kwargs.get('kubectl_args', '') }} --kubeconfig={{ pillar['paths']['kubeconfig'] }} {{ args }}
     - retry:
         attempts: 10
         interval: 1
@@ -54,7 +54,7 @@
 {% macro kubectl_apply(manifest) -%}
 {{ manifest }}:
   {{ _kubectl_run("apply -f " + manifest, **kwargs) }}
-{%- endmacro %}
+{% endmacro %}
 
 #####################################################################
 
@@ -64,19 +64,25 @@
     - name:        {{ manifest }}
     - source:      {{ src }}
     - template:    jinja
-
-kubectl-apply-{{ manifest }}:
+    - makedirs:    true
+  {%- if 'require' in kwargs %}
+    - require:
+    {%- for r in kwargs['require'] %}
+        - {{ r }}
+    {%- endfor %}
+  {%- endif %}
   {{ _kubectl_run("apply -f " + manifest,
                   watch=["file: " + manifest] + kwargs.pop('watch', []),
                   **kwargs) }}
-    {# make this idempotent by using a 'onchanges' on the file #}
+    {#- make this idempotent by using a 'onchanges' on the file: #}
+    {#- we don't run 'kubectl apply' unless the file changes     #}
     - onchanges:
       - file: {{ manifest }}
-
-cleanup-{{ manifest }}:
-  cmd.run:
+  {#- make sure we remove the manifest if something fails,     #}
+  {#- so we could run kubectl again if we orchestrate again... #}
+  cmd.run:      {#- cannot use file.absent to avoid duplicates #}
     - name: rm -f {{ manifest }}
     - onfail:
-      - kubectl-apply-{{ manifest }}
+      - caasp_cmd: {{ manifest }}
 
-{%- endmacro %}
+{% endmacro %}
