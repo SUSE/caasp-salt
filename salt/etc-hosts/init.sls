@@ -24,17 +24,35 @@ update-velum-hosts:
     - name: |-
         velum_id=$(docker ps | grep velum-dashboard | awk '{print $1}')
         if [ -n "$velum_id" ]; then
-            docker cp /etc/hosts $velum_id:/etc/hosts
+            docker cp /etc/hosts $velum_id:/etc/hosts-caasp
         fi
     - onchanges:
       - file: /etc/hosts
+update-velum-hosts2:
+  cmd.run:
+    - name: |-
+        velum_id=$(docker ps | grep velum-dashboard | awk '{print $1}')
+        if [ -n "$velum_id" ]; then
+            docker exec $velum_id bash -c "cat /etc/hosts-caasp > /etc/hosts"
+        fi
+    - onchanges:
+      - cmd: update-velum-hosts
 update-haproxy-hosts:
   cmd.run:
     - name: |-
         haproxy_id=$(docker ps | grep -E "k8s_haproxy.*\.{{ pillar['internal_infra_domain'] | replace(".", "\.") }}_kube-system_" | awk '{print $1}')
         if [ -n "$haproxy_id" ]; then
-            docker cp /etc/hosts $haproxy_id:/etc/hosts
+            docker cp /etc/hosts $haproxy_id:/etc/hosts-caasp
         fi
     - onchanges:
       - file: /etc/hosts
+update-haproxy-hosts2:
+  cmd.run:
+    - name: |-
+        haproxy_id=$(docker ps | grep -E "k8s_haproxy.*\.{{ pillar['internal_infra_domain'] | replace(".", "\.") }}_kube-system_" | awk '{print $1}')
+        if [ -n "$haproxy_id" ]; then
+            docker exec $haproxy_id bash -c "cat /etc/hosts-caasp > /etc/hosts"
+        fi
+    - onchanges:
+      - cmd: update-haproxy-hosts
 {% endif %}
