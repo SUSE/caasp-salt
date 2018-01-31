@@ -55,7 +55,6 @@ kubelet-config:
 kubelet:
   pkg.installed:
     - pkgs:
-      - iptables
       - kubernetes-client
       - kubernetes-node
     - require:
@@ -81,22 +80,6 @@ kubelet:
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial
       - kubelet-config
-  caasp_retriable.retry:
-    - name: iptables-kubelet
-    - target: iptables.append
-    - retry:
-        attempts: 2
-    - table:     filter
-    - family:    ipv4
-    - chain:     INPUT
-    - jump:      ACCEPT
-    - match:     state
-    - connstate: NEW
-    - dports:
-      - {{ pillar['kubelet']['port'] }}
-    - proto:     tcp
-    - require:
-      - service: kubelet
 
 {% if not "kube-master" in salt['grains.get']('roles', []) and salt['grains.get']('kubelet:should_uncordon', false) %}
   caasp_cmd.run:
