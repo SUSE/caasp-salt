@@ -18,24 +18,6 @@ haproxy:
     - mode: 644
     - makedirs: True
     - dir_mode: 755
-  caasp_retriable.retry:
-    - name: iptables-haproxy
-{% if "kube-master" in salt['grains.get']('roles', []) %}
-    - target: iptables.append
-{% else %}
-    - target: iptables.delete
-{% endif %}
-    - retry:
-        attempts: 2
-    - table:      filter
-    - family:     ipv4
-    - chain:      INPUT
-    - jump:       ACCEPT
-    - match:      state
-    - connstate:  NEW
-    - dports:
-      - {{ pillar['api']['ssl_port'] }}
-    - proto:      tcp
 
 # Send a HUP to haproxy when the config changes
 # TODO: There should be a better way to handle this, but currently, there is not. See

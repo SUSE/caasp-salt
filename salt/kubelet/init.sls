@@ -39,7 +39,6 @@ kubelet-config:
 kubelet:
   pkg.installed:
     - pkgs:
-      - iptables
       - kubernetes-client
       - kubernetes-node
     - require:
@@ -63,22 +62,6 @@ kubelet:
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial
       - kubelet-config
-  caasp_retriable.retry:
-    - name: iptables-kubelet
-    - target: iptables.append
-    - retry:
-        attempts: 2
-    - table:     filter
-    - family:    ipv4
-    - chain:     INPUT
-    - jump:      ACCEPT
-    - match:     state
-    - connstate: NEW
-    - dports:
-      - {{ pillar['kubelet']['port'] }}
-    - proto:     tcp
-    - require:
-      - service: kubelet
 
   # TODO: This needs to wait for the node to register, which takes a few seconds.
   # Salt doesn't seem to have a retry mechanism in the version were using, so I'm
