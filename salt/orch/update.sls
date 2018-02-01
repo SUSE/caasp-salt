@@ -11,7 +11,7 @@ set-update-grain:
 
 # Generate sa key (we should refactor this as part of the ca highstate along with its counterpart
 # in orch/kubernetes.sls)
-generate_sa_key:
+generate-sa-key:
   salt.state:
     - tgt: 'roles:ca'
     - tgt_type: grain
@@ -19,38 +19,38 @@ generate_sa_key:
       - kubernetes-common.generate-serviceaccount-key
 
 # Generic Updates
-sync_pillar:
+sync-pillar:
   salt.runner:
     - name: saltutil.sync_pillar
 
-update_pillar:
+update-pillar:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_pillar
     - require:
-      - salt: generate_sa_key
+      - generate-sa-key
 
-update_grains:
+update-grains:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_grains
 
-update_mine:
+update-mine:
   salt.function:
     - tgt: '*'
     - name: mine.update
     - require:
-       - salt: update_pillar
-       - salt: update_grains
+       - update-pillar
+       - update-grains
 
-update_modules:
+update-modules:
   salt.function:
     - name: saltutil.sync_modules
     - tgt: '*'
     - kwarg:
         refresh: True
     - require:
-      - salt: update_mine
+      - update-mine
 
 # Perform any migrations necessary before starting the update orchestration. All services and
 # machines should be running and we can migrate some data on the whole cluster and then proceed
@@ -64,7 +64,7 @@ pre-orchestration-migration:
       - cni.update-pre-orchestration
       - kubelet.update-pre-orchestration
     - require:
-      - salt: update_modules
+      - update-modules
 
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
@@ -88,7 +88,7 @@ pre-orchestration-migration:
     - sls:
       - cni.update-pre-reboot
     - require:
-      - salt: {{ master_id }}-clean-shutdown
+      - {{ master_id }}-clean-shutdown
 
 # Reboot the node
 {{ master_id }}-reboot:
@@ -100,7 +100,7 @@ pre-orchestration-migration:
     - kwarg:
         bg: True
     - require:
-      - salt: {{ master_id }}-pre-reboot
+      - {{ master_id }}-pre-reboot
 
 # Wait for it to start again
 {{ master_id }}-wait-for-start:
@@ -110,7 +110,7 @@ pre-orchestration-migration:
     - id_list:
       - {{ master_id }}
     - require:
-      - salt: {{ master_id }}-reboot
+      - {{ master_id }}-reboot
 
 # Start services
 {{ master_id }}-start-services:
@@ -118,7 +118,7 @@ pre-orchestration-migration:
     - tgt: {{ master_id }}
     - highstate: True
     - require:
-      - salt: {{ master_id }}-wait-for-start
+      - {{ master_id }}-wait-for-start
 
 # Perform any migratrions after services are started
 {{ master_id }}-post-start-services:
@@ -128,17 +128,18 @@ pre-orchestration-migration:
       - cni.update-post-start-services
       - kubelet.update-post-start-services
     - require:
-      - salt: {{ master_id }}-start-services
+      - {{ master_id }}-start-services
 
 {{ master_id }}-reboot-needed-grain:
   salt.function:
     - tgt: {{ master_id }}
-    - name: grains.setval
+    - name: grains.delval
     - arg:
       - tx_update_reboot_needed
-      - false
+    - kwarg:
+        destructive: True
     - require:
-      - salt: {{ master_id }}-post-start-services
+      - {{ master_id }}-post-start-services
 
 {% endfor %}
 
@@ -159,7 +160,7 @@ pre-orchestration-migration:
     - require:
       # wait until all the masters have been updated
 {%- for master_id in masters.keys() %}
-      - salt: {{ master_id }}-reboot-needed-grain
+      - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
 {% endif %}
 
@@ -170,7 +171,7 @@ pre-orchestration-migration:
     - sls:
       - cni.update-pre-reboot
     - require:
-      - salt: {{ worker_id }}-clean-shutdown
+      - {{ worker_id }}-clean-shutdown
 
 # Reboot the node
 {{ worker_id }}-reboot:
@@ -182,7 +183,7 @@ pre-orchestration-migration:
     - kwarg:
         bg: True
     - require:
-      - salt: {{ worker_id }}-pre-reboot
+      - {{ worker_id }}-pre-reboot
 
 # Wait for it to start again
 {{ worker_id }}-wait-for-start:
@@ -192,7 +193,7 @@ pre-orchestration-migration:
     - id_list:
       - {{ worker_id }}
     - require:
-      - salt: {{ worker_id }}-reboot
+      - {{ worker_id }}-reboot
 
 # Start services
 {{ worker_id }}-start-services:
@@ -210,17 +211,18 @@ pre-orchestration-migration:
       - cni.update-post-start-services
       - kubelet.update-post-start-services
     - require:
-      - salt: {{ worker_id }}-start-services
+      - {{ worker_id }}-start-services
 
 {{ worker_id }}-update-reboot-needed-grain:
   salt.function:
     - tgt: {{ worker_id }}
-    - name: grains.setval
+    - name: grains.delval
     - arg:
       - tx_update_reboot_needed
-      - false
+    - kwarg:
+        destructive: True
     - require:
-      - salt: {{ worker_id }}-update-post-start-services
+      - {{ worker_id }}-update-post-start-services
 
 # Ensure the node is marked as finished upgrading
 {{ worker_id }}-remove-update-grain:
@@ -232,7 +234,7 @@ pre-orchestration-migration:
     - kwarg:
         destructive: True
     - require:
-      - salt: {{ worker_id }}-update-reboot-needed-grain
+      - {{ worker_id }}-update-reboot-needed-grain
 
 {% endfor %}
 
@@ -247,7 +249,7 @@ pre-orchestration-migration:
 
 # we must start CNI right after the masters/minions reach highstate,
 # as nodes will be NotReady until the CNI DaemonSet is loaded and running...
-cni_setup:
+cni-setup:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
@@ -256,13 +258,13 @@ cni_setup:
     - require:
 # wait until all the machines in the cluster have been upgraded
 {%- for worker_id in workers.keys() %}
-      - salt: {{ worker_id }}-remove-update-grain
+      - {{ worker_id }}-remove-update-grain
 {%- endfor %}
 {% endif %}
 
 # (re-)apply all the manifests
 # this will perform a rolling-update for existing daemonsets
-services_setup:
+services-setup:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
@@ -271,7 +273,7 @@ services_setup:
       - addons.tiller
       - dex
     - require:
-      - cni_setup
+      - cni-setup
 
 # Remove the now defuct caasp_fqdn grain (Remove for 4.0).
 remove-caasp-fqdn-grain:
@@ -283,7 +285,7 @@ remove-caasp-fqdn-grain:
     - kwarg:
         destructive: True
     - require:
-      - salt: services_setup
+      - services-setup
 
 masters-remove-update-grain:
   salt.function:
@@ -295,4 +297,4 @@ masters-remove-update-grain:
     - kwarg:
         destructive: True
     - require:
-      - salt: remove-caasp-fqdn-grain
+      - remove-caasp-fqdn-grain

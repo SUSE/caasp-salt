@@ -6,7 +6,7 @@
 {%- set num_etcd_masters = salt.caasp_etcd.get_cluster_size() %}
 
 # Ensure the node is marked as bootstrapping
-set_bootstrap_in_progress_flag:
+set-bootstrap-in-progress-flag:
   salt.function:
     - tgt: '*'
     - name: grains.setval
@@ -14,92 +14,92 @@ set_bootstrap_in_progress_flag:
       - bootstrap_in_progress
       - true
 
-sync_pillar:
+sync-pillar:
   salt.runner:
     - name: saltutil.sync_pillar
 
-disable_rebootmgr:
+disable-rebootmgr:
   salt.state:
     - tgt: 'roles:(admin|kube-(master|minion))'
     - tgt_type: grain_pcre
     - sls:
       - rebootmgr
     - require:
-      - salt: set_bootstrap_in_progress_flag
+      - set-bootstrap-in-progress-flag
 
-update_pillar:
+update-pillar:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_pillar
     - require:
-      - salt: disable_rebootmgr
+      - disable-rebootmgr
 
-update_grains:
+update-grains:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_grains
     - require:
-      - salt: disable_rebootmgr
+      - disable-rebootmgr
 
-update_mine:
+update-mine:
   salt.function:
     - tgt: '*'
     - name: mine.update
     - require:
-      - salt: update_pillar
-      - salt: update_grains
+      - update-pillar
+      - update-grains
 
-update_modules:
+update-modules:
   salt.function:
     - tgt: '*'
     - name: saltutil.sync_all
     - kwarg:
         refresh: True
 
-etc_hosts_setup:
+etc-hosts-setup:
   salt.state:
     - tgt: 'roles:(admin|kube-(master|minion))'
     - tgt_type: grain_pcre
     - sls:
       - etc-hosts
     - require:
-      - salt: update_mine
+      - update-mine
 
-ca_setup:
+ca-setup:
   salt.state:
     - tgt: 'roles:ca'
     - tgt_type: grain
     - highstate: True
     - require:
-      - salt: etc_hosts_setup
-      - salt: update_mine
+      - etc-hosts-setup
+      - update-mine
 
-generate_sa_key:
+generate-sa-key:
   salt.state:
     - tgt: 'roles:ca'
     - tgt_type: grain
     - sls:
       - kubernetes-common.generate-serviceaccount-key
     - require:
-      - salt: ca_setup
+      - ca-setup
 
-update_mine_again:
+update-mine-again:
   salt.function:
     - tgt: '*'
     - name: mine.update
     - require:
-      - salt: generate_sa_key
+      - generate-sa-key
 
-etcd_discovery_setup:
+etcd-discovery-setup:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
       - etcd-discovery
     - require:
-      - salt: update_modules
+      - update-modules
 
 # setup {{ num_etcd_masters }} etcd masters
-etcd_setup:
+etcd-setup:
   salt.state:
     - tgt: 'roles:kube-(master|minion)'
     - tgt_type: grain_pcre
@@ -107,57 +107,57 @@ etcd_setup:
       - etcd
     - batch: {{ num_etcd_masters }}
     - require:
-      - salt: etcd_discovery_setup
+      - etcd-discovery-setup
 
-admin_setup:
+admin-setup:
   salt.state:
     - tgt: 'roles:admin'
     - tgt_type: grain
     - highstate: True
     - batch: {{ default_batch }}
     - require:
-      - salt: etcd_setup
+      - etcd-setup
 
-kube_master_setup:
+kube-master-setup:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
     - highstate: True
     - batch: {{ default_batch }}
     - require:
-      - salt: admin_setup
-      - salt: generate_sa_key
-      - salt: update_mine_again
+      - admin-setup
+      - generate-sa-key
+      - update-mine-again
 
-kube_minion_setup:
+kube-minion-setup:
   salt.state:
     - tgt: 'roles:kube-minion'
     - tgt_type: grain
     - highstate: True
     - batch: {{ default_batch }}
     - require:
-      - salt: kube_master_setup
+      - kube-master-setup
 
 # we must start CNI right after the masters/minions reach highstate,
 # as nodes will be NotReady until the CNI DaemonSet is loaded and running...
-cni_setup:
+cni-setup:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
       - cni
     - require:
-      - salt: kube_master_setup
-      - salt: kube_minion_setup
+      - kube-master-setup
+      - kube-minion-setup
 
-reboot_setup:
+reboot-setup:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
       - reboot
     - require:
-      - salt: cni_setup
+      - cni-setup
 
-services_setup:
+services-setup:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
@@ -166,11 +166,11 @@ services_setup:
       - addons.tiller
       - dex
     - require:
-      - salt: reboot_setup
+      - reboot-setup
 
 # This flag indicates at least one bootstrap has completed at some
 # point in time on this node.
-set_bootstrap_complete_flag:
+set-bootstrap-complete-flag:
   salt.function:
     - tgt: '*'
     - name: grains.setval
@@ -178,10 +178,10 @@ set_bootstrap_complete_flag:
       - bootstrap_complete
       - true
     - require:
-      - salt: services_setup
+      - services-setup
 
 # Ensure the node is marked as finished bootstrapping
-clear_bootstrap_in_progress_flag:
+clear-bootstrap-in-progress-flag:
   salt.function:
     - tgt: '*'
     - name: grains.setval
@@ -189,4 +189,4 @@ clear_bootstrap_in_progress_flag:
       - bootstrap_in_progress
       - false
     - require:
-      - salt: set_bootstrap_complete_flag
+      - set-bootstrap-complete-flag
