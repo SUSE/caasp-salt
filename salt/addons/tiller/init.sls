@@ -16,6 +16,10 @@ include:
            check_cmd="kubectl get clusterrolebindings | grep tiller",
            watch=["/etc/kubernetes/addons/tiller.yaml"]) }}
 
+{{ kubectl("remove-old-tiller-deployment",
+           "delete deploy tiller -n kube-system",
+           onlyif="kubectl get deploy tiller -n kube-system") }}
+
 {% else %}
 
 dummy:
