@@ -21,4 +21,9 @@ node-pem:
 
 wipe-var-lib-kubelet:
   cmd.run:
-    - name: rm -f /var/lib/kubelet/*
+    - name: |-
+        mnts=`mount | grep kubelet | grep tmpfs | cut -f3 -d" "`
+        for i in $mnts ; do
+            umount $i
+        done
+        rm -rf /var/lib/kubelet/*
