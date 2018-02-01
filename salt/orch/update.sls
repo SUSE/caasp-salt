@@ -62,6 +62,7 @@ pre-orchestration-migration:
     - batch: 3
     - sls:
       - cni.update-pre-orchestration
+      - kubelet.update-pre-orchestration
     - require:
       - salt: update_modules
 
@@ -125,6 +126,7 @@ pre-orchestration-migration:
     - tgt: {{ master_id }}
     - sls:
       - cni.update-post-start-services
+      - kubelet.update-post-start-services
     - require:
       - salt: {{ master_id }}-start-services
 
@@ -206,6 +208,7 @@ pre-orchestration-migration:
     - tgt: {{ worker_id }}
     - sls:
       - cni.update-post-start-services
+      - kubelet.update-post-start-services
     - require:
       - salt: {{ worker_id }}-start-services
 
@@ -270,6 +273,18 @@ services_setup:
     - require:
       - cni_setup
 
+# Remove the now defuct caasp_fqdn grain (Remove for 4.0).
+remove-caasp-fqdn-grain:
+  salt.function:
+    - tgt: '*'
+    - name: grains.delval
+    - arg:
+      - caasp_fqdn
+    - kwarg:
+        destructive: True
+    - require:
+      - salt: services_setup
+
 masters-remove-update-grain:
   salt.function:
     - tgt: G@roles:kube-master and G@update_in_progress:true
@@ -280,4 +295,4 @@ masters-remove-update-grain:
     - kwarg:
         destructive: True
     - require:
-      - salt: services_setup
+      - salt: remove-caasp-fqdn-grain

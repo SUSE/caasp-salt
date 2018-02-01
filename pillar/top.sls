@@ -8,7 +8,6 @@ base:
     - mine
     - docker
     - registries
-    - fqdn
     - schedule
   'roles:ca':
     - match: grain

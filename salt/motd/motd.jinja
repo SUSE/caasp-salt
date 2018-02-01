@@ -1,7 +1,7 @@
 Welcome!
 
 Machine ID: {{ salt['grains.get']('machine_id', 'ERROR') }}
-Internal FQDN: {{ salt['grains.get']('caasp_fqdn', 'ERROR') }}
+Hostname: {{ salt['grains.get']('nodename', 'ERROR') }}
 
 The roles of this node are:
 {%- for role in salt['grains.get']('roles', []) %}

@@ -58,7 +58,7 @@ etcd:
         etcdctl --key-file {{ pillar['ssl']['key_file'] }} \
                 --cert-file {{ pillar['ssl']['crt_file'] }} \
                 --ca-file {{ pillar['ssl']['ca_file'] }} \
-                --endpoints https://{{ grains['caasp_fqdn'] }}:2379 \
+                --endpoints https://{{ grains['nodename'] }}:2379 \
                 cluster-health | grep "cluster is healthy"
     - retry:
         attempts: 10

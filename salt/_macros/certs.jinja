@@ -1,7 +1,10 @@
 
 {% macro alt_names(lst=[]) -%}
   {#- add all the names and IPs we know about -#}
-  {%- set altNames = ["DNS: " + grains['caasp_fqdn'] ] -%}
+  {%- set altNames = [
+    "DNS: " + grains['nodename'], "DNS: " + grains['nodename'] + "." + pillar['internal_infra_domain'],
+    "DNS: " + grains['machine_id'], "DNS: " + grains['machine_id'] + "." + pillar['internal_infra_domain']
+  ] -%}
   {#- append all the names/IPs provided (if not empty) -#}
   {%- for name in lst -%}
     {%- if name and name|length > 0 -%}

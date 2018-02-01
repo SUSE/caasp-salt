@@ -6,7 +6,7 @@ ETCD_NAME="{{ grains['id'] }}"
 
 ETCD_LISTEN_CLIENT_URLS="https://0.0.0.0:2379"
 ETCD_LISTEN_PEER_URLS="https://0.0.0.0:2380"
-ETCD_ADVERTISE_CLIENT_URLS="https://{{ grains['caasp_fqdn'] }}:2379"
+ETCD_ADVERTISE_CLIENT_URLS="https://{{ grains['nodename'] }}:2379"
 ETCD_CLIENT_CERT_AUTH="true"
 
 ETCD_CA_FILE={{ pillar['ssl']['ca_file'] }}
@@ -26,7 +26,7 @@ ETCD_DISCOVERY="http://{{ pillar['dashboard'] }}:{{ pillar['etcd']['disco']['por
 ETCD_DISCOVERY_FALLBACK="proxy"
 
 ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
-ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ grains['caasp_fqdn'] }}:2380"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ grains['nodename'] }}:2380"
 ETCD_INITIAL_CLUSTER_STATE="new"
 
 # set log level

@@ -10,7 +10,7 @@ include:
 {{ certs("kube-apiserver",
          pillar['ssl']['kube_apiserver_crt'],
          pillar['ssl']['kube_apiserver_key'],
-         cn = grains['caasp_fqdn'],
+         cn = grains['nodename'],
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
 kube-apiserver:

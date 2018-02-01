@@ -18,7 +18,7 @@ exit_changes() {
 }
 
 get_node_cidr() {
-	kubectl get no "$NODE_ID" --template="{{.spec.podCIDR}}"
+	kubectl get node "$NODE_ID" --template="{{.spec.podCIDR}}"
 }
 
 patch_node() {

@@ -27,26 +27,19 @@ disable_rebootmgr:
     - require:
       - salt: set_bootstrap_in_progress_flag
 
-hostname_setup:
-  salt.state:
-    - tgt: 'roles:(admin|kube-(master|minion))'
-    - tgt_type: grain_pcre
-    - sls:
-      - hostname
-
 update_pillar:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_pillar
     - require:
-      - salt: hostname_setup
+      - salt: disable_rebootmgr
 
 update_grains:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_grains
     - require:
-      - salt: hostname_setup
+      - salt: disable_rebootmgr
 
 update_mine:
   salt.function:

@@ -6,7 +6,7 @@
 # etcdctl:
 # set -a; source /etc/sysconfig/etcdctl; set +a
 
-ETCDCTL_ENDPOINT="https://{{ grains['caasp_fqdn'] }}:2379"
+ETCDCTL_ENDPOINT="https://{{ grains['nodename'] }}:2379"
 
 # etcd v2 style flags
 ETCDCTL_CA_FILE={{ pillar['ssl']['ca_file'] }}

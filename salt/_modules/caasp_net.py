@@ -59,3 +59,9 @@ def get_primary_ips_for(compound, **kwargs):
     for host in _get_mine(compound, 'network.interfaces', expr_form='compound').keys():
         res.append(get_primary_ip(host=host, **kwargs))
     return res
+
+
+def get_nodename(**kwargs):
+    host = kwargs.pop('host', _get_local_id())
+    
+    return _get_mine(host, 'nodename')[host]
