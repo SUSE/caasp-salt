@@ -16,26 +16,10 @@ etcd:
       - group: etcd
   pkg.installed:
     - pkgs:
-      - iptables
       - etcdctl
       - etcd
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-  caasp_retriable.retry:
-    - name: iptables-etcd
-    - target: iptables.append
-    - retry:
-        attempts: 2
-    - table: filter
-    - family: ipv4
-    - chain: INPUT
-    - jump: ACCEPT
-    - match: state
-    - connstate: NEW
-    # TODO: add "- source: <local-subnet>"
-    - dports:
-        - 2380
-    - proto: tcp
   caasp_service.running_stable:
     - name: etcd
     - successful_retries_in_a_row: 50
@@ -46,7 +30,6 @@ etcd:
       - sls: ca-cert
       - sls: cert
       - pkg: etcd
-      - caasp_retriable: iptables-etcd
     - watch:
       - file: /etc/sysconfig/etcd
 

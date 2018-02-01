@@ -24,7 +24,6 @@ kube-proxy-config:
 kube-proxy:
   pkg.installed:
     - pkgs:
-      - iptables
       - conntrack-tools
       - kubernetes-node
     - require:
