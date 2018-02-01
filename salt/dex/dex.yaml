@@ -101,7 +101,7 @@ spec:
       containers:
       - image: sles12/caasp-dex:2.7.1
         name: dex
-        command: ["/usr/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
+        command: ["/usr/bin/caasp-dex", "serve", "/etc/dex/cfg/config.yaml"]
 
         ports:
         - name: https
