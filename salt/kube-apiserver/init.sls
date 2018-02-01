@@ -16,26 +16,9 @@ include:
 kube-apiserver:
   pkg.installed:
     - pkgs:
-      - iptables
       - kubernetes-master
     - require:
       - file: /etc/zypp/repos.d/containers.repo
-  caasp_retriable.retry:
-    - name: iptables-kube-apiserver
-    - target: iptables.append
-    - retry:
-        attempts: 2
-    - table:      filter
-    - family:     ipv4
-    - chain:      INPUT
-    - jump:       ACCEPT
-    - match:      state
-    - connstate:  NEW
-    - dports:
-      - {{ pillar['api']['int_ssl_port'] }}
-    - proto:      tcp
-    - require:
-      - sls:      kubernetes-common
   file.managed:
     - name:       /etc/kubernetes/apiserver
     - source:     salt://kube-apiserver/apiserver.jinja
@@ -43,7 +26,6 @@ kube-apiserver:
   service.running:
     - enable:     True
     - require:
-      - caasp_retriable: iptables-kube-apiserver
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}
