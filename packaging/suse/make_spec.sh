@@ -38,6 +38,18 @@ cat <<EOF > ${NAME}.spec
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
+%if 0%{?suse_version} == 1315 && !0%{?is_opensuse}
+  %define _base_image sles12
+%endif
+
+%if 0%{?suse_version} == 1500 && !0%{?is_opensuse}
+  %define _base_image sles15
+%endif
+
+%if 0%{?is_opensuse} && 0%{?suse_version} > 1500
+  %define _base_image tumbleweed
+%endif
+
 %{!?tmpfiles_create:%global tmpfiles_create systemd-tmpfiles --create}
 
 Name:           $NAME
@@ -66,6 +78,21 @@ Salt scripts for deploying a Kubernetes cluster
 rm -rf %{buildroot}%{_datadir}
 mkdir -p %{buildroot}%{_datadir}/salt/kubernetes
 cp -R %{_builddir}/%{gitrepo}-${SAFE_BRANCH}/*  %{buildroot}%{_datadir}/salt/kubernetes/
+
+# fix image name
+dir_name=%{buildroot}/%{_datadir}/salt/kubernetes
+files=\$(grep "image:[ ]*sles12" \$dir_name -r | cut -d: -f1 | uniq)
+files="\$files \$(grep "image:[ ]*'sles12" \$dir_name -r | cut -d: -f1 | uniq)"
+
+for file in \$files;do
+    echo "DEBUG: Replacing sles12 by %{_base_image} in \$file"
+    if [ ! -f \$file ];then
+        echo "ERROR: File not found \$file"
+        exit -1
+    fi
+    sed -e "s%image:[ ]*sles12/\(.*\):%image: %{_base_image}/\1:%g" -i \$file
+    sed -e "s%image:[ ]*'sles12/\(.*\):%image: '%{_base_image}/\1:%g" -i \$file
+done
 
 %files
 %defattr(-,root,root)
