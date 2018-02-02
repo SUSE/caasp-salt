@@ -11,7 +11,7 @@ metadata:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: system:dex
+  name: suse:caasp:dex
 subjects:
 - kind: ServiceAccount
   name: dex

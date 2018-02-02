@@ -31,6 +31,26 @@ include:
                           "/root/roles.yaml",
                           watch=["dex_secrets", "/root/dex.yaml"]) }}
 
+# TODO: Transitional code, remove for CaaSP v4
+{{ kubectl("remove-old-find-dex-role",
+           "delete role find-dex -n kube-system",
+           onlyif="kubectl get role find-dex -n kube-system") }}
+
+# TODO: Transitional code, remove for CaaSP v4
+{{ kubectl("remove-old-find-dex-rolebinding",
+           "delete rolebinding find-dex -n kube-system",
+           onlyif="kubectl get rolebinding find-dex -n kube-system") }}
+
+# TODO: Transitional code, remove for CaaSP v4
+{{ kubectl("remove-old-administrators-in-ldap-clusterrolebinding",
+           "delete clusterrolebinding administrators-in-ldap",
+           onlyif="kubectl get clusterrolebinding administrators-in-ldap") }}
+
+# TODO: Transitional code, remove for CaaSP v4
+{{ kubectl("remove-old-dex-clusterrolebinding",
+           "delete clusterrolebinding system:dex",
+           onlyif="kubectl get clusterrolebinding system:dex") }}
+
 ensure_dex_running:
   # Wait until the Dex API is actually up and running
   http.wait_for_successful_query:

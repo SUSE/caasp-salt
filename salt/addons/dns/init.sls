@@ -10,11 +10,10 @@ include:
                           "/etc/kubernetes/addons/kubedns.yaml",
                           check_cmd="kubectl get deploy kube-dns -n kube-system | grep kube-dns") }}
 
-{{ kubectl("create-dns-clusterrolebinding",
-           "create clusterrolebinding system:kube-dns --clusterrole=cluster-admin --serviceaccount=kube-system:default",
-           unless="kubectl get clusterrolebindings | grep kube-dns",
-           check_cmd="kubectl get clusterrolebindings | grep kube-dns",
-           watch=["/etc/kubernetes/addons/kubedns.yaml"]) }}
+# TODO: Transitional code, remove for CaaSP v4
+{{ kubectl("remove-old-kube-dns-clusterrolebinding",
+           "delete clusterrolebinding system:kube-dns",
+           onlyif="kubectl get clusterrolebinding system:kube-dns") }}
 
 {% else %}
 
