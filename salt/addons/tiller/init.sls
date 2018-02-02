@@ -8,13 +8,17 @@ include:
 
 {{ kubectl_apply_template("salt://addons/tiller/tiller.yaml.jinja",
                           "/etc/kubernetes/addons/tiller.yaml",
-                          check_cmd="kubectl get deploy tiller -n kube-system | grep tiller") }}
+                          check_cmd="kubectl get deploy tiller-deploy -n kube-system | grep tiller-deploy") }}
 
 {{ kubectl("create-tiller-clusterrolebinding",
            "create clusterrolebinding system:tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller",
            unless="kubectl get clusterrolebindings | grep tiller",
            check_cmd="kubectl get clusterrolebindings | grep tiller",
            watch=["/etc/kubernetes/addons/tiller.yaml"]) }}
+
+{{ kubectl("remove-old-tiller-deployment",
+           "delete deploy tiller -n kube-system",
+           onlyif="kubectl get deploy tiller -n kube-system") }}
 
 {% else %}
 

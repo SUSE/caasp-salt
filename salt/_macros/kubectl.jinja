@@ -39,6 +39,10 @@
     - check_cmd:
        - {{ kwargs['check_cmd'] }}
 {%- endif %}
+{%- if 'onlyif' in kwargs %}
+    - onlyif:
+       - {{ kwargs['onlyif'] }}
+{%- endif %}
 {%- endmacro %}
 
 #####################################################################
