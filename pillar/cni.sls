@@ -1,6 +1,6 @@
 # the flannel backend ('udp', 'vxlan', 'host-gw', etc)
 flannel:
-  image:          'sles12/flannel:1.0.0'
+  image:          'sles12/flannel:0.9.1'
   backend:        'vxlan'   # UDP seems to be near end of life (https://github.com/coreos/flannel/pull/786)
 # log level for flanneld service
 # 0 - Generally useful for this to ALWAYS be visible to an operator.
