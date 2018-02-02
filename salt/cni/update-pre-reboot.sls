@@ -7,10 +7,10 @@ uninstall-flannel:
   service.disabled:
     - name: flanneld
 
-remove-flannel-unit:
+remove-flannel-files-1:
   file.absent:
-    - name: /usr/lib/systemd/system/docker.service.d/flannel.conf
+    - name: /run/flannel/docker
 
-remove-flannel-subnets:
+remove-flannel-files-2:
   file.absent:
     - name: /var/run/flannel
