@@ -3,7 +3,7 @@
 # any time. It will be in a different location in a
 # cloud provider environment.
 kind: Role
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: find-dex
   namespace: kube-system
@@ -16,7 +16,7 @@ rules:
 # Allow any authenticated *or* unauthenticated
 # user to look up Dex's service entry
 kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: find-dex
   namespace: kube-system
@@ -34,7 +34,7 @@ roleRef:
 ---
 # Map the LDAP Administrators role to the Kubernetes system:masters group
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: administrators-in-ldap
 subjects:
