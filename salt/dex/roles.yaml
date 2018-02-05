@@ -5,7 +5,7 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: find-dex
+  name: suse:caasp:read-dex-service
   namespace: kube-system
 rules:
 - apiGroups: [""]
@@ -18,7 +18,7 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: find-dex
+  name: suse:caasp:read-dex-service
   namespace: kube-system
 subjects:
 - kind: Group
@@ -29,14 +29,14 @@ subjects:
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
-  name: find-dex
+  name: suse:caasp:read-dex-service
   apiGroup: rbac.authorization.k8s.io
 ---
 # Map the LDAP Administrators role to the Kubernetes system:masters group
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: administrators-in-ldap
+  name: suse:caasp:ldap-administrators
 subjects:
 - kind: Group
   name: "{{ pillar['ldap']['admin_group_name'] }}"

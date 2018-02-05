@@ -48,4 +48,3 @@ include:
       - file:      /etc/kubernetes/addons/kube-flannel-rbac.yaml
 
 {% endif %}
-
