@@ -90,8 +90,8 @@ for file in \$files;do
         echo "ERROR: File not found \$file"
         exit -1
     fi
-    sed -e "s%image:[ ]*sles12/\(.*\):%image: %{_base_image}/\1:%g" -i \$file
-    sed -e "s%image:[ ]*'sles12/\(.*\):%image: '%{_base_image}/\1:%g" -i \$file
+    sed -e "s|image:[ ]*sles12/\(.*\):|image: %{_base_image}/\1:|g" -i \$file
+    sed -e "s|image:[ ]*'sles12/\(.*\):|image: '%{_base_image}/\1:|g" -i \$file
 done
 
 %files
