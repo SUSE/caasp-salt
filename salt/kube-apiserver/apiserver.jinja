@@ -47,7 +47,7 @@ KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --runtime-config=admissionregistration.k8s.io/v1alpha1 \
                --authorization-mode=Node,RBAC \
                --oidc-issuer-url=https://{{ pillar['api']['server']['external_fqdn'] }}:{{ pillar['dex']['node_port'] }} \
-               --oidc-client-id=caasp-cli \
+               --oidc-client-id=kubernetes \
                --oidc-ca-file={{ pillar['ssl']['ca_file'] }} \
                --oidc-username-claim=email \
                --oidc-groups-claim=groups"

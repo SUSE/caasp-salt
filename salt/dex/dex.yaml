@@ -69,13 +69,30 @@ data:
       skipApprovalScreen: true
 
     staticClients:
+    - id: kubernetes
+      redirectURIs:
+      - 'urn:ietf:wg:oauth:2.0:oob'
+      name: "Kubernetes"
+      secret: "{{ pillar['dex']['client_secrets']['kubernetes'] }}"
+      trustedPeers:
+      - caasp-cli
+      - velum
+
     - id: caasp-cli
       redirectURIs:
+      - 'urn:ietf:wg:oauth:2.0:oob'
       - 'http://127.0.0.1'
-      - 'https://{{ pillar['dashboard'] }}/oidc/done'
-      - 'https://{{ pillar['dashboard_external_fqdn'] }}/oidc/done'
+      - 'http://localhost'
       name: "CaaSP CLI"
       secret: "swac7qakes7AvucH8bRucucH"
+      public: true
+
+    - id: velum
+      redirectURIs:
+      - 'https://{{ pillar['dashboard'] }}/oidc/done'
+      - 'https://{{ pillar['dashboard_external_fqdn'] }}/oidc/done'
+      name: "Velum"
+      secret: "{{ pillar['dex']['client_secrets']['velum'] }}"
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
