@@ -120,3 +120,17 @@
         - x509: {{ key }}
 
 {%- endmacro %}
+
+{% macro revoke_cert(crt) -%}
+
+/etc/pki/ca.crl:
+  x509.crl_managed:
+    - signing_private_key: /etc/pki/private/ca.key
+    - signing_cert: /etc/pki/ca.crt
+    - revoked:
+      - removed_certificate:
+        - certificate: {{ crt }}
+        - revocation_date: {{ None|strftime("%Y-%m-%d %H:%M:%S") }}
+        - reason: nodeWasRemoved
+
+{%- endmacro %}
