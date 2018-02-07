@@ -155,6 +155,9 @@ transactional-update:
 
 dex:
   node_port: '32000'
+  client_secrets:
+    kubernetes: ''
+    velum: ''
 
 # configuration parameters for interacting with LDAP via Dex
 # these get filled in by velum during bootstrap. they're listed
