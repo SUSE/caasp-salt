@@ -170,6 +170,17 @@ kube-minion-setup:
     - require:
       - kube-master-setup
 
+kubelet-setup:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
+    - sls:
+      - kubelet.configure-taints
+      - kubelet.configure-labels
+    - require:
+      - kube-master-setup
+      - kube-minion-setup
+
 # we must start CNI right after the masters/minions reach highstate,
 # as nodes will be NotReady until the CNI DaemonSet is loaded and running...
 cni-setup:
@@ -178,8 +189,7 @@ cni-setup:
     - sls:
       - cni
     - require:
-      - kube-master-setup
-      - kube-minion-setup
+      - kubelet-setup
 
 reboot-setup:
   salt.state:

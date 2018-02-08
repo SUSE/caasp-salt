@@ -11,10 +11,12 @@ include:
     - source: salt://kubelet/kubelet-initial.jinja
     - template: jinja
     - defaults:
-{% if not "kube-master" in salt['grains.get']('roles', []) %}
-      schedulable: "true"
+{% if "kube-master" in salt['grains.get']('roles', []) %}
+      nodeLabels: "node-role.kubernetes.io/master="
+      nodeTaints: "node-role.kubernetes.io/master=:NoSchedule"
 {% else %}
-      schedulable: "false"
+      nodeLabels: ""
+      nodeTaints: ""
 {% endif %}
 
 {% from '_macros/certs.jinja' import certs with context %}
@@ -97,7 +99,7 @@ kubelet:
     - require:
       - service: kubelet
 
-{% if not "kube-master" in salt['grains.get']('roles', []) and salt['grains.get']('kubelet:should_uncordon', false) %}
+{% if salt['grains.get']('kubelet:should_uncordon', false) %}
   caasp_cmd.run:
     - name: |
         kubectl uncordon {{ grains['nodename'] }}

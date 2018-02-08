@@ -1,10 +1,8 @@
 # NOTE: There are some implicit "requires" in these macros, so you
 # should start your SLS with:
 #
-# - include:
-#   - kube-apiserver
+# include:
 #   - kubectl-config
-#
 
 #####################################################################
 
@@ -18,7 +16,6 @@
         attempts: 10
         interval: 1
     - require:
-      - kube-apiserver
       - {{ pillar['paths']['kubeconfig'] }}
 {%- if 'require' in kwargs %}
   {%- for r in kwargs['require'] %}

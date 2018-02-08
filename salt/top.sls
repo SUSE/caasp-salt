@@ -10,10 +10,19 @@ base:
     - rebootmgr
     - transactional-update
     - haproxy
+    - kubectl-config
   'roles:admin':
     - match: grain
     - velum
     - ldap
+  'roles:etcd':
+    - match: grain
+    - etcd
+  'roles:kube-master':
+    - match: grain
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
   'roles:kube-(master|minion)':
     - match: grain_pcre
     - ca-cert
@@ -23,14 +32,5 @@ base:
     - cert
     - docker
     - container-feeder
-    - kubectl-config
     - kubelet
     - kube-proxy
-  'roles:etcd':
-    - match: grain
-    - etcd
-  'roles:kube-master':
-    - match: grain
-    - kube-apiserver
-    - kube-controller-manager
-    - kube-scheduler

@@ -1,1 +1,1 @@
-KUBELET_INITIAL_ARGS="--register-schedulable={{ schedulable }}"
+KUBELET_INITIAL_ARGS="{% if nodeLabels %}--node-labels={{ nodeLabels }}{% endif %} {% if nodeTaints %}--register-with-taints={{ nodeTaints }}{% endif %}"
