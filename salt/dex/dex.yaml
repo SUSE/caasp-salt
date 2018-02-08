@@ -118,6 +118,19 @@ spec:
       tolerations:
       - key: "CriticalAddonsOnly"
         operator: "Exists"
+
+      # ensure dex pods are running on different hosts
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - dex
+            topologyKey: "kubernetes.io/hostname"
+
       containers:
       - image: sles12/caasp-dex:2.7.1
         name: dex
