@@ -6,6 +6,8 @@ metadata:
   namespace: kube-system
   labels:
     name: haproxy
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ''
 spec:
   restartPolicy: Always
   hostNetwork: true
@@ -13,6 +15,8 @@ spec:
     - key: node-role.kubernetes.io/master
       operator: Exists
       effect: NoSchedule
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
   containers:
     - name: haproxy
       image: sles12/haproxy:1.6.0
