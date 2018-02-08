@@ -1,3 +1,19 @@
+admin-apply-haproxy:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - batch: 1
+    - sls:
+      - haproxy
+
+admin-setup:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - highstate: True
+    - require:
+      - admin-apply-haproxy
+
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
 set-update-grain:
@@ -114,13 +130,22 @@ pre-orchestration-migration:
     - require:
       - {{ master_id }}-reboot
 
+# Early apply haproxy configuration
+{{ master_id }}-apply-haproxy:
+  salt.state:
+    - tgt: {{ master_id }}
+    - sls:
+      - haproxy
+    - require:
+      - {{ master_id }}-wait-for-start
+
 # Start services
 {{ master_id }}-start-services:
   salt.state:
     - tgt: {{ master_id }}
     - highstate: True
     - require:
-      - {{ master_id }}-wait-for-start
+      - {{ master_id }}-apply-haproxy
 
 # Perform any migratrions after services are started
 {{ master_id }}-post-start-services:
@@ -197,13 +222,22 @@ pre-orchestration-migration:
     - require:
       - {{ worker_id }}-reboot
 
+# Early apply haproxy configuration
+{{ worker_id }}-apply-haproxy:
+  salt.state:
+    - tgt: {{ worker_id }}
+    - sls:
+      - haproxy
+    - require:
+      - {{ worker_id }}-wait-for-start
+
 # Start services
 {{ worker_id }}-start-services:
   salt.state:
     - tgt: {{ worker_id }}
     - highstate: True
     - require:
-      - salt: {{ worker_id }}-wait-for-start
+      - salt: {{ worker_id }}-apply-haproxy
 
 # Perform any migratrions after services are started
 {{ worker_id }}-update-post-start-services:
