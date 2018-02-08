@@ -22,11 +22,13 @@ defaults
 listen kubernetes-master
         bind {{ bind_ip }}:{{ pillar['api']['ssl_port'] }}
         mode tcp
-        default-server inter 10s fall 3
+        default-server inter 10s fall 2
         balance roundrobin
+        option redispatch
+        option httpchk GET /healthz
 
 {%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.interfaces', 'grain').items() %}
-        server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} check
+        server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify none
 {% endfor -%}
 
 {%- if "admin" in salt['grains.get']('roles', []) -%}
@@ -34,8 +36,9 @@ listen kubernetes-master
 listen kubernetes-dex
         bind {{ bind_ip }}:32000
         mode tcp
-        default-server inter 10s fall 3
+        default-server inter 10s fall 2
         balance roundrobin
+        option redispatch
 
 {%- for minion_id, _ in salt['mine.get']('roles:kube-master', 'network.interfaces', 'grain').items() %}
         server master-{{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}:32000 check

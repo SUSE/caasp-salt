@@ -34,5 +34,3 @@ base:
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
-    - addons
-    - dex
