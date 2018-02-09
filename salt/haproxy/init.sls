@@ -1,4 +1,12 @@
-/etc/haproxy/haproxy.cfg:
+/etc/caasp/haproxy:
+  file.directory:
+    - name: /etc/caasp/haproxy
+    - user:     root
+    - group:    root
+    - dir_mode: 755
+    - makedirs: True
+
+/etc/caasp/haproxy/haproxy.cfg:
   file.managed:
     - source: salt://haproxy/haproxy.cfg.jinja
     - template: jinja
@@ -48,4 +56,4 @@ haproxy_restart:
             docker kill -s HUP $haproxy_id
         fi
     - onchanges:
-      - file: /etc/haproxy/haproxy.cfg
+      - file: /etc/caasp/haproxy/haproxy.cfg
