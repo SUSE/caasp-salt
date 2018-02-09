@@ -43,7 +43,7 @@ spec:
   volumes:
     - name: haproxy-cfg
       hostPath:
-        path: /etc/haproxy
+        path: /etc/caasp/haproxy
 {% if "admin" in salt['grains.get']('roles', []) %}
     - name: etc-hosts
       hostPath:
