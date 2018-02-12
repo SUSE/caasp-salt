@@ -1,9 +1,12 @@
+{%- set default_batch = 5 %}
+
+{# machine IDs that have the master roles assigned #}
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set super_master = masters|first %}
 
-{%- set default_batch = 5 %}
-
-{%- set num_etcd_masters = salt.caasp_etcd.get_cluster_size() %}
+{# the number of etcd masters that should be in the cluster #}
+{%- set num_etcd_members = salt.caasp_etcd.get_cluster_size() %}
+{%- set additional_etcd_members = salt.caasp_etcd.get_additional_etcd_members() %}
 
 # Ensure the node is marked as bootstrapping
 set-bootstrap-in-progress-flag:
@@ -14,9 +17,28 @@ set-bootstrap-in-progress-flag:
       - bootstrap_in_progress
       - true
 
+{% if additional_etcd_members|length > 0 %}
+# Mark some machines as new etcd members
+set-etcd-roles:
+  salt.function:
+    - tgt: {{ additional_etcd_members|join(',') }}
+    - tgt_type: list
+    - name: grains.append
+    - arg:
+      - roles
+      - etcd
+    - require:
+      - set-bootstrap-in-progress-flag
+{% endif %}
+
 sync-pillar:
   salt.runner:
     - name: saltutil.sync_pillar
+    - require:
+      - set-bootstrap-in-progress-flag
+{%- if additional_etcd_members|length > 0 %}
+      - set-etcd-roles
+{%- endif %}
 
 disable-rebootmgr:
   salt.state:
@@ -25,7 +47,7 @@ disable-rebootmgr:
     - sls:
       - rebootmgr
     - require:
-      - set-bootstrap-in-progress-flag
+      - sync-pillar
 
 update-pillar:
   salt.function:
@@ -55,6 +77,8 @@ update-modules:
     - name: saltutil.sync_all
     - kwarg:
         refresh: True
+    - require:
+      - update-mine
 
 etc-hosts-setup:
   salt.state:
@@ -63,7 +87,7 @@ etc-hosts-setup:
     - sls:
       - etc-hosts
     - require:
-      - update-mine
+      - update-modules
 
 ca-setup:
   salt.state:
@@ -72,7 +96,6 @@ ca-setup:
     - highstate: True
     - require:
       - etc-hosts-setup
-      - update-mine
 
 generate-sa-key:
   salt.state:
@@ -90,24 +113,16 @@ update-mine-again:
     - require:
       - generate-sa-key
 
-etcd-discovery-setup:
-  salt.state:
-    - tgt: {{ super_master }}
-    - sls:
-      - etcd-discovery
-    - require:
-      - update-modules
-
-# setup {{ num_etcd_masters }} etcd masters
+# setup {{ num_etcd_members }} etcd masters
 etcd-setup:
   salt.state:
-    - tgt: 'roles:kube-(master|minion)'
-    - tgt_type: grain_pcre
+    - tgt: 'roles:etcd'
+    - tgt_type: grain
     - sls:
       - etcd
-    - batch: {{ num_etcd_masters }}
+    - batch: {{ num_etcd_members }}
     - require:
-      - etcd-discovery-setup
+      - update-mine-again
 
 admin-setup:
   salt.state:

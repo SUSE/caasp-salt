@@ -2,11 +2,15 @@
 # Configuration for the reboot manager
 ##################################################
 
-include:
-  - etcd
+{%- set etcd_members = salt['mine.get']('G@roles:etcd', 'nodename', expr_form='compound').values() %}
+{%- set etcd_server = etcd_members|first %}
 
-{% set reboot_uri = "http://127.0.0.1:2379/v2/keys/" + pillar['reboot']['directory'] + "/" +
+{% set reboot_uri = "https://" + etcd_server + ":2379/v2/keys/" + pillar['reboot']['directory'] + "/" +
          pillar['reboot']['group'] %}
+
+{% set curl_args = " --cacert " + pillar['ssl']['ca_file'] +
+                   " --cert " + pillar['ssl']['crt_file'] +
+                   " --key " + pillar['ssl']['key_file'] %}
 
 # `max_holders` contains the maximum number of lock holders for the cluster. It
 # must comply with the optimal cluster size as defined here:
@@ -23,10 +27,8 @@ set_max_holders_mutex:
   pkg.installed:
     - name: curl
   cmd.run:
-    - name: curl -L -X PUT {{ reboot_uri }}/mutex?prevExist=false -d value="0"
-    - onlyif: curl {{ reboot_uri }}/mutex?prevExist=false | grep -i "key not found"
-    - watch:
-      - etcd
+    - name: curl -L -X PUT {{ curl_args}} {{ reboot_uri }}/mutex?prevExist=false -d value="0"
+    - onlyif: curl {{ curl_args}} {{ reboot_uri }}/mutex?prevExist=false | grep -i "key not found"
 
 # Initialize the `data` key, which is JSON data with: the maximum number of
 # holders, and a list of current holders.
@@ -34,9 +36,8 @@ set_max_holders_data:
   pkg.installed:
     - name: curl
   cmd.run:
-    - name: >-
-        curl -L -X PUT {{ reboot_uri }}/data?prevExist=false -d value='{ "max":"{{ max_holders }}", "holders":[] }'
-    - onlyif: curl {{ reboot_uri }}/data?prevExist=false | grep -i "key not found"
+    - name:
+        curl -L -X PUT {{ curl_args}} {{ reboot_uri }}/data?prevExist=false -d value='{ "max":"{{ max_holders }}", "holders":[] }'
+    - onlyif: curl {{ curl_args}} {{ reboot_uri }}/data?prevExist=false | grep -i "key not found"
     - watch:
       - cmd: set_max_holders_mutex
-      - etcd

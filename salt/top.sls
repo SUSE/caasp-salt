@@ -21,12 +21,14 @@ base:
     - motd
     - users
     - cert
-    - etcd
     - docker
     - container-feeder
     - kubectl-config
     - kubelet
     - kube-proxy
+  'roles:etcd':
+    - match: grain
+    - etcd
   'roles:kube-master':
     - match: grain
     - kube-apiserver

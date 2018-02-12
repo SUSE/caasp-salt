@@ -16,7 +16,7 @@ KUBE_API_PORT="--insecure-port=8080 --secure-port={{ pillar['api']['int_ssl_port
 KUBE_ETCD_SERVERS="--etcd-cafile={{ pillar['ssl']['ca_file'] }} \
                    --etcd-certfile={{ pillar['ssl']['kube_apiserver_crt'] }} \
                    --etcd-keyfile={{ pillar['ssl']['kube_apiserver_key'] }} \
-                   --etcd-servers=https://{{ grains['nodename'] }}:2379"
+                   --etcd-servers={{ salt.caasp_etcd.get_endpoints() }}"
 
 # Address range to use for services
 # [alvaro] should not be in the same range as the flannel network (https://github.com/coreos/flannel/issues/232)
