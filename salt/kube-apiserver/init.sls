@@ -55,7 +55,21 @@ kube-apiserver:
   # wait until the API server is actually up and running
   http.wait_for_successful_query:
     {% set api_server = "api." + pillar['internal_infra_domain']  -%}
-    {% set api_ssl_port = salt['pillar.get']('api:ssl_port', '6443') -%}
+    {% set api_ssl_port = pillar['api']['int_ssl_port'] -%}
+    - name:       {{ 'https://' + api_server + ':' + api_ssl_port }}/healthz
+    - wait_for:   300
+    - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
+    - status:     200
+    - watch:
+      - service:  kube-apiserver
+
+# Wait for the kube-apiserver to be answering on any location. Even if our local instance is already
+# up, it could happen that HAProxy did not yet realize it's up, so let's wait until HAProxy agrees
+# with us.
+kube-apiserver-up:
+  http.wait_for_successful_query:
+    {% set api_server = "api." + pillar['internal_infra_domain']  -%}
+    {% set api_ssl_port = pillar['api']['ssl_port'] -%}
     - name:       {{ 'https://' + api_server + ':' + api_ssl_port }}/healthz
     - wait_for:   300
     - ca_bundle:  {{ pillar['ssl']['ca_file'] }}

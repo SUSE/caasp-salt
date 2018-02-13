@@ -133,6 +133,22 @@ admin-setup:
     - require:
       - etcd-setup
 
+# HAProxy is a fundamental piece for interconnectivity. Ensure that we apply the SLS with a small
+# and safe batch, since applying this SLS might cause HAProxy containers to be restarted. Also,
+# applying it before the highstate will ensure that there is always at least one instance listening.
+# If we only applied the `haproxy` sls on the highstate, we would be targeting all masters at the
+# same time, and they could kill HAProxy at the same time, what would make the apiserver unavailable
+# until one of them was back up again.
+apply-haproxy:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
+    - sls:
+      - haproxy
+    - batch: 1
+    - require:
+      - admin-setup
+
 kube-master-setup:
   salt.state:
     - tgt: 'roles:kube-master'
@@ -143,6 +159,7 @@ kube-master-setup:
       - admin-setup
       - generate-sa-key
       - update-mine-again
+      - apply-haproxy
 
 kube-minion-setup:
   salt.state:

@@ -45,15 +45,26 @@ haproxy:
       - {{ pillar['api']['ssl_port'] }}
     - proto:      tcp
 
-# Send a HUP to haproxy when the config changes
+# Send a SIGTERM to haproxy when the config changes
 # TODO: There should be a better way to handle this, but currently, there is not. See
 # kubernetes/kubernetes#24957
 haproxy_restart:
   cmd.run:
     - name: |-
-        haproxy_id=$(docker ps | grep -E "k8s_haproxy.*\.{{ pillar['internal_infra_domain'] | replace(".", "\.") }}_kube-system_" | awk '{print $1}')
+        haproxy_id=$(docker ps | grep -E "k8s_haproxy.*_kube-system_" | awk '{print $1}')
         if [ -n "$haproxy_id" ]; then
-            docker kill -s HUP $haproxy_id
+            docker kill $haproxy_id
         fi
     - onchanges:
       - file: /etc/caasp/haproxy/haproxy.cfg
+
+{% if "admin" in salt['grains.get']('roles', []) %}
+# The admin node is serving the internal API with the pillars. Wait for it to come back
+# before going on with the orchestration/highstates.
+wait_for_haproxy:
+  cmd.run:
+    - name: |-
+        until $(docker ps | grep -E "k8s_haproxy.*_kube-system_" &> /dev/null); do
+            sleep 1
+        done
+{% endif %}
