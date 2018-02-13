@@ -1,3 +1,6 @@
+{%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set super_master = masters|first %}
+
 {%- set default_batch = 5 %}
 
 {%- set num_etcd_masters = salt.caasp_etcd.get_cluster_size() %}
@@ -129,6 +132,22 @@ admin_setup:
     - require:
       - salt: flannel_setup
 
+# HAProxy is a fundamental piece for interconnectivity. Ensure that we apply the SLS with a small
+# and safe batch, since applying this SLS might cause HAProxy containers to be restarted. Also,
+# applying it before the highstate will ensure that there is always at least one instance listening.
+# If we only applied the `haproxy` sls on the highstate, we would be targeting all masters at the
+# same time, and they could kill HAProxy at the same time, what would make the apiserver unavailable
+# until one of them was back up again.
+apply_haproxy:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
+    - sls:
+      - haproxy
+    - batch: 1
+    - require:
+      - admin_setup
+
 kube_master_setup:
   salt.state:
     - tgt: 'roles:kube-master'
@@ -139,6 +158,7 @@ kube_master_setup:
       - salt: admin_setup
       - salt: generate_sa_key
       - salt: update_mine_again
+      - salt: apply_haproxy
 
 kube_minion_setup:
   salt.state:
@@ -160,15 +180,14 @@ reboot_setup:
     - require:
       - salt: kube_master_setup
 
-wait_for_dex_api:
+services_setup:
   salt.state:
-    - tgt: 'roles:kube-master'
-    - tgt_type: grain
-    - batch: 5
+    - tgt: {{ super_master }}
     - sls:
-      - dex.ensure-dex-running
+      - addons
+      - dex
     - require:
-      - salt: reboot_setup
+      - reboot_setup
 
 # This flag indicates at least one bootstrap has completed at some
 # point in time on this node.
@@ -180,7 +199,7 @@ set_bootstrap_complete_flag:
       - bootstrap_complete
       - true
     - require:
-      - salt: wait_for_dex_api
+      - salt: services_setup
 
 # Ensure the node is marked as finished bootstrapping
 clear_bootstrap_in_progress_flag:

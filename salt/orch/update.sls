@@ -75,13 +75,22 @@ update_modules:
     - require:
       - salt: {{ master_id }}-reboot
 
+# Early apply haproxy configuration
+{{ master_id }}-apply-haproxy:
+  salt.state:
+    - tgt: {{ master_id }}
+    - sls:
+      - haproxy
+    - require:
+      - {{ master_id }}-wait-for-start
+
 # Start services
 {{ master_id }}-start-services:
   salt.state:
     - tgt: {{ master_id }}
     - highstate: True
     - require:
-      - salt: {{ master_id }}-wait-for-start
+      - salt: {{ master_id }}-apply-haproxy
 
 {{ master_id }}-update-reboot-needed-grain:
   salt.function:
@@ -92,18 +101,6 @@ update_modules:
       - false
     - require:
       - salt: {{ master_id }}-start-services
-
-# Ensure the node is marked as finished upgrading
-{{ master_id }}-remove-update-grain:
-  salt.function:
-    - tgt: {{ master_id }}
-    - name: grains.delval
-    - arg:
-      - update_in_progress
-    - kwarg:
-        destructive: True
-    - require:
-      - salt: {{ master_id }}-update-reboot-needed-grain
 
 {% endfor %}
 
@@ -125,7 +122,7 @@ update_modules:
     - require:
       # wait until all the masters have been updated
 {%- for master_id in masters.keys() %}
-      - salt: {{ master_id }}-remove-update-grain
+      - salt: {{ master_id }}-update-reboot-needed-grain
 {%- endfor %}
 {% endif %}
 
@@ -151,13 +148,22 @@ update_modules:
     - require:
       - salt: {{ worker_id }}-reboot
 
+# Early apply haproxy configuration
+{{ worker_id }}-apply-haproxy:
+  salt.state:
+    - tgt: {{ worker_id }}
+    - sls:
+      - haproxy
+    - require:
+      - {{ worker_id }}-wait-for-start
+
 # Start services
 {{ worker_id }}-start-services:
   salt.state:
     - tgt: {{ worker_id }}
     - highstate: True
     - require:
-      - salt: {{ worker_id }}-wait-for-start
+      - salt: {{ worker_id }}-apply-haproxy
 
 {{ worker_id }}-update-reboot-needed-grain:
   salt.function:
@@ -182,3 +188,40 @@ update_modules:
       - salt: {{ worker_id }}-update-reboot-needed-grain
 
 {% endfor %}
+
+# At this point in time, all workers have been removed the `update_in_progress` grain, so the
+# update-etc-hosts orchestration can potentially run on them. We need to keep the masters locked
+# (at least the one that we will use to run other tasks in [super_master]). In any case, for the
+# sake of simplicity we keep all of them locked until the very end of the orchestration, when we'll
+# release all of them (removing the `update_in_progress` grain).
+
+{%- set all_masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set super_master = all_masters|first %}
+
+# (re-)apply all the manifests
+# this will perform a rolling-update for existing daemonsets
+services-setup:
+  salt.state:
+    - tgt: {{ super_master }}
+    - sls:
+      - addons
+      - dex
+{% if workers|length > 0 %}
+    - require:
+# wait until all the machines in the cluster have been upgraded
+{%- for worker_id in workers.keys() %}
+      - {{ worker_id }}-remove-update-grain
+{%- endfor %}
+{% endif %}
+
+masters-remove-update-grain:
+  salt.function:
+    - tgt: G@roles:kube-master and G@update_in_progress:true
+    - tgt_type: compound
+    - name: grains.delval
+    - arg:
+      - update_in_progress
+    - kwarg:
+        destructive: True
+    - require:
+      - services-setup
