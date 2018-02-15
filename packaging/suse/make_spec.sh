@@ -65,6 +65,7 @@ Source:         ${SAFE_BRANCH}.tar.gz
 BuildRequires:  systemd-rpm-macros
 Requires:       salt
 Requires:       python-m2crypto
+Requires:       python-pyOpenSSL
 
 %description
 Salt scripts for deploying a Kubernetes cluster
