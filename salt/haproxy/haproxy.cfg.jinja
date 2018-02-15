@@ -14,8 +14,8 @@ defaults
         option  tcplog
         option  dontlognull
         timeout connect 5000
-        timeout client 50000
-        timeout server 50000
+        timeout client 120000
+        timeout server 120000
 
 # Listen on the standard Kube-API Public port, 6443 by default, and proxy to the masters on
 # the Kube-API internal port, 6444 by default.
