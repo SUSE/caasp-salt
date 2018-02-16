@@ -30,6 +30,14 @@ import salt.cache
 
 import os
 
+# Globals
+log = logging.getLogger(__name__)
+
+def __virtual__():
+    log.info("Loaded velum pillar module")
+    return "velum"
+
+
 def ext_pillar(minion_id,
                pillar,  # pylint: disable=W0613
                url=None,
@@ -46,8 +54,8 @@ def ext_pillar(minion_id,
     :returns dict with pillar data to add
     :returns empty if error
     '''
+    log.debug("Fetching velum pillar data")
 
-    log = logging.getLogger(__name__)
     cache = salt.cache.Cache(__opts__)
 
     if username is None:
