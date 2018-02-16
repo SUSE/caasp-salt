@@ -1,7 +1,0 @@
-[containers]
-name=containers
-type=rpm-md
-gpgcheck=0
-enabled=1
-autorefresh=1
-baseurl=http://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Leap_{{ grains['osrelease'] }}/
