@@ -25,3 +25,17 @@ kubelet:
     - enable: False
     - require:
       - cmd: drain-kubelet
+  caasp_retriable.retry:
+    - name: iptables-kubelet
+    - target: iptables.append
+    - retry:
+        attempts: 2
+    - table:     filter
+    - family:    ipv4
+    - chain:     INPUT
+    - jump:      ACCEPT
+    - match:     state
+    - connstate: NEW
+    - dports:
+      - {{ pillar['kubelet']['port'] }}
+    - proto:     tcp
