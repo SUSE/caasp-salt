@@ -5,6 +5,8 @@
 # and forwarding connections to the real master
 {% if "kube-master" in salt['grains.get']('roles', []) %}
 127.0.0.1 api api.{{ pillar['internal_infra_domain'] }}{% if not salt['caasp_filters.is_ip'](external_fqdn) %} {{ external_fqdn }}{% endif %}
+{% elif "admin" in salt['grains.get']('roles', []) %}
+127.0.0.1 api api.{{ pillar['internal_infra_domain'] }} ldap.{{ pillar['internal_infra_domain'] }}
 {% else %}
 127.0.0.1 api api.{{ pillar['internal_infra_domain'] }}
 {% endif %}
