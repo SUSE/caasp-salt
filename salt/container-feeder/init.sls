@@ -9,7 +9,6 @@ include:
 container-feeder:
   service.running:
     - enable: True
-    - reload: True
     - require:
       - cmd: docker
     - watch:
