@@ -40,28 +40,19 @@ sync-pillar:
       - set-etcd-roles
 {%- endif %}
 
-disable-rebootmgr:
-  salt.state:
-    - tgt: 'roles:(admin|kube-(master|minion))'
-    - tgt_type: grain_pcre
-    - sls:
-      - rebootmgr
-    - require:
-      - sync-pillar
-
 update-pillar:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_pillar
     - require:
-      - disable-rebootmgr
+      - sync-pillar
 
 update-grains:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_grains
     - require:
-      - disable-rebootmgr
+      - sync-pillar
 
 update-mine:
   salt.function:
@@ -80,6 +71,15 @@ update-modules:
     - require:
       - update-mine
 
+disable-rebootmgr:
+  salt.state:
+    - tgt: 'roles:(admin|kube-(master|minion))'
+    - tgt_type: grain_pcre
+    - sls:
+      - rebootmgr
+    - require:
+      - update-modules
+
 etc-hosts-setup:
   salt.state:
     - tgt: 'roles:(admin|kube-(master|minion))'
@@ -87,7 +87,7 @@ etc-hosts-setup:
     - sls:
       - etc-hosts
     - require:
-      - update-modules
+      - disable-rebootmgr
 
 ca-setup:
   salt.state:
