@@ -16,7 +16,9 @@ openldap_restart:
     - name: |-
         openldap_id=$(docker ps | grep "openldap" | awk '{print $1}')
         if [ -n "$openldap_id" ]; then
-            docker restart $openldap_id
+            # Don't allow this state to fail if docker restart fails, this avoids
+            # a race condition between `docker ps` and `docker restart`
+            docker restart $openldap_id || :
         fi
     - onchanges:
       - caasp_retriable: {{ pillar['ssl']['ldap_crt'] }}

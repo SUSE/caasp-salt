@@ -53,7 +53,9 @@ haproxy_restart:
     - name: |-
         haproxy_id=$(docker ps | grep -E "k8s_haproxy.*_kube-system_" | awk '{print $1}')
         if [ -n "$haproxy_id" ]; then
-            docker kill $haproxy_id
+            # Don't allow this state to fail if docker kill fails, this avoids
+            # a race condition between `docker ps` and `docker kill`
+            docker kill $haproxy_id || :
         fi
     - onchanges:
       - file: /etc/caasp/haproxy/haproxy.cfg
