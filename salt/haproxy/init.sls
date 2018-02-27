@@ -1,3 +1,8 @@
+{% if "admin" not in salt['grains.get']('roles', []) %}
+include:
+  - kubelet
+{% endif %}
+
 /etc/caasp/haproxy:
   file.directory:
     - name: /etc/caasp/haproxy

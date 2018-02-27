@@ -2,6 +2,7 @@ include:
   - repositories
   - ca-cert
   - cert
+  - haproxy
   - kubernetes-common
   - kubernetes-common.serviceaccount-key
 

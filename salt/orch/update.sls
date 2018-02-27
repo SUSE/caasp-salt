@@ -280,6 +280,24 @@ pre-orchestration-migration:
 # sake of simplicity we keep all of them locked until the very end of the orchestration, when we'll
 # release all of them (removing the `update_in_progress` grain).
 
+kubelet-setup:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
+    - sls:
+      - kubelet.configure-taints
+      - kubelet.configure-labels
+    - require:
+# wait until all the machines in the cluster have been upgraded
+{%- for master_id in masters.keys() %}
+      # We use the last state within the masters loop, which is different
+      # on masters and minions.
+      - {{ master_id }}-reboot-needed-grain
+{%- endfor %}
+{%- for worker_id in workers.keys() %}
+      - {{ worker_id }}-remove-update-grain
+{%- endfor %}
+
 {%- set all_masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set super_master = all_masters|first %}
 
@@ -290,13 +308,8 @@ cni-setup:
     - tgt: {{ super_master }}
     - sls:
       - cni
-{% if workers|length > 0 %}
     - require:
-# wait until all the machines in the cluster have been upgraded
-{%- for worker_id in workers.keys() %}
-      - {{ worker_id }}-remove-update-grain
-{%- endfor %}
-{% endif %}
+      - kubelet-setup
 
 # (re-)apply all the manifests
 # this will perform a rolling-update for existing daemonsets
