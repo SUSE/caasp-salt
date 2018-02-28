@@ -35,7 +35,13 @@ apiVersion: v1
 kind: Node
 metadata:
   name: ${NEW_NODE_NAME}
+  labels:
+    kubernetes.io/hostname: '$(get_node_data 'index .metadata.labels "kubernetes.io/hostname"')'
+    beta.kubernetes.io/arch: '$(get_node_data 'index .metadata.labels "beta.kubernetes.io/arch"')'
+    beta.kubernetes.io/os: '$(get_node_data 'index .metadata.labels "beta.kubernetes.io/os"')'
   annotations:
+    node.alpha.kubernetes.io/ttl: '$(get_node_data 'index .metadata.annotations "node.alpha.kubernetes.io/ttl"')'
+    volumes.kubernetes.io/controller-managed-attach-detach: '$(get_node_data 'index .metadata.annotations "volumes.kubernetes.io/controller-managed-attach-detach"')'
     flannel.alpha.coreos.com/backend-data: '$(get_node_data 'index .metadata.annotations "flannel.alpha.coreos.com/backend-data"')'
     flannel.alpha.coreos.com/backend-type: '$(get_node_data 'index .metadata.annotations "flannel.alpha.coreos.com/backend-type"')'
     flannel.alpha.coreos.com/public-ip: $(get_node_data 'index .metadata.annotations "flannel.alpha.coreos.com/public-ip"')
