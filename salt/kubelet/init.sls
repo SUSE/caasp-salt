@@ -100,6 +100,7 @@ kubelet:
       - service: kubelet
 
 {% if salt['grains.get']('kubelet:should_uncordon', false) %}
+uncordon-node:
   caasp_cmd.run:
     - name: |
         kubectl uncordon {{ grains['nodename'] }}
@@ -110,12 +111,14 @@ kubelet:
           test "$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['nodename'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" != "true"
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
-{% endif %}
 
 remove-should-uncordon-grain:
   grains.absent:
     - name: kubelet:should_uncordon
     - destructive: True
+    - require:
+      - caasp_cmd: uncordon-node
+{% endif %}
 
 #######################
 # config files
