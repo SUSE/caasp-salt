@@ -183,13 +183,12 @@ pre-orchestration-migration:
       - kube-proxy.stop
       - docker.stop
       - etcd.stop
-{% if masters|length > 0 %}
     - require:
+      - pre-orchestration-migration
       # wait until all the masters have been updated
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
-{% endif %}
 
 # Perform any migrations necessary before rebooting
 {{ worker_id }}-pre-reboot:
@@ -288,6 +287,7 @@ kubelet-setup:
       - kubelet.configure-taints
       - kubelet.configure-labels
     - require:
+      - pre-orchestration-migration
 # wait until all the machines in the cluster have been upgraded
 {%- for master_id in masters.keys() %}
       # We use the last state within the masters loop, which is different
