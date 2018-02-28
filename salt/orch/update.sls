@@ -1,3 +1,17 @@
+{%- set additional_etcd_members = salt.caasp_etcd.get_additional_etcd_members() %}
+
+{% if additional_etcd_members|length > 0 %}
+# Mark some machines as new etcd members
+set-etcd-roles:
+  salt.function:
+    - tgt: {{ additional_etcd_members|join(',') }}
+    - tgt_type: list
+    - name: grains.append
+    - arg:
+      - roles
+      - etcd
+{% endif %}
+
 admin-apply-haproxy:
   salt.state:
     - tgt: 'roles:admin'
@@ -5,6 +19,10 @@ admin-apply-haproxy:
     - batch: 1
     - sls:
       - haproxy
+{% if additional_etcd_members|length > 0 %}
+    - require:
+      - set-etcd-roles
+{% endif %}
 
 admin-setup:
   salt.state:
