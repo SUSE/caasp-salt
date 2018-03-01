@@ -12,10 +12,14 @@ NEW_NODE_NAME="$2"
 
 log() { echo "[machine-id migration]: $1 " ; logger -t "machine-id-migration" "$1" ; }
 
+log_changes() {
+  log "$2"
+  echo  # an empty line here so the next line will be the last.
+  echo "changed=$1 comment='"$2"'"
+}
+
 exit_changes() {
-	log "$2"
-	echo  # an empty line here so the next line will be the last.
-	echo "changed=$1 comment='"$2"'"
+	log_changes "$1" "$2"
 	exit 0
 }
 
@@ -23,6 +27,17 @@ get_node_data() {
 	local template="$1"
 	kubectl get node "$OLD_NODE_NAME" --template="{{$template}}"
 }
+
+exit_handler() {
+  # Stashing $? MUST be the first command in the handler.
+  code=$?
+  if [ "$code" != "0" ]; then
+    log_changes "yes" "Unknown failure migrating from $OLD_NODE_NAME to $NEW_NODE_NAME"
+  fi
+  exit $code
+}
+
+trap "exit_handler" INT TERM EXIT
 
 ##########################################################
 
