@@ -30,7 +30,9 @@ base:
     - motd
     - users
     - cert
-    - docker
+    - docker.install
+    - docker.configure
+    - docker.start
     - container-feeder
     - kubelet
     - kube-proxy
