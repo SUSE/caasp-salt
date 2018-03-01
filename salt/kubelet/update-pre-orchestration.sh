@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
+set -uo pipefail
 
 # Preseeds a node in Kubernetes with critical data migrated from
 # an old node.
