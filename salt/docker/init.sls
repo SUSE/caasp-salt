@@ -78,18 +78,22 @@ docker:
     - append_if_not_found: True
     - require:
       - pkg: docker
-  cmd.run:
-    - name: systemctl restart docker.service
-    - onlyif: systemctl status docker.service
-    - onchanges:
-      - /etc/systemd/system/docker.service.d/proxy.conf
-      - /etc/docker/daemon.json
-    - require:
-      - file: /etc/sysconfig/docker
-      - file: /etc/docker/daemon.json
   service.running:
     - enable: True
     - watch:
       - pkg: docker
       - file: /etc/sysconfig/docker
+
+docker-restart-config:
+  cmd.run:
+    - name: systemctl restart docker.service
+    - onlyif: systemctl status docker.service
+    - onchanges:
       - /etc/systemd/system/docker.service.d/proxy.conf
+
+docker-reload-config:
+  service.running:
+    - name: docker
+    - reload: True
+    - onchanges:
+      - file: /etc/docker/daemon.json
