@@ -111,8 +111,6 @@ uncordon-node:
           test "$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['nodename'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" != "true"
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
-
-remove-should-uncordon-grain:
   grains.absent:
     - name: kubelet:should_uncordon
     - destructive: True

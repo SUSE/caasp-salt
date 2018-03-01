@@ -61,7 +61,7 @@ update-mine:
 
 update-modules:
   salt.function:
-    - name: saltutil.sync_modules
+    - name: saltutil.sync_all
     - tgt: '*'
     - kwarg:
         refresh: True
