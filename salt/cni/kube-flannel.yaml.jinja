@@ -46,6 +46,9 @@ data:
       {%- endif %}
       "Backend":
       {
+        {%- if salt.caasp_pillar.get('flannel:backend') in ["vxlan", "udp"] and salt.caasp_pillar.get('flannel:port') %}
+        "Port": {{ salt.caasp_pillar.get('flannel:port') }},
+        {%- endif %}
         "Type": "{{ salt.caasp_pillar.get('flannel:backend') }}"
       }
     }
