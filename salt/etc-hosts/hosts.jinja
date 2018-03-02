@@ -3,7 +3,10 @@
 {%- set this_roles    = salt['grains.get']('roles', []) %}
 
 {%- set internal_fqdn = "api api." + pillar['internal_infra_domain'] -%}
-{%- set external_fqdn = pillar['api']['server']['external_fqdn'] %}
+{%- set external_fqdn = "" -%}
+{%- if not salt['caasp_filters.is_ip'](pillar['api']['server']['external_fqdn']) -%}
+{%- set external_fqdn = pillar['api']['server']['external_fqdn'] -%}
+{%- endif -%}
 
 {%- macro nodes_entries(expr) -%}
   {%- set nodes = salt['mine.get'](expr, 'network.interfaces', 'compound') %}
@@ -30,7 +33,7 @@
 ### service names ###
 # set the apiserver for 127.0.0.1 on all hosts as haproxy is listening on all nodes
 # and forwarding connections to the real master
-{%- if "kube-master" in this_roles and not salt['caasp_filters.is_ip'](external_fqdn) %}
+{%- if "kube-master" in this_roles %}
 127.0.0.1 {{ internal_fqdn }} {{ external_fqdn }}
 {%- elif "admin" in this_roles %}
 127.0.0.1 {{ internal_fqdn }} {{ external_fqdn }} ldap.{{ pillar['internal_infra_domain'] }}
