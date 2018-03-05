@@ -43,6 +43,7 @@ trap "exit_handler" INT TERM EXIT
 
 log "migrating $OLD_NODE_NAME to $NEW_NODE_NAME"
 
+kubectl get node $NEW_NODE_NAME && exit_changes "no" "$NEW_NODE_NAME already exists, nothing to migrate"
 kubectl get node $OLD_NODE_NAME || exit_changes "no" "$OLD_NODE_NAME does not exist, nothing to migrate"
 
 cat << EOF > /tmp/k8s-node-migration.yaml
