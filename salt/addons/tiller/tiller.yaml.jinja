@@ -22,6 +22,25 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: suse:caasp:tiller-user
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods/portforward
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+
+---
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
