@@ -84,12 +84,13 @@ docker:
       - pkg: docker
       - file: /etc/sysconfig/docker
 
-docker-restart-config:
+docker-proxy-config:
   cmd.run:
-    - name: systemctl restart docker.service
+    - name: systemctl daemon-reload && systemctl restart docker.service
     - onlyif: systemctl status docker.service
     - onchanges:
       - /etc/systemd/system/docker.service.d/proxy.conf
+      - /etc/sysconfig/docker
 
 docker-reload-config:
   service.running:
