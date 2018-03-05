@@ -53,6 +53,7 @@
   {%- elif etcd_members|length > 1 %}
     {%- do salt.caasp_log.warn('CaaS: numnber of etcd members will be reduced to %d, as no replacement for %s has been found (or provided)', etcd_members|length, target) %}
   {%- else %}
+    {#- we need at least one etcd server #}
     {%- do salt.caasp_log.abort('CaaS: cannot remove etcd member %s: too few etcd members, and no replacement found or provided', target) %}
   {%- endif %}
 {%- endif %} {# target in etcd_members #}
@@ -98,6 +99,7 @@
   {%- elif masters|length > 1 %}
     {%- do salt.caasp_log.warn('CaaS: number of k8s masters will be reduced to %d, as no replacement for %s has been found (or provided)', masters|length, target) %}
   {%- else %}
+    {#- we need at least one master (for runing the k8s API at all times) #}
     {%- do salt.caasp_log.abort('CaaS: cannot remove master %s: too few k8s masters, and no replacement found or provided', target) %}
   {%- endif %}
 {%- endif %} {# target in masters #}
@@ -138,8 +140,11 @@
   {%- if replacement %}
     {%- do salt.caasp_log.debug('CaaS: setting %s as replacement for the k8s minion %s', replacement, target) %}
     {%- do replacement_roles.append('kube-minion') %}
-  {%- elif minions|length == 1 %}
-    {%- do salt.caasp_log.warn('CaaS: number of k8s minions will be 0, as no replacement for %s has been found (or provided)', target) %}
+  {%- elif minions|length > 1 %}
+    {%- do salt.caasp_log.warn('CaaS: number of k8s minions will be reduced to %d, as no replacement for %s has been found (or provided)', masters|length, target) %}
+  {%- else %}
+    {#- we need at least one minion (for running dex, kube-dns, etc..) #}
+    {%- do salt.caasp_log.abort('CaaS: cannot remove minion %s: too few k8s minions, and no replacement found or provided', target) %}
   {%- endif %}
 {%- endif %} {# target in minions #}
 
