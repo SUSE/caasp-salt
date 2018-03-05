@@ -83,6 +83,33 @@ pre-orchestration-migration:
     - require:
       - update-modules
 
+# NOTE: Remove me for 4.0
+#
+# During an upgrade from 2.0 to 3.0, as we go master by master first, the first master will not
+# succeed on the orchestration if it doesn't have an etcd member. Assume M{1,2,3}, W{1,2}. Assume
+# etcd members are running on M2, W1 and W2.
+#
+# M1 updates its configurations on highstate and refers to the etcd nodes with the new names
+# (hostnames) instead of machine-ids, but M2, W1 and W2 still didn't run anything to refresh their
+# certificates and their etcd instances, what will make M1 fail because it cannot connect to any
+# etcd instance (as all certificates look invalid at this point for M2.hostname, W1.hostname and
+# W2.hostname). This makes the apiserver on M1 fail restarting itself until the orchestration reaches
+# M2 [there's no hard dependency on states between masters], but the orchestration already failed on
+# M1, so the global result will be failure nevertheless.
+#
+# Let's force etcd to refresh certificates on all machines, restarting the etcd service so we can
+# continue with the upgrade, as certificates will be valid for the old and the new SAN.
+etcd-setup:
+  salt.state:
+    - tgt: 'roles:etcd'
+    - tgt_type: grain
+    - sls:
+      - etcd
+    - batch: 1
+    - require:
+      - pre-orchestration-migration
+# END NOTE
+
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
@@ -97,6 +124,8 @@ pre-orchestration-migration:
       - kube-scheduler.stop
       - docker.stop
       - etcd.stop
+    - require:
+        - etcd-setup
 
 # Perform any migratrions necessary before services are shutdown
 {{ master_id }}-pre-reboot:
