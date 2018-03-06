@@ -9,28 +9,56 @@ global
 
 defaults
         log     global
-        mode    tcp
-        option  tcplog
+        mode    http
+        option  redispatch
         option  dontlognull
-        timeout connect 5000
-        timeout client 120000
-        timeout server 120000
+        balance roundrobin
+        timeout connect      5s
+        timeout client       120s
+        timeout http-request 30s
+        timeout client-fin   30s
+        timeout server       120s
+        timeout tunnel       0
+        default-server inter 10s fall 2
 
 # Listen on the standard Kube-API Public port, 6443 by default, and proxy to the masters on
 # the Kube-API internal port, 6444 by default.
-listen kubernetes-master
-        bind {{ bind_ip }}:{{ pillar['api']['ssl_port'] }}
-        mode tcp
-        default-server inter 10s fall 2
-        balance roundrobin
-        option redispatch
+frontend kubernetes-master
+        bind {{ bind_ip }}:{{ pillar['api']['ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }} ca-file /etc/pki/ca.crt verify optional
+        timeout client 0
+        http-request set-header X-Remote-User  %{+Q}[ssl_c_s_dn(cn)] if { ssl_c_used ssl_c_verify 0 }
+        http-request set-header X-Remote-Group %{+Q}[ssl_c_s_dn(o)] if { ssl_c_used ssl_c_verify 0 }
+        # If no certificate is passed, or if it's invalid, remove the auth headers
+        http-request del-header X-Remote-User  unless { ssl_c_used ssl_c_verify 0 }
+        http-request del-header X-Remote-Group unless { ssl_c_used ssl_c_verify 0 }
+        http-request del-header X-Remote-Extra unless { ssl_c_used ssl_c_verify 0 }
+        acl streaming_logs url_reg [?&]follow=true
+        acl streaming_logs url_reg [?&]watch=true
+        use_backend no-timeout-backend if streaming_logs
+        acl interactive_session url_reg [?&]tty=true
+        use_backend no-timeout-backend if interactive_session
+        default_backend default-backend
+
+backend default-backend
+        option forwardfor
         option httpchk GET /healthz
+{% for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
+        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }} ca-file /etc/pki/ca.crt check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify required
+{%- endfor %}
 
-{%- for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
-        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify none
-{% endfor -%}
+backend no-timeout-backend
+        option forwardfor
+        option forceclose
+        option http-server-close
+        option httpchk GET /healthz
+        timeout server 0
+        timeout tunnel 0
+{% for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
+        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }} ca-file /etc/pki/ca.crt check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify required
+{%- endfor %}
 
-{%- if "admin" in salt['grains.get']('roles', []) %}
+
+{% if "admin" in salt['grains.get']('roles', []) %}
 # Velum should be able to access Kube API and Dex service as well to get kubeconfig
 listen kubernetes-dex
         bind {{ bind_ip }}:{{ pillar['dex']['node_port'] }}
@@ -39,29 +67,22 @@ listen kubernetes-dex
         balance roundrobin
         option redispatch
         option httpchk GET /healthz
-
-{%- for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
+{% for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
         server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['dex']['node_port'] }} check check-ssl port {{ pillar['dex']['node_port'] }} verify none
-{% endfor %}
+{%- endfor %}
 
 listen velum
         bind 0.0.0.0:80
-        bind 0.0.0.0:443 ssl crt /etc/pki/velum.pem ca-file /etc/pki/ca.crt
-        mode http
+        bind 0.0.0.0:443 ssl crt {{ pillar['ssl']['velum_bundle'] }} ca-file /etc/pki/ca.crt
         acl path_autoyast path_reg ^/autoyast$
         option forwardfor
         http-request set-header X-Forwarded-Proto https
         redirect scheme https code 302 if !{ ssl_fc } !path_autoyast
-        default-server inter 10s fall 3
-        balance roundrobin
         server velum unix@/var/run/puma/dashboard.sock
 
 listen velum-api
-        bind 127.0.0.1:444 ssl crt /etc/pki/velum.pem ca-file /etc/pki/ca.crt
-        mode http
+        bind 127.0.0.1:444 ssl crt {{ pillar['ssl']['velum_bundle'] }} ca-file /etc/pki/ca.crt
         option forwardfor
         http-request set-header X-Forwarded-Proto https
-        default-server inter 10s fall 3
-        balance roundrobin
         server velum unix@/var/run/puma/api.sock
-{% endif -%}
+{% endif %}

@@ -24,19 +24,19 @@ include:
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-find-dex-role",
            "delete role find-dex -n kube-system",
-           onlyif="kubectl get role find-dex -n kube-system") }}
+           onlyif="kubectl --request-timeout=1m get role find-dex -n kube-system") }}
 
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-find-dex-rolebinding",
            "delete rolebinding find-dex -n kube-system",
-           onlyif="kubectl get rolebinding find-dex -n kube-system") }}
+           onlyif="kubectl --request-timeout=1m get rolebinding find-dex -n kube-system") }}
 
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-administrators-in-ldap-clusterrolebinding",
            "delete clusterrolebinding administrators-in-ldap",
-           onlyif="kubectl get clusterrolebinding administrators-in-ldap") }}
+           onlyif="kubectl --request-timeout=1m get clusterrolebinding administrators-in-ldap") }}
 
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-dex-clusterrolebinding",
            "delete clusterrolebinding system:dex",
-           onlyif="kubectl get clusterrolebinding system:dex") }}
+           onlyif="kubectl --request-timeout=1m get clusterrolebinding system:dex") }}
