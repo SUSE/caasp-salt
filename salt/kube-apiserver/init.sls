@@ -76,6 +76,6 @@ kube-apiserver-wait-port-{{ port }}:
     - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
     - status:     200
     - watch:
-      - service:  kube-apiserver
+      - service: kube-apiserver
 
 {% endfor %}

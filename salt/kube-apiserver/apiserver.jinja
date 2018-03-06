@@ -44,7 +44,10 @@ KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --tls-ca-file={{ pillar['ssl']['ca_file'] }} \
                --cert-dir=/etc/pki \
                {{ salt.caasp_pillar.get('components:apiserver:args') }} \
-               --client-ca-file={{ pillar['ssl']['ca_file'] }} \
+               --requestheader-username-headers=X-Remote-User \
+               --requestheader-group-headers=X-Remote-Group \
+               --requestheader-extra-headers-prefix=X-Remote-Extra \
+               --requestheader-client-ca-file={{ pillar['ssl']['ca_file'] }} \
                --storage-backend={{ pillar['api']['etcd_version'] }} \
                --storage-media-type=application/json \
                --service-account-key-file={{ pillar['paths']['service_account_key'] }} \

@@ -13,7 +13,7 @@ include:
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-kube-dns-clusterrolebinding",
            "delete clusterrolebinding system:kube-dns",
-           onlyif="kubectl get clusterrolebinding system:kube-dns") }}
+           onlyif="kubectl --request-timeout=1m get clusterrolebinding system:kube-dns") }}
 
 {% else %}
 

@@ -28,14 +28,17 @@ spec:
       volumeMounts:
         - name: haproxy-cfg
           mountPath: /etc/haproxy
+        - name: ca-certificate
+          mountPath: /etc/pki/ca.crt
+          readOnly: True
+        - name: kubernetes-proxy-bundle-certificate
+          mountPath: {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }}
+          readOnly: True
 {% if "admin" in salt['grains.get']('roles', []) %}
         - name: etc-hosts
           mountPath: /etc/hosts
         - name: velum-bundle-certificate
-          mountPath: /etc/pki/velum.pem
-          readOnly: True
-        - name: ca-certificate
-          mountPath: /etc/pki/ca.crt
+          mountPath: {{ pillar['ssl']['velum_bundle'] }}
           readOnly: True
         - name: velum-unix-socket
           mountPath: /var/run/puma
@@ -44,16 +47,25 @@ spec:
     - name: haproxy-cfg
       hostPath:
         path: /etc/caasp/haproxy
+    - name: ca-certificate
+      hostPath:
+{% if "admin" in salt['grains.get']('roles', []) %}
+        path: /etc/pki/ca.crt
+{% else %}
+        path: {{ pillar['ssl']['ca_file'] }}
+{% endif %}
+        type: FileOrCreate
+    - name: kubernetes-proxy-bundle-certificate
+      hostPath:
+        path: {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }}
+        type: FileOrCreate
 {% if "admin" in salt['grains.get']('roles', []) %}
     - name: etc-hosts
       hostPath:
         path: /etc/hosts
     - name: velum-bundle-certificate
       hostPath:
-        path: /etc/pki/private/velum-bundle.pem
-    - name: ca-certificate
-      hostPath:
-        path: /etc/pki/ca.crt
+        path: {{ pillar['ssl']['velum_bundle'] }}
     - name: velum-unix-socket
       hostPath:
         path: /var/run/puma

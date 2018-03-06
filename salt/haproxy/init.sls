@@ -1,3 +1,6 @@
+include:
+  - ca-cert
+  - cert
 {% if not salt.caasp_nodes.is_admin_node() %}
 # This state is executed also on the admin node. On the admin
 # node we cannot require the kubelet state otherwise the node will
@@ -5,7 +8,6 @@
 # scheduled there. All these services would then fail due to the network
 # not being configured properly, and that would lead to slow and always
 # failing orchestrations.
-include:
   - kubelet
   - {{ salt['pillar.get']('cri:chosen', 'docker') }}
   - container-feeder
@@ -28,6 +30,14 @@ include:
     - mode: 644
     - makedirs: True
     - dir_mode: 755
+
+{% from '_macros/certs.jinja' import certs, alt_master_names with context %}
+{{ certs("kube-apiserver-proxy",
+         pillar['ssl']['kube_apiserver_proxy_crt'],
+         pillar['ssl']['kube_apiserver_proxy_key'],
+         cn = grains['nodename'] + '-proxy',
+         o = pillar['certificate_information']['subject_properties']['O'],
+         extra_alt_names = alt_master_names()) }}
 
 haproxy:
   file.managed:
