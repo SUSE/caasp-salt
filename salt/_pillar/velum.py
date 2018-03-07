@@ -74,7 +74,10 @@ def ext_pillar(minion_id,
                                   decode_type='json')
 
     if 'dict' in data:
-        cache.store('caasp/pillar', minion_id, data['dict'])
+        try:
+            cache.store('caasp/pillar', minion_id, data['dict'])
+        except Exception as e:
+            log.warning('Error when populating the cache: {0}. Moving on, not critical'.format(e))
         return data['dict']
     elif cache.contains('caasp/pillar', minion_id):
         log.warning('Serving pillar from cache for minion {0}, since {1} was not available'.format(minion_id, url))
