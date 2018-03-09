@@ -10,6 +10,6 @@ container-feeder:
   service.running:
     - enable: True
     - require:
-      - cmd: docker
+      - pkg: docker
     - watch:
       - service: docker
