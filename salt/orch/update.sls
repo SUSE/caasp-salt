@@ -6,14 +6,6 @@ admin-apply-haproxy:
     - sls:
       - haproxy
 
-admin-setup:
-  salt.state:
-    - tgt: 'roles:admin'
-    - tgt_type: grain
-    - highstate: True
-    - require:
-      - admin-apply-haproxy
-
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
 set-update-grain:
@@ -68,6 +60,14 @@ update-modules:
     - require:
       - update-mine
 
+admin-setup:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - highstate: True
+    - require:
+      - update-modules
+
 # Perform any migrations necessary before starting the update orchestration. All services and
 # machines should be running and we can migrate some data on the whole cluster and then proceed
 # with the real update.
@@ -81,7 +81,7 @@ pre-orchestration-migration:
       - kubelet.update-pre-orchestration
       - etcd.update-pre-orchestration
     - require:
-      - update-modules
+      - admin-setup
 
 # NOTE: Remove me for 4.0
 #
