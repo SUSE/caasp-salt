@@ -1,0 +1,14 @@
+---
+# This role exists so that the CLI can find Dex at
+# any time. It will be in a different location in a
+# cloud provider environment.
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: suse:caasp:read-dex-service
+  namespace: kube-system
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["dex"]
+  verbs: ["get"]

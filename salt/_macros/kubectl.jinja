@@ -68,3 +68,19 @@
                   watch=["file: " + manifest] + kwargs.pop('watch', []),
                   **kwargs) }}
 {%- endmacro %}
+
+{% macro kubectl_apply_dir_template(src, dest) -%}
+{{ dest }}:
+  file.recurse:
+    - name:        {{ dest }}
+    - source:      {{ src }}
+    - user:        root
+    - group:       root
+    - file_mode:   0600
+    - dir_mode:    0700
+    - clean:       True
+    - template:    jinja
+  {{ _kubectl_run("apply -f " + dest,
+                  watch=["file: " + dest] + kwargs.pop('watch', []),
+                  **kwargs) }}
+{%- endmacro %}
