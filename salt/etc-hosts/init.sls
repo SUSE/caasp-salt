@@ -1,4 +1,5 @@
 {# In Kubernetes, /etc/hosts is mounted in from the host. file.blockreplace fails on this #}
+{# TODO: check if there's something special to do when moving completely to crio #}
 {% if salt['grains.get']('virtual_subtype', None) != 'Docker' %}
 /etc/hosts:
   file.blockreplace:
@@ -20,40 +21,35 @@ dummy_step:
 {# So the old /etc/hosts will remain mounted in the container (as bind-mount works at inode level). #}
 {# For more info see https://github.com/kubic-project/salt/pull/265#issuecomment-337256898 #}
 {% if "admin" in salt['grains.get']('roles', []) %}
+
 update-velum-hosts:
-  cmd.run:
-    - name: |-
-        velum_id=$(docker ps | grep velum-dashboard | awk '{print $1}')
-        if [ -n "$velum_id" ]; then
-            docker cp /etc/hosts $velum_id:/etc/hosts-caasp
-        fi
+  caasp_cri.cp_file_to_container:
+    - name: velum-dashboard
+    - namespace: default
+    - source: /etc/hosts
+    - destination: /etc/hosts-caasp
     - onchanges:
       - file: /etc/hosts
 update-velum-hosts2:
-  cmd.run:
-    - name: |-
-        velum_id=$(docker ps | grep velum-dashboard | awk '{print $1}')
-        if [ -n "$velum_id" ]; then
-            docker exec $velum_id bash -c "cat /etc/hosts-caasp > /etc/hosts"
-        fi
+  caasp_cri.exec_cmd_inside_of_container:
+    - name: velum-dashboard
+    - namespace: default
+    - command: 'bash -c "cat /etc/hosts-caasp > /etc/hosts"'
     - onchanges:
-      - cmd: update-velum-hosts
+      - caasp_cri: update-velum-hosts
 update-haproxy-hosts:
-  cmd.run:
-    - name: |-
-        haproxy_id=$(docker ps | grep -E "k8s_haproxy.*\.{{ pillar['internal_infra_domain'] | replace(".", "\.") }}_kube-system_" | awk '{print $1}')
-        if [ -n "$haproxy_id" ]; then
-            docker cp /etc/hosts $haproxy_id:/etc/hosts-caasp
-        fi
+  caasp_cri.cp_file_to_container:
+    - name: haproxy
+    - namespace: kube-system
+    - source: /etc/hosts
+    - destination: /etc/hosts-caasp
     - onchanges:
       - file: /etc/hosts
 update-haproxy-hosts2:
-  cmd.run:
-    - name: |-
-        haproxy_id=$(docker ps | grep -E "k8s_haproxy.*\.{{ pillar['internal_infra_domain'] | replace(".", "\.") }}_kube-system_" | awk '{print $1}')
-        if [ -n "$haproxy_id" ]; then
-            docker exec $haproxy_id bash -c "cat /etc/hosts-caasp > /etc/hosts"
-        fi
+  caasp_cri.exec_cmd_inside_of_container:
+    - name: haproxy
+    - namespace: kube-system
+    - command: 'bash -c "cat /etc/hosts-caasp > /etc/hosts"'
     - onchanges:
-      - cmd: update-haproxy-hosts
+      - caasp_cri: update-velum-hosts
 {% endif %}

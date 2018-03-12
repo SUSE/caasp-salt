@@ -1,4 +1,5 @@
 {# In devenv, the transactional-update service does not exist on admin #}
+{# TODO: figure out what to do when crio is used #}
 {% if salt['grains.get']('virtual_subtype', None) != 'Docker' %}
 /etc/systemd/system/transactional-update.service.d/10-update-rebootmgr-options.conf:
   file.managed:

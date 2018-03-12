@@ -1,6 +1,8 @@
 {% if "admin" not in salt['grains.get']('roles', []) %}
 include:
+  - {{ salt.caasp_cri.cri_salt_state_name() }}
   - kubelet
+  - container-feeder
 {% endif %}
 
 /etc/caasp/haproxy:
@@ -54,18 +56,17 @@ haproxy:
 # TODO: There should be a better way to handle this, but currently, there is not. See
 # kubernetes/kubernetes#24957
 haproxy-restart:
-  cmd.run:
-    - name: |-
-        haproxy_id=$(docker ps | grep -E "k8s_haproxy.*_kube-system_" | awk '{print $1}')
-        if [ -n "$haproxy_id" ]; then
-            # Don't allow this state to fail if docker kill fails, this avoids
-            # a race condition between `docker ps` and `docker kill`
-            docker kill $haproxy_id || :
-        fi
+  caasp_cri.stop_container_and_wait:
+    - name: haproxy
+    - namespace: kube-system
+    - timeout: 60
     - onchanges:
       - file: /etc/caasp/haproxy/haproxy.cfg
+    - require:
+      - service: container-feeder
 
-{% if "admin" in salt['grains.get']('roles', []) %}
+
+{% if 'admin' in salt['grains.get']('roles', []) %}
 # The admin node is serving the internal API with the pillars. Wait for it to come back
 # before going on with the orchestration/highstates.
 wait-for-haproxy:

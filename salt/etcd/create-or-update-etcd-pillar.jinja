@@ -1,0 +1,81 @@
+#!/bin/env python
+
+import json
+import subprocess
+
+
+# This is set by salt, with jinja, when copying the file over to the minion
+CRI = {{ salt['pillar.get']('cri:name', 'docker').lower() }}
+
+
+def _cri_runtime_endpoint():
+    '''
+    Return the path to the socket required by crictl to communicate
+    with the CRI
+    '''
+    # check the crio socket first, there might be cases when docker and crio
+    # are running at the same time
+    if CRI == 'docker':
+        return '/var/run/dockershim.sock'
+    elif CRI == 'crio':
+        return '/var/run/crio/crio.sock'
+    else:
+        raise RuntimeError('Cannot find a suitable CRI socket')
+
+
+def _get_container_id(name, namespace):
+    '''
+    Return the id of the running container identified by ``name``
+    and ``namespace``.
+
+    Return ``None`` if no running container matching the expressed criteria is
+    found.
+    '''
+    output = subprocess.check_output(
+            'crictl',
+            '--runtime-endpoint',
+            _cri_runtime_endpoint(),
+            'ps',
+            '-o',
+            'json')
+
+    ps_data = json.loads(output)
+    for container in ps_data['containers']:
+        if container['metadata']['name'] == name and \
+           container['labels']['io.kubernetes.pod.namespace'] == namespace:
+            return container['id']
+
+    return None
+
+
+def _container_exec(container_id, cmd):
+    '''
+    Run the requested `cmd` inside of the given ``container``
+    '''
+    if type(cmd) != list:
+        print("Wrong parameter given to _container_exec")
+        exit(1)
+
+    base_cmd = ['crictl',
+                '--runtime-endpoint',
+                _cri_runtime_endpoint(),
+                'exec',
+                '-s',
+                container_id]
+    subprocess.check_output(base_cmd + cmd)
+
+
+velum_dashboard_container_id = _get_container_id('velum-dashboard', 'default')
+
+if velum_dashboard_container_id is None:
+    print('Error, cannot find the velum-dashboard running inside of the default namespace')
+    exit(1)
+
+rails_cmd = ['entrypoint.sh',
+             'bundle',
+             'exec',
+             'rails',
+             'runner',
+             "'ActiveRecord::Base.logger=nil; pillar = Pillar.find_or_create_by(pillar: \"api:etcd_version\"); pillar.value = \"etcd3\"; pillar.save'"]
+
+_container_exec( velum_dashboard_container_id, rails_cmd)

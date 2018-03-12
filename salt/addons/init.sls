@@ -1,6 +1,7 @@
 include:
   - kube-apiserver
   - kubectl-config
+  - cri-common
 
 /etc/kubernetes/addons:
   file.directory:
@@ -8,6 +9,8 @@ include:
     - group:    root
     - dir_mode: 755
     - makedirs: True
+    - require:
+      - file: /etc/cni/net.d/87-podman-bridge.conflist
 
 {% from '_macros/kubectl.jinja' import kubectl_apply_template with context %}
 

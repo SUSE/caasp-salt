@@ -1,30 +1,32 @@
-{% if salt['pillar.get']('runtime', 'docker').lower() == 'crio' -%}
-
 include:
   - kubelet
+  - container-feeder
 
-/etc/systemd/system/crio.service:
+/etc/crio/crio.conf:
   file.managed:
-    - source: salt://crio/crio.service.jinja
-    - makedirs: True
+    - source: salt://crio/crio.conf.jinja
     - template: jinja
     - require_in:
       - kubelet
-  module.run:
-    - name: service.systemctl_reload
+  service.running:
+    - name: crio
+    - reload: True
     - onchanges:
-      - file: /etc/systemd/system/crio.service
+      - file: /etc/crio/crio.conf
 
 /etc/systemd/system/kubelet.service.d/kubelet.conf:
   file.managed:
-    - source: salt://crio/kubelet.conf.jinja
-    - template: jinja
+    - source: salt://crio/kubelet.conf
     - makedirs: True
     - require_in:
       - kubelet
+    - require:
+      - service: container-feeder
   module.run:
     - name: service.systemctl_reload
     - onchanges:
       - file: /etc/systemd/system/kubelet.service.d/kubelet.conf
 
-{% endif %}
+crio:
+  pkg.installed:
+    - name: cri-o

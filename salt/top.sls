@@ -5,6 +5,11 @@ base:
   'roles:(admin|kube-master|kube-minion|etcd)':
     - match: grain_pcre
     - ca-cert
+    - cri-common
+    - container-feeder
+    {% if 'admin' not in grains.get('roles', []) %}
+    - {{ salt.caasp_cri.cri_salt_state_name() }}
+    {% endif %}
     - swap
     - etc-hosts
     - proxy
@@ -30,7 +35,5 @@ base:
     - motd
     - users
     - cert
-    - docker
-    - container-feeder
     - kubelet
     - kube-proxy

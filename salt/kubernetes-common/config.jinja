@@ -16,7 +16,7 @@ KUBE_LOGTOSTDERR="--logtostderr=true"
 # journal message level, 0 is debug
 KUBE_LOG_LEVEL="--v={{ pillar['kube_log_level'] }}"
 
-# Should this cluster be allowed to run privileged docker containers
+# Should this cluster be allowed to run privileged containers
 KUBE_ALLOW_PRIV="--allow-privileged=true"
 
 KUBE_ENABLE_DAEMONSETS=true

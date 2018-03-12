@@ -1,0 +1,23 @@
+{
+  "feeder-target": "{{ salt['pillar.get']('cri:name', 'docker').lower() }}",
+  "whitelist": [
+    "sles12/haproxy",
+  {% if 'admin' in salt['grains.get']('roles', []) -%}
+    "sles12/mariadb",
+    "sles12/openldap",
+    "sles12/salt-api",
+    "sles12/salt-master",
+    "sles12/salt-minion",
+    "sles12/velum",
+  {% else -%}
+    "sles12/caasp-dex",
+    "sles12/dnsmasq-nanny",
+    "sles12/flannel",
+    "sles12/kubedns",
+    "sles12/sidecar",
+    "sles12/tiller",
+  {% endif -%}
+    "sles12/pause",
+    "sles12/pv-recycler-node"
+  ]
+}

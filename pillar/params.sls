@@ -157,9 +157,6 @@ dex:
     kubernetes: ''
     velum: ''
 
-# the containers runtime: 'docker' or 'crio'
-runtime: 'docker'
-
 # configuration parameters for interacting with LDAP via Dex
 # these get filled in by velum during bootstrap. they're listed
 # here for documentation purposes.
@@ -176,3 +173,6 @@ ldap:
   admin_group_name: ''
   tls_method: ''
   mail_attribute: ''
+
+# infra container to use instead of downloading gcr.io/google_containers/pause
+pod_infra_container_image: sles12/pause:1.0.0
