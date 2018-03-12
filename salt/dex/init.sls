@@ -5,7 +5,7 @@ include:
   - kube-apiserver
 
 {% from '_macros/certs.jinja' import alt_master_names, certs with context %}
-{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_template with context %}
+{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_dir_template with context %}
 
 {% set dex_alt_names = ["dex",
                         "dex.kube-system",
@@ -17,19 +17,9 @@ include:
          cn = 'Dex',
          extra_alt_names = alt_master_names(dex_alt_names)) }}
 
-{{ kubectl("dex_secrets",
-           "create secret generic dex-tls --namespace=kube-system --from-file=/etc/pki/dex.crt --from-file=/etc/pki/dex.key",
-           unless="kubectl get secret dex-tls --namespace=kube-system",
-           check_cmd="kubectl get secret dex-tls --namespace=kube-system",
-           require=["/etc/pki/dex.crt"]) }}
-
-{{ kubectl_apply_template("salt://dex/dex.yaml",
-                          "/root/dex.yaml",
-                          watch=["dex_secrets", "/etc/pki/dex.crt"]) }}
-
-{{ kubectl_apply_template("salt://dex/roles.yaml",
-                          "/root/roles.yaml",
-                          watch=["dex_secrets", "/root/dex.yaml"]) }}
+{{ kubectl_apply_dir_template("salt://dex/manifests/",
+                              "/etc/kubernetes/addons/dex/",
+                              watch=[pillar['ssl']['dex_crt'], pillar['ssl']['dex_key']]) }}
 
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-find-dex-role",
@@ -64,5 +54,4 @@ ensure_dex_running:
     - header_dict:
         Host: {{ dex_api_server_ext + ':' + dex_api_port }}
     - watch:
-      - /root/dex.yaml
-      - /root/roles.yaml
+      - /etc/kubernetes/addons/dex/

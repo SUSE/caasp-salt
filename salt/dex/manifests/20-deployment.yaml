@@ -1,0 +1,96 @@
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  labels:
+    app: dex
+    kubernetes.io/cluster-service: "true"
+  name: dex
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: dex
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: dex
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        # Kubernetes will not restart dex when the configmap or secret changes, and
+        # dex will not notice anything has been changed either. By storing the checksum
+        # within an annotation, we force Kubernetes to perform the rolling restart
+        # of all Dex pods.
+        checksum/configmap: {{ salt.hashutil.digest_file("/etc/kubernetes/addons/dex/15-configmap.yaml", "sha256") }}
+        checksum/secret: {{ salt.hashutil.digest_file("/etc/kubernetes/addons/dex/15-secret.yaml", "sha256") }}
+    spec:
+      serviceAccountName: dex
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+
+      # ensure dex pods are running on different hosts
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - dex
+              topologyKey: "kubernetes.io/hostname"
+
+      containers:
+      - image: sles12/caasp-dex:2.7.1
+        name: dex
+        command: ["/usr/bin/caasp-dex", "serve", "/etc/dex/cfg/config.yaml"]
+
+        ports:
+        - name: https
+          containerPort: 5556
+
+        readinessProbe:
+          # Give Dex a little time to startup
+          initialDelaySeconds: 30
+          failureThreshold: 5
+          successThreshold: 5
+          timeoutSeconds: 10
+          httpGet:
+            path: /healthz
+            port: https
+            scheme: HTTPS
+
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: https
+            scheme: HTTPS
+
+        volumeMounts:
+        - name: config
+          mountPath: /etc/dex/cfg
+        - name: tls
+          mountPath: /etc/dex/tls
+        - name: ca
+          mountPath: {{ pillar['ssl']['ca_file'] }}
+
+      volumes:
+      - name: config
+        configMap:
+          name: dex
+          items:
+          - key: config.yaml
+            path: config.yaml
+      - name: tls
+        secret:
+          secretName: dex-tls
+      - name: ca
+        hostPath:
+          path: {{ pillar['ssl']['ca_file'] }}

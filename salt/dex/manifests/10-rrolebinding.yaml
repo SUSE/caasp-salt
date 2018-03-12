@@ -1,0 +1,28 @@
+---
+# Map the Dex SA to the Kubernetes cluster-admin role
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: suse:caasp:dex
+subjects:
+- kind: ServiceAccount
+  name: dex
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+# Map the LDAP Administrators group to the Kubernetes cluster-admin role
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: suse:caasp:ldap-administrators
+subjects:
+- kind: Group
+  name: "{{ pillar['ldap']['admin_group_name'] }}"
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,73 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: dex
+  namespace: kube-system
+data:
+  config.yaml: |
+    issuer: "https://{{ pillar['api']['server']['external_fqdn'] }}:{{ pillar['dex']['node_port'] }}"
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+    web:
+      https: 0.0.0.0:5556
+      tlsCert: /etc/dex/tls/dex.crt
+      tlsKey: /etc/dex/tls/dex.key
+    frontend:
+      dir: /usr/share/caasp-dex/web
+      theme: caasp
+    connectors:
+    - type: ldap
+      id: ldap
+      name: LDAP
+      config:
+        host: "{{ pillar['dashboard'] }}:389"
+        startTLS: true
+        bindDN: "{{ pillar['ldap']['bind_dn'] }}"
+        bindPW: "{{ pillar['ldap']['bind_pw'] }}"
+        rootCA: {{ pillar['ssl']['ca_file'] }}
+        userSearch:
+          baseDN: "{{ pillar['ldap']['people_dn'] }}"
+          filter: "(objectClass=inetOrgPerson)"
+          username: "{{ pillar['ldap']['mail_attribute'] }}"
+          idAttr: DN
+          emailAttr: "{{ pillar['ldap']['mail_attribute'] }}"
+          nameAttr: cn
+        groupSearch:
+          baseDN: "{{ pillar['ldap']['group_dn'] }}"
+          filter: "(objectClass=groupOfUniqueNames)"
+
+          userAttr: DN
+          groupAttr: uniqueMember
+
+          nameAttr: cn
+    oauth2:
+      skipApprovalScreen: true
+
+    staticClients:
+    - id: kubernetes
+      redirectURIs:
+      - 'urn:ietf:wg:oauth:2.0:oob'
+      name: "Kubernetes"
+      secret: "{{ pillar['dex']['client_secrets']['kubernetes'] }}"
+      trustedPeers:
+      - caasp-cli
+      - velum
+
+    - id: caasp-cli
+      redirectURIs:
+      - 'urn:ietf:wg:oauth:2.0:oob'
+      - 'http://127.0.0.1'
+      - 'http://localhost'
+      name: "CaaSP CLI"
+      secret: "swac7qakes7AvucH8bRucucH"
+      public: true
+
+    - id: velum
+      redirectURIs:
+      - 'https://{{ pillar['dashboard'] }}/oidc/done'
+      - 'https://{{ pillar['dashboard_external_fqdn'] }}/oidc/done'
+      name: "Velum"
+      secret: "{{ pillar['dex']['client_secrets']['velum'] }}"
