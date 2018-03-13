@@ -185,29 +185,23 @@ kubelet-setup:
       - kube-master-setup
       - kube-minion-setup
 
-# we must start CNI right after the masters/minions reach highstate,
-# as nodes will be NotReady until the CNI DaemonSet is loaded and running...
-cni-setup:
-  salt.state:
-    - tgt: {{ super_master }}
-    - sls:
-      - cni
-    - require:
-      - kubelet-setup
-
 reboot-setup:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
       - reboot
     - require:
-      - cni-setup
+      - kubelet-setup
 
+# we must start CNI before any other pods, as nodes will be NotReady until
+# the CNI DaemonSet is loaded and running...
 services-setup:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
       - addons
+      - addons.psp
+      - cni
       - addons.dns
       - addons.tiller
       - addons.dex

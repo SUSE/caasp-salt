@@ -4,12 +4,13 @@ kind: ServiceAccount
 metadata:
   name: flannel
   namespace: kube-system
+
 ---
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: flannel-plugin-config-map
-  namespace: "kube-system"
+  namespace: kube-system
   labels:
     tier: node
     app: flannel
@@ -52,12 +53,13 @@ data:
         "Type": "{{ salt.caasp_pillar.get('flannel:backend') }}"
       }
     }
+
 ---
 apiVersion: apps/v1beta2
 kind: DaemonSet
 metadata:
   name: kube-flannel
-  namespace: "kube-system"
+  namespace: kube-system
   labels:
     tier: node
     k8s-app: flannel
