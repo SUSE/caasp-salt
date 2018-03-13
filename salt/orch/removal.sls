@@ -299,10 +299,10 @@ cleanups-in-target-before-rebooting:
       - kube-apiserver.remove-pre-reboot
       - kube-controller-manager.remove-pre-reboot
       - kube-scheduler.remove-pre-reboot
-      - dex.remove-pre-reboot
       - addons.remove-pre-reboot
       - addons.dns.remove-pre-reboot
       - addons.tiller.remove-pre-reboot
+      - addons.dex.remove-pre-reboot
   {%- endif %}
       - kube-proxy.remove-pre-reboot
       - kubelet.remove-pre-reboot

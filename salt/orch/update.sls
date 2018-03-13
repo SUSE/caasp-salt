@@ -349,7 +349,7 @@ services-setup:
       - addons
       - addons.dns
       - addons.tiller
-      - dex
+      - addons.dex
     - require:
       - cni-setup
 
