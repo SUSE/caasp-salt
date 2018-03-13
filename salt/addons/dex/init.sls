@@ -17,7 +17,7 @@ include:
          cn = 'Dex',
          extra_alt_names = alt_master_names(dex_alt_names)) }}
 
-{{ kubectl_apply_dir_template("salt://dex/manifests/",
+{{ kubectl_apply_dir_template("salt://addons/dex/manifests/",
                               "/etc/kubernetes/addons/dex/",
                               watch=[pillar['ssl']['dex_crt'], pillar['ssl']['dex_key']]) }}
 
