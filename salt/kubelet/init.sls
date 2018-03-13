@@ -118,6 +118,17 @@ uncordon-node:
       - caasp_cmd: uncordon-node
 {% endif %}
 
+kubelet-check-status:
+  http.wait_for_successful_query:
+    {% set kubelet_server = "127.0.0.1" -%}
+    {% set kubelet_port = "10248" -%}
+    - name:       {{ 'http://' + kubelet_server + ':' + kubelet_port }}/healthz
+    - wait_for:   300
+    - match:      "ok"
+    - status:     200
+    - watch:
+      - service:  kubelet
+
 #######################
 # config files
 #######################
