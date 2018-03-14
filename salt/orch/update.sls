@@ -159,6 +159,15 @@ etcd-setup:
     - require:
       - {{ master_id }}-reboot
 
+# After an update, critical grains like `nodename` could need to be refreshed, make sure we do so
+# before attempting to highstate the node.
+{{ master_id }}-refresh-grains:
+  salt.function:
+    - tgt: {{ master_id }}
+    - name: saltutil.refresh_grains
+    - require:
+      - {{ master_id }}-wait-for-start
+
 # Early apply haproxy configuration
 {{ master_id }}-apply-haproxy:
   salt.state:
@@ -166,7 +175,7 @@ etcd-setup:
     - sls:
       - haproxy
     - require:
-      - {{ master_id }}-wait-for-start
+      - {{ master_id }}-refresh-grains
 
 # Start services
 {{ master_id }}-start-services:
@@ -250,6 +259,15 @@ etcd-setup:
     - require:
       - {{ worker_id }}-reboot
 
+# After an update, critical grains like `nodename` could need to be refreshed, make sure we do so
+# before attempting to highstate the node.
+{{ worker_id }}-refresh-grains:
+  salt.function:
+    - tgt: {{ worker_id }}
+    - name: saltutil.refresh_grains
+    - require:
+      - {{ worker_id }}-wait-for-start
+
 # Early apply haproxy configuration
 {{ worker_id }}-apply-haproxy:
   salt.state:
@@ -257,7 +275,7 @@ etcd-setup:
     - sls:
       - haproxy
     - require:
-      - {{ worker_id }}-wait-for-start
+      - {{ worker_id }}-refresh-grains
 
 # Start services
 {{ worker_id }}-start-services:
