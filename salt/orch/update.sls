@@ -132,6 +132,7 @@ etcd-setup:
   salt.state:
     - tgt: {{ master_id }}
     - sls:
+      - etc-hosts.update-pre-reboot
       - cni.update-pre-reboot
       - etcd.update-pre-reboot
     - require:
@@ -159,6 +160,16 @@ etcd-setup:
     - require:
       - {{ master_id }}-reboot
 
+# Perform any migratrions necessary before salt starts doing
+# "real work" again
+{{ master_id }}-post-reboot:
+  salt.state:
+    - tgt: {{ master_id }}
+    - sls:
+      - etc-hosts.update-post-reboot
+    - require:
+      - {{ master_id }}-wait-for-start
+
 # Early apply haproxy configuration
 {{ master_id }}-apply-haproxy:
   salt.state:
@@ -166,7 +177,7 @@ etcd-setup:
     - sls:
       - haproxy
     - require:
-      - {{ master_id }}-wait-for-start
+      - {{ master_id }}-post-reboot
 
 # Start services
 {{ master_id }}-start-services:
@@ -224,6 +235,7 @@ etcd-setup:
   salt.state:
     - tgt: {{ worker_id }}
     - sls:
+      - etc-hosts.update-pre-reboot
       - cni.update-pre-reboot
     - require:
       - {{ worker_id }}-clean-shutdown
@@ -250,6 +262,16 @@ etcd-setup:
     - require:
       - {{ worker_id }}-reboot
 
+# Perform any migratrions necessary before salt starts doing
+# "real work" again
+{{ worker_id }}-post-reboot:
+  salt.state:
+    - tgt: {{ worker_id }}
+    - sls:
+      - etc-hosts.update-post-reboot
+    - require:
+      - {{ worker_id }}-wait-for-start
+
 # Early apply haproxy configuration
 {{ worker_id }}-apply-haproxy:
   salt.state:
@@ -257,7 +279,7 @@ etcd-setup:
     - sls:
       - haproxy
     - require:
-      - {{ worker_id }}-wait-for-start
+      - {{ worker_id }}-post-reboot
 
 # Start services
 {{ worker_id }}-start-services:

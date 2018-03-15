@@ -2,6 +2,7 @@
 {% if salt['grains.get']('virtual_subtype', None) != 'Docker' %}
 /etc/hosts:
   file.blockreplace:
+    # If markers are changed, also update etc-hosts/update-pre-reboot.sls
     - marker_start: "#-- start Salt-CaaSP managed hosts - DO NOT MODIFY --"
     - marker_end:   "#-- end Salt-CaaSP managed hosts --"
     - source:       salt://etc-hosts/hosts.jinja
