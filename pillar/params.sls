@@ -46,7 +46,7 @@ api:
 dns:
   cluster_ip:     '172.24.0.2'
   domain:         'cluster.local'
-  replicas:       '1'
+  replicas:       '3'
 
 # user and group for running services and some other stuff...
 kube_user:        'kube'
