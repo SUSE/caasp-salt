@@ -135,7 +135,9 @@ def get_replacement_for_member():
         expr = ''
         expr += 'not G@roles:etcd'
         expr += ' and not G@roles:admin and not G@roles:ca'
-        expr += ' and not P@.*_in_progress:true'
+        expr += ' and not G@bootstrap_in_progress:true'
+        expr += ' and not G@update_in_progress:true'
+        expr += ' and not G@removal_in_progress:true'
         expr += ' and {}'.format(role)
 
         log.debug('CaaS: trying to find an etcd replacement with %s', expr)

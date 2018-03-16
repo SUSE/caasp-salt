@@ -381,7 +381,9 @@ remove-target-salt-key:
   {%- endif %}
 
   {%- set affected_expr = 'G@bootstrap_complete:true' +
-                          ' and not P@.*_in_progress:true' +
+                          ' and not G@bootstrap_in_progress:true' +
+                          ' and not G@update_in_progress:true' +
+                          ' and not G@removal_in_progress:true' +
                           ' and P@roles:(' + affected_roles|join('|') + ')' +
                           ' and not L@' + excluded_nodes|join(',') %}
 
