@@ -5,7 +5,7 @@ metadata:
   name: suse:caasp:kube-dns
 roleRef:
   kind: ClusterRole
-  name: cluster-admin
+  name: system:kube-dns
   apiGroup: rbac.authorization.k8s.io
 subjects:
 - kind: ServiceAccount
