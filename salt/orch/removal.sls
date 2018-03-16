@@ -49,7 +49,7 @@
     {%- do salt.caasp_log.debug('CaaS: setting %s as the replacement for the etcd member %s', replacement, target) %}
     {%- do replacement_roles.append('etcd') %}
   {%- elif etcd_members|length > 1 %}
-    {%- do salt.caasp_log.warn('CaaS: numnber of etcd members will be reduced to %d, as no replacement for %s has been found (or provided)', etcd_members|length, target) %}
+    {%- do salt.caasp_log.warn('CaaS: number of etcd members will be reduced to %d, as no replacement for %s has been found (or provided)', etcd_members|length, target) %}
   {%- else %}
     {#- we need at least one etcd server #}
     {%- do salt.caasp_log.abort('CaaS: cannot remove etcd member %s: too few etcd members, and no replacement found or provided', target) %}
@@ -147,12 +147,18 @@
 {%- endif %} {# target in minions #}
 
 {#- other consistency checks... #}
+
 {%- if replacement %}
   {#- consistency check: if there is a replacement, it must have some (new) role(s) #}
   {%- if not replacement_roles %}
     {%- do salt.caasp_log.abort('CaaS: %s cannot be removed: too few etcd members, and no replacement found', target) %}
   {%- endif %}
-{%- endif %} {# replacement #}
+{%- else %}
+  {#- consistency check: if some of the previous checks set replacement to an empty string, clear replacement_roles #}
+  {%- set replacement_roles = [] %}
+{%- endif %}
+
+{#- end other consistency checks... #}
 
 {##############################
  # set grains
