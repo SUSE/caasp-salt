@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: helm
+    name: tiller
+    kubernetes.io/cluster-service: "true"
+    kubernetes.io/name: "Tiller"
+  name: tiller
+  namespace: kube-system
+spec:
+  type: ClusterIP
+  ports:
+  - name: tiller
+    port: 44134
+    targetPort: tiller
+  selector:
+    app: helm
+    name: tiller

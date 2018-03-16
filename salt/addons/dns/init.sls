@@ -4,11 +4,11 @@ include:
   - kube-apiserver
   - kubectl-config
 
-{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_template with context %}
+{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_dir_template with context %}
 
-{{ kubectl_apply_template("salt://addons/dns/kubedns.yaml.jinja",
-                          "/etc/kubernetes/addons/kubedns.yaml",
-                          check_cmd="kubectl get deploy kube-dns -n kube-system | grep kube-dns") }}
+
+{{ kubectl_apply_dir_template("salt://addons/dns/manifests/",
+                              "/etc/kubernetes/addons/dns/") }}
 
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-kube-dns-clusterrolebinding",
