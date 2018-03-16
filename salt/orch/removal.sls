@@ -4,9 +4,7 @@
 # ... and we can provide an optional replacement node, and
 # this Salt code will always trust that node as a valid replacement
 {%- set replacement = salt['pillar.get']('replacement', '') %}
-{%- if replacement %}
-  {%- set replacement_provided = True %}
-{%- endif %}
+{%- set replacement_provided = (replacement != '') %}
 {%- set replacement_roles = [] %}
 
 
