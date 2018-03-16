@@ -27,7 +27,7 @@ listen kubernetes-master
         option httpchk GET /healthz
 
 {%- for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
-        server master-{{ minion_id }} {{ nodename }}:{{ pillar['api']['int_ssl_port'] }} check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify none
+        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify none
 {% endfor -%}
 
 {%- if "admin" in salt['grains.get']('roles', []) %}
@@ -40,7 +40,7 @@ listen kubernetes-dex
         option redispatch
 
 {%- for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
-        server master-{{ minion_id }} {{ nodename }}:32000 check
+        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:32000 check
 {% endfor %}
 
 listen velum
