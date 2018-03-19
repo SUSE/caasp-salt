@@ -4,6 +4,7 @@ admin-apply-haproxy:
     - tgt_type: grain
     - batch: 1
     - sls:
+      - etc-hosts
       - haproxy
 
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
