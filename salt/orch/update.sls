@@ -1,12 +1,3 @@
-admin-apply-haproxy:
-  salt.state:
-    - tgt: 'roles:admin'
-    - tgt_type: grain
-    - batch: 1
-    - sls:
-      - etc-hosts
-      - haproxy
-
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
 set-update-grain:
@@ -18,39 +9,33 @@ set-update-grain:
       - update_in_progress
       - true
 
-# Generate sa key (we should refactor this as part of the ca highstate along with its counterpart
-# in orch/kubernetes.sls)
-generate-sa-key:
-  salt.state:
-    - tgt: 'roles:ca'
-    - tgt_type: grain
-    - sls:
-      - kubernetes-common.generate-serviceaccount-key
-
 # Generic Updates
 sync-pillar:
   salt.runner:
     - name: saltutil.sync_pillar
+    - require:
+      - set-update-grain
 
 update-pillar:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_pillar
     - require:
-      - generate-sa-key
+      - sync-pillar
 
 update-grains:
   salt.function:
     - tgt: '*'
     - name: saltutil.refresh_grains
+    - require:
+      - update-pillar
 
 update-mine:
   salt.function:
     - tgt: '*'
     - name: mine.update
     - require:
-       - update-pillar
-       - update-grains
+      - update-grains
 
 update-modules:
   salt.function:
@@ -61,13 +46,35 @@ update-modules:
     - require:
       - update-mine
 
+# Generate sa key (we should refactor this as part of the ca highstate along with its counterpart
+# in orch/kubernetes.sls)
+generate-sa-key:
+  salt.state:
+    - tgt: 'roles:ca'
+    - tgt_type: grain
+    - sls:
+      - kubernetes-common.generate-serviceaccount-key
+    - require:
+      - update-modules
+
+admin-apply-haproxy:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - batch: 1
+    - sls:
+      - etc-hosts
+      - haproxy
+    - require:
+      - generate-sa-key
+
 admin-setup:
   salt.state:
     - tgt: 'roles:admin'
     - tgt_type: grain
     - highstate: True
     - require:
-      - update-modules
+      - admin-apply-haproxy
 
 # Perform any migrations necessary before starting the update orchestration. All services and
 # machines should be running and we can migrate some data on the whole cluster and then proceed
