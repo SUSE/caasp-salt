@@ -14,6 +14,9 @@ DEFAULT_ATTEMPTS = 10
 # ... and the interval between them
 DEFAULT_ATTEMPTS_INTERVAL = 2
 
+# default etcd peer port
+ETCD_PEER_PORT = 2380
+
 
 def etcdctl(name, retry={}, **kwargs):
     '''
@@ -42,8 +45,11 @@ def member_add(name, **kwargs):
     '''
     Add this node to the etcd cluster
     '''
+    port = kwargs.pop('port', ETCD_PEER_PORT)
+
     this_id = __salt__['grains.get']('id')
-    this_peer_url = 'https://' + __salt__['grains.get']('nodename') + ':2380'
+    this_nodename = __salt__['caasp_net.get_nodename']()
+    this_peer_url = 'https://{}:{}'.format(this_nodename, port)
 
     name = 'member add {} {}'.format(this_id, this_peer_url)
     log.debug('CaaS: adding etcd member')

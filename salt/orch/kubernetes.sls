@@ -1,12 +1,16 @@
 {%- set default_batch = 5 %}
 
-{# machine IDs that have the master roles assigned #}
-{%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set etcd_members = salt.saltutil.runner('mine.get', tgt='G@roles:etcd',        fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set masters      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set minions      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion', fun='network.interfaces', tgt_type='compound').keys() %}
+
 {%- set super_master = masters|first %}
 
 {# the number of etcd masters that should be in the cluster #}
-{%- set num_etcd_members = salt.caasp_etcd.get_cluster_size() %}
-{%- set additional_etcd_members = salt.caasp_etcd.get_additional_etcd_members() %}
+{%- set num_etcd_members = salt.caasp_etcd.get_cluster_size(masters=masters,
+                                                            minions=minions) %}
+{%- set additional_etcd_members = salt.caasp_etcd.get_additional_etcd_members(num_wanted=num_etcd_members,
+                                                                              etcd_members=etcd_members) %}
 
 # Ensure the node is marked as bootstrapping
 set-bootstrap-in-progress-flag:
@@ -73,7 +77,7 @@ update-modules:
 
 disable-rebootmgr:
   salt.state:
-    - tgt: 'roles:(admin|kube-(master|minion))'
+    - tgt: 'roles:(admin|kube-master|minion|etcd)'
     - tgt_type: grain_pcre
     - sls:
       - rebootmgr
@@ -82,7 +86,7 @@ disable-rebootmgr:
 
 etc-hosts-setup:
   salt.state:
-    - tgt: 'roles:(admin|kube-(master|minion))'
+    - tgt: 'roles:(admin|kube-master|kube-minion|etcd)'
     - tgt_type: grain_pcre
     - sls:
       - etc-hosts
