@@ -1,50 +1,72 @@
+{#- Get a list of nodes seem to be down or unresponsive #}
+{#- This sends a "are you still there?" message to all #}
+{#- the nodes and wait for a response, so it takes some time. #}
+{#- Hopefully this list will not be too long... #}
+{%- set nodes_down = salt.saltutil.runner('manage.down') %}
+{%- if nodes_down|length >= 1 %}
+# {{ nodes_down|join(',') }} seem to be down: skipping
+  {%- do salt.caasp_log.debug('CaaS: nodes "%s" seem to be down: ignored', nodes_down|join(',')) %}
+  {%- set is_responsive_node_tgt = 'not L@' + nodes_down|join(',') %}
+{%- else %}
+# all nodes seem to be up
+  {%- do salt.caasp_log.debug('CaaS: all nodes seem to be up') %}
+  {#- we cannot leave this empty (it would produce many " and <empty>" targets) #}
+  {%- set is_responsive_node_tgt = '*' %}
+{%- endif %}
+
+{#- some other targets: #}
+
+{#- the regular nodes (ie, not the CA or the admin node) #}
+{%- set is_regular_node_tgt = 'P@roles:(etcd|kube-(master|minion))' + ' and ' + is_responsive_node_tgt %}
+{#- machines that need to be updated #}
+{%- set is_updateable_tgt = 'G@tx_update_reboot_needed:true' %}
+
+{#- all the other nodes classes #}
+{#- (all of them are required to be responsive nodes) #}
+{%- set is_etcd_tgt              = is_responsive_node_tgt + ' and G@roles:etcd' %}
+{%- set is_master_tgt            = is_responsive_node_tgt + ' and G@roles:kube-master' %}
+{%- set is_worker_tgt            = is_responsive_node_tgt + ' and G@roles:kube-minion' %}
+{%- set is_updateable_master_tgt = is_updateable_tgt + ' and ' + is_master_tgt %}
+{%- set is_updateable_worker_tgt = is_updateable_tgt + ' and ' + is_worker_tgt %}
+
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
 set-update-grain:
   salt.function:
-    - tgt: G@roles:kube-* and G@tx_update_reboot_needed:true
+    - tgt: '{{ is_regular_node_tgt }} and {{ is_updateable_tgt }}'
     - tgt_type: compound
     - name: grains.setval
     - arg:
       - update_in_progress
       - true
 
-# Generic Updates
+# this will load the _pillars/velum.py on the master
 sync-pillar:
   salt.runner:
     - name: saltutil.sync_pillar
     - require:
       - set-update-grain
 
-update-pillar:
+update-data:
   salt.function:
-    - tgt: '*'
-    - name: saltutil.refresh_pillar
+    - tgt: '{{ is_responsive_node_tgt }}'
+    - tgt_type: compound
+    - names:
+      - saltutil.refresh_pillar
+      - saltutil.refresh_grains
+      - mine.update
     - require:
       - sync-pillar
-
-update-grains:
-  salt.function:
-    - tgt: '*'
-    - name: saltutil.refresh_grains
-    - require:
-      - update-pillar
-
-update-mine:
-  salt.function:
-    - tgt: '*'
-    - name: mine.update
-    - require:
-      - update-grains
 
 update-modules:
   salt.function:
     - name: saltutil.sync_all
-    - tgt: '*'
+    - tgt: '{{ is_responsive_node_tgt }}'
+    - tgt_type: compound
     - kwarg:
         refresh: True
     - require:
-      - update-mine
+      - update-data
 
 # Generate sa key (we should refactor this as part of the ca highstate along with its counterpart
 # in orch/kubernetes.sls)
@@ -81,8 +103,8 @@ admin-setup:
 # with the real update.
 pre-orchestration-migration:
   salt.state:
-    - tgt: 'roles:kube-(master|minion)'
-    - tgt_type: grain_pcre
+    - tgt: '{{ is_regular_node_tgt }}'
+    - tgt_type: compound
     - batch: 3
     - sls:
       - cni.update-pre-orchestration
@@ -109,8 +131,8 @@ pre-orchestration-migration:
 # continue with the upgrade, as certificates will be valid for the old and the new SAN.
 etcd-setup:
   salt.state:
-    - tgt: 'roles:etcd'
-    - tgt_type: grain
+    - tgt: '{{ is_etcd_tgt }}'
+    - tgt_type: compound
     - sls:
       - etcd
     - batch: 1
@@ -119,12 +141,12 @@ etcd-setup:
 # END NOTE
 
 # Get list of masters needing reboot
-{%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
+{%- set masters = salt.saltutil.runner('mine.get', tgt=is_updateable_master_tgt, fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
 
 {{ master_id }}-clean-shutdown:
   salt.state:
-    - tgt: {{ master_id }}
+    - tgt: '{{ master_id }}'
     - sls:
       - container-feeder.stop
       - kube-apiserver.stop
@@ -138,7 +160,7 @@ etcd-setup:
 # Perform any migratrions necessary before services are shutdown
 {{ master_id }}-pre-reboot:
   salt.state:
-    - tgt: {{ master_id }}
+    - tgt: '{{ master_id }}'
     - sls:
       - etc-hosts.update-pre-reboot
       - cni.update-pre-reboot
@@ -149,7 +171,7 @@ etcd-setup:
 # Reboot the node
 {{ master_id }}-reboot:
   salt.function:
-    - tgt: {{ master_id }}
+    - tgt: '{{ master_id }}'
     - name: cmd.run
     - arg:
       - sleep 15; systemctl reboot
@@ -172,7 +194,7 @@ etcd-setup:
 # "real work" again
 {{ master_id }}-post-reboot:
   salt.state:
-    - tgt: {{ master_id }}
+    - tgt: '{{ master_id }}'
     - sls:
       - etc-hosts.update-post-reboot
     - require:
@@ -181,7 +203,7 @@ etcd-setup:
 # Early apply haproxy configuration
 {{ master_id }}-apply-haproxy:
   salt.state:
-    - tgt: {{ master_id }}
+    - tgt: '{{ master_id }}'
     - sls:
       - haproxy
     - require:
@@ -190,7 +212,7 @@ etcd-setup:
 # Start services
 {{ master_id }}-start-services:
   salt.state:
-    - tgt: {{ master_id }}
+    - tgt: '{{ master_id }}'
     - highstate: True
     - require:
       - {{ master_id }}-apply-haproxy
@@ -198,7 +220,7 @@ etcd-setup:
 # Perform any migratrions after services are started
 {{ master_id }}-post-start-services:
   salt.state:
-    - tgt: {{ master_id }}
+    - tgt: '{{ master_id }}'
     - sls:
       - cni.update-post-start-services
       - kubelet.update-post-start-services
@@ -207,7 +229,7 @@ etcd-setup:
 
 {{ master_id }}-reboot-needed-grain:
   salt.function:
-    - tgt: {{ master_id }}
+    - tgt: '{{ master_id }}'
     - name: grains.delval
     - arg:
       - tx_update_reboot_needed
@@ -218,13 +240,13 @@ etcd-setup:
 
 {% endfor %}
 
-{%- set workers = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
+{%- set workers = salt.saltutil.runner('mine.get', tgt=is_updateable_worker_tgt, fun='network.interfaces', tgt_type='compound') %}
 {%- for worker_id, ip in workers.items() %}
 
 # Call the node clean shutdown script
 {{ worker_id }}-clean-shutdown:
   salt.state:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - sls:
       - container-feeder.stop
       - kubelet.stop
@@ -241,7 +263,7 @@ etcd-setup:
 # Perform any migrations necessary before rebooting
 {{ worker_id }}-pre-reboot:
   salt.state:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - sls:
       - etc-hosts.update-pre-reboot
       - cni.update-pre-reboot
@@ -251,7 +273,7 @@ etcd-setup:
 # Reboot the node
 {{ worker_id }}-reboot:
   salt.function:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - name: cmd.run
     - arg:
       - sleep 15; systemctl reboot
@@ -274,7 +296,7 @@ etcd-setup:
 # "real work" again
 {{ worker_id }}-post-reboot:
   salt.state:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - sls:
       - etc-hosts.update-post-reboot
     - require:
@@ -283,7 +305,7 @@ etcd-setup:
 # Early apply haproxy configuration
 {{ worker_id }}-apply-haproxy:
   salt.state:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - sls:
       - haproxy
     - require:
@@ -292,7 +314,7 @@ etcd-setup:
 # Start services
 {{ worker_id }}-start-services:
   salt.state:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - highstate: True
     - require:
       - salt: {{ worker_id }}-apply-haproxy
@@ -300,7 +322,7 @@ etcd-setup:
 # Perform any migratrions after services are started
 {{ worker_id }}-update-post-start-services:
   salt.state:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - sls:
       - cni.update-post-start-services
       - kubelet.update-post-start-services
@@ -309,7 +331,7 @@ etcd-setup:
 
 {{ worker_id }}-update-reboot-needed-grain:
   salt.function:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - name: grains.delval
     - arg:
       - tx_update_reboot_needed
@@ -321,7 +343,7 @@ etcd-setup:
 # Ensure the node is marked as finished upgrading
 {{ worker_id }}-remove-update-grain:
   salt.function:
-    - tgt: {{ worker_id }}
+    - tgt: '{{ worker_id }}'
     - name: grains.delval
     - arg:
       - update_in_progress
@@ -340,8 +362,8 @@ etcd-setup:
 
 kubelet-setup:
   salt.state:
-    - tgt: 'roles:kube-(master|minion)'
-    - tgt_type: grain_pcre
+    - tgt: '{{ is_regular_node_tgt }}'
+    - tgt_type: compound
     - sls:
       - kubelet.configure-taints
       - kubelet.configure-labels
@@ -357,14 +379,14 @@ kubelet-setup:
       - {{ worker_id }}-remove-update-grain
 {%- endfor %}
 
-{%- set all_masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set all_masters = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set super_master = all_masters|first %}
 
 # we must start CNI right after the masters/minions reach highstate,
 # as nodes will be NotReady until the CNI DaemonSet is loaded and running...
 cni-setup:
   salt.state:
-    - tgt: {{ super_master }}
+    - tgt: '{{ super_master }}'
     - sls:
       - cni
     - require:
@@ -374,7 +396,7 @@ cni-setup:
 # this will perform a rolling-update for existing daemonsets
 services-setup:
   salt.state:
-    - tgt: {{ super_master }}
+    - tgt: '{{ super_master }}'
     - sls:
       - addons
       - addons.dns
@@ -410,7 +432,8 @@ admin-wait-for-services:
 # Remove the now defuct caasp_fqdn grain (Remove for 4.0).
 remove-caasp-fqdn-grain:
   salt.function:
-    - tgt: '*'
+    - tgt: '{{ is_responsive_node_tgt }}'
+    - tgt_type: compound
     - name: grains.delval
     - arg:
       - caasp_fqdn
@@ -421,7 +444,7 @@ remove-caasp-fqdn-grain:
 
 masters-remove-update-grain:
   salt.function:
-    - tgt: G@roles:kube-master and G@update_in_progress:true
+    - tgt: '{{ is_master_tgt }} and G@update_in_progress:true'
     - tgt_type: compound
     - name: grains.delval
     - arg:
