@@ -47,4 +47,8 @@ include:
       - /etc/kubernetes/addons/kube-flannel-rbac.yaml
       - file:      /etc/kubernetes/addons/kube-flannel-rbac.yaml
 
+delay-it:
+  cmd.run:
+    - name: sleep 30
+
 {% endif %}
