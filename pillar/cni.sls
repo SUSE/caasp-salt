@@ -3,6 +3,7 @@ flannel:
   image:          'sles12/flannel:0.9.1'
   backend:        'vxlan'
   port:           '8472'    # UDP port to use for sending encapsulated packets. Defaults to kernel default, currently 8472.
+  healthz_port:   '8471'    # TCP port used for flannel healthchecks
 # log level for flanneld service
 # 0 - Generally useful for this to ALWAYS be visible to an operator.
 # 1 - A reasonable default log level if you don't want verbosity.
