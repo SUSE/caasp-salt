@@ -375,6 +375,19 @@ services-setup:
     - require:
       - cni-setup
 
+# Velum will connect to dex through the local haproxy instance in the admin node (because the
+# /etc/hosts include the external apiserver pointing to 127.0.0.1). Make sure that before calling
+# the orchestration done, we can access dex from the admin node as Velum would do.
+admin-wait-for-services:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - batch: 1
+    - sls:
+      - addons.dex.wait
+    - require:
+      - services-setup
+
 # Remove the now defuct caasp_fqdn grain (Remove for 4.0).
 remove-caasp-fqdn-grain:
   salt.function:
@@ -385,7 +398,7 @@ remove-caasp-fqdn-grain:
     - kwarg:
         destructive: True
     - require:
-      - services-setup
+      - admin-wait-for-services
 
 masters-remove-update-grain:
   salt.function:

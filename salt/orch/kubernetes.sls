@@ -210,6 +210,19 @@ services-setup:
     - require:
       - reboot-setup
 
+# Velum will connect to dex through the local haproxy instance in the admin node (because the
+# /etc/hosts include the external apiserver pointing to 127.0.0.1). Make sure that before calling
+# the orchestration done, we can access dex from the admin node as Velum would do.
+admin-wait-for-services:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - batch: {{ default_batch }}
+    - sls:
+      - addons.dex.wait
+    - require:
+      - services-setup
+
 # This flag indicates at least one bootstrap has completed at some
 # point in time on this node.
 set-bootstrap-complete-flag:
@@ -220,7 +233,7 @@ set-bootstrap-complete-flag:
       - bootstrap_complete
       - true
     - require:
-      - services-setup
+      - admin-wait-for-services
 
 # Ensure the node is marked as finished bootstrapping
 clear-bootstrap-in-progress-flag:
