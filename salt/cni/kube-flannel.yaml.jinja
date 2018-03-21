@@ -103,8 +103,21 @@ spec:
           - "--kube-subnet-mgr"
           - "--v={{ pillar['flannel']['log_level'] }}"
           - "--iface=$(POD_IP)"
+          - "--healthz-ip=$(POD_IP)"
+          - "--healthz-port={{ pillar['flannel']['healthz_port'] }}"
         securityContext:
           privileged: true
+        ports:
+        - name: healthz
+          containerPort: {{ pillar['flannel']['healthz_port'] }}
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: healthz
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: healthz
         env:
         - name: POD_IP
           valueFrom:
