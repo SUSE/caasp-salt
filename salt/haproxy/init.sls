@@ -53,7 +53,7 @@ haproxy:
 # Send a SIGTERM to haproxy when the config changes
 # TODO: There should be a better way to handle this, but currently, there is not. See
 # kubernetes/kubernetes#24957
-haproxy_restart:
+haproxy-restart:
   cmd.run:
     - name: |-
         haproxy_id=$(docker ps | grep -E "k8s_haproxy.*_kube-system_" | awk '{print $1}')
@@ -68,10 +68,12 @@ haproxy_restart:
 {% if "admin" in salt['grains.get']('roles', []) %}
 # The admin node is serving the internal API with the pillars. Wait for it to come back
 # before going on with the orchestration/highstates.
-wait_for_haproxy:
-  cmd.run:
-    - name: |-
-        until $(docker ps | grep -E "k8s_haproxy.*_kube-system_" &> /dev/null); do
-            sleep 1
-        done
+wait-for-haproxy:
+  http.wait_for_successful_query:
+    - name:       https://localhost:444/internal-api/v1/pillar.json
+    - wait_for:   300
+    - status:     401
+    - verify_ssl: False
+    - onchanges:
+      - haproxy-restart
 {% endif %}
