@@ -4,11 +4,10 @@ include:
   - kube-apiserver
   - kubectl-config
 
-{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_template with context %}
+{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_dir_template with context %}
 
-{{ kubectl_apply_template("salt://addons/tiller/tiller.yaml.jinja",
-                          "/etc/kubernetes/addons/tiller.yaml",
-                          check_cmd="kubectl get deploy tiller-deploy -n kube-system | grep tiller-deploy") }}
+{{ kubectl_apply_dir_template("salt://addons/tiller/manifests/",
+                              "/etc/kubernetes/addons/tiller/") }}
 
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-tiller-clusterrolebinding",
