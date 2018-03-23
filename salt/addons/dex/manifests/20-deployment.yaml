@@ -56,25 +56,6 @@ spec:
         - name: https
           containerPort: 5556
 
-        readinessProbe:
-          # Give Dex a little time to startup
-          initialDelaySeconds: 30
-          failureThreshold: 5
-          successThreshold: 5
-          timeoutSeconds: 10
-          httpGet:
-            path: /healthz
-            port: https
-            scheme: HTTPS
-
-        livenessProbe:
-          # Give Dex a little time to startup
-          initialDelaySeconds: 30
-          httpGet:
-            path: /healthz
-            port: https
-            scheme: HTTPS
-
         volumeMounts:
         - name: config
           mountPath: /etc/dex/cfg

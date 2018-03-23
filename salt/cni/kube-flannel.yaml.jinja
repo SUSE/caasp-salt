@@ -110,14 +110,6 @@ spec:
         ports:
         - name: healthz
           containerPort: {{ pillar['flannel']['healthz_port'] }}
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: healthz
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: healthz
         env:
         - name: POD_IP
           valueFrom:

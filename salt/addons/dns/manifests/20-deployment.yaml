@@ -46,24 +46,6 @@ spec:
           requests:
             cpu: 100m
             memory: 70Mi
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/kubedns
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 8081
-            scheme: HTTP
-          # we poll on pod startup for the Kubernetes master service and
-          # only setup the /readiness HTTP server once that's available.
-          initialDelaySeconds: 3
-          timeoutSeconds: 5
         args:
         - --domain={{ pillar['dns']['domain'] }}
         - --dns-port=10053
@@ -87,15 +69,6 @@ spec:
           mountPath: /kube-dns-config
       - name: dnsmasq
         image: sles12/dnsmasq-nanny:1.0.0 
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/dnsmasq
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
         args:
         - -v=2
         - -logtostderr
@@ -125,15 +98,6 @@ spec:
           mountPath: /etc/k8s/dns/dnsmasq-nanny
       - name: sidecar
         image: sles12/sidecar:1.0.0
-        livenessProbe:
-          httpGet:
-            path: /metrics
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
         args:
         - --v=2
         - --logtostderr
