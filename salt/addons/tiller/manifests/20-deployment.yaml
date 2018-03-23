@@ -36,12 +36,6 @@ spec:
           value: kube-system
         image: sles12/tiller:2.7.2
         imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
         name: tiller
         ports:
         - containerPort: 44134
