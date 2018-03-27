@@ -24,6 +24,26 @@ def __virtual__():
     return "caasp_cri"
 
 
+def cri_name():
+    '''
+    Calculate the CRI name by looking at the pillar set by the user.
+
+    Forces the 'docker' CRI to be used on the nodes that have certain roles,
+    this is needed because salt pillars exposed by Velum have precedence
+    over everything.
+    '''
+    roles_requiring_docker = ('admin', 'ca')
+
+    node_roles = __salt__['grains.get']('roles', [])
+    cri = __salt__['pillar.get']('cri:name', 'docker').lower()
+
+    for role in node_roles:
+        if role in roles_requiring_docker:
+            return 'docker'
+
+    return cri
+
+
 def get_container_id(name, namespace):
     '''
     Return the ID of the running container named ``name`` running inside of
@@ -180,7 +200,7 @@ def cp_file_to_container(container_id, source, destination):
 
     __wait_CRI_socket()
 
-    cri = __salt__['pillar.get']('cri:name', 'docker').lower()
+    cri = cri_name()
 
     if cri == 'docker':
         success, info = _docker_cp_file_to_container(container_id, source, destination)
@@ -247,7 +267,7 @@ def cri_service_name():
     if 'admin' in __salt__['grains.get']('roles', []):
         return 'docker'
 
-    cri = __salt__['pillar.get']('cri:name', 'docker').lower()
+    cri = cri_name()
 
     if cri == 'docker':
         return 'docker'
@@ -276,7 +296,7 @@ def cri_package_name():
     if 'admin' in __salt__['grains.get']('roles', []):
         return 'docker'
 
-    cri = __salt__['pillar.get']('cri:name', 'docker').lower()
+    cri = cri_name()
 
     if cri == 'docker':
         return 'docker'
@@ -295,7 +315,7 @@ def cri_runtime_endpoint():
     if 'admin' in __salt__['grains.get']('roles', []):
         return '/var/run/dockershim.sock'
 
-    cri = __salt__['pillar.get']('cri:name', 'docker').lower()
+    cri = cri_name()
 
     if cri == 'docker':
         return '/var/run/dockershim.sock'

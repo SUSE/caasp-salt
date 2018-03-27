@@ -31,7 +31,7 @@ KUBELET_ARGS="\
   {% endif -%}
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
-{% if salt['pillar.get']('cri:name', 'docker').lower() == 'crio' -%}
+{% if salt.caasp_cri.cri_name() == 'crio' -%}
     --container-runtime=remote \
     --container-runtime-endpoint=/var/run/crio/crio.sock \
     --runtime-request-timeout=10m \

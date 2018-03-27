@@ -1,5 +1,5 @@
 {
-  "feeder-target": "{{ salt['pillar.get']('cri:name', 'docker').lower() }}",
+"feeder-target": "{{ salt.caasp_cri.cri_name() }}",
   "whitelist": [
     "sles12/haproxy",
   {% if 'admin' in salt['grains.get']('roles', []) -%}

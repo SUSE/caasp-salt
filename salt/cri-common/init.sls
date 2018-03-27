@@ -4,7 +4,7 @@
     - template: jinja
 
 /etc/containers/storage.conf:
-{% if salt['pillar.get']('cri:name', 'docker').lower() == 'crio' %}
+{% if salt.caasp_cri.cri_name() == 'crio' %}
   file.managed:
     - source: salt://cri-common/storage.conf.jinja
     - template: jinja

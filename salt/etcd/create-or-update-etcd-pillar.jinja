@@ -5,7 +5,7 @@ import subprocess
 
 
 # This is set by salt, with jinja, when copying the file over to the minion
-CRI = {{ salt['pillar.get']('cri:name', 'docker').lower() }}
+CRI = '{{ salt.caasp_cri.cri_name() }}'
 
 
 def _cri_runtime_endpoint():
