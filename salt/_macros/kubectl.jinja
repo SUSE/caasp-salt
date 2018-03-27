@@ -84,3 +84,19 @@
                   watch=["file: " + dest] + kwargs.pop('watch', []),
                   **kwargs) }}
 {%- endmacro %}
+
+#####################################################################
+
+{% macro kubectl_wait_for_deployment(deployment, namespace = 'kube-system', timeout = 600) -%}
+wait-for-{{ deployment }}-deployment:
+  caasp_cmd.run:
+    - name: |-
+        desiredReplicas=$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.spec.replicas}}' }})
+        readyReplicas=$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.readyReplicas}}' }})
+        availableReplicas=$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.availableReplicas}}' }})
+        updatedReplicas=$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.updatedReplicas}}' }})
+        [ "$readyReplicas" == "$desiredReplicas" ] && [ "$availableReplicas" == "$desiredReplicas" ] && [ "$updatedReplicas" == "$desiredReplicas" ]
+    - retry:
+        attempts: {{ timeout }}
+        interval: 1
+{%- endmacro %}
