@@ -10,7 +10,7 @@ certificate_information:
     ST: Bavaria
   days_valid:
     ca_certificate: 3650
-    certificate: 100
+    certificate: 365
   days_remaining:
     ca_certificate: 90
     certificate: 90
