@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import json
 import logging
 import os.path
-import shutil
 import time
 from salt.exceptions import CommandExecutionError
 
@@ -176,88 +175,6 @@ def wait_for_container(name, namespace, timeout):
     return False
 
 
-def cp_file_to_container(container_id, source, destination):
-    '''
-    Copy a file from the host into a running container.
-
-    container_id
-        ID of the running container.
-
-    source
-        Full path, relative to the host, of the file to be copied.
-
-    destination
-        Full path, relative to the container, where the to copy the file.
-
-    CLI example:
-
-    .. code-block:: bash
-
-        salt '*' caasp_cri.cp_file_to_container container_id='boring-elon' source='/etc/hosts' destination='/etc/hosts-caasp'
-    '''
-    info = ''
-    success = False
-
-    __wait_CRI_socket()
-
-    cri = cri_name()
-
-    if cri == 'docker':
-        success, info = _docker_cp_file_to_container(container_id, source, destination)
-    elif cri == 'crio':
-        success, info = _crio_cp_file_to_container(container_id, source, destination)
-    else:
-        raise InvalidConfigError(
-                'Uknown CRI specified inside of pillars: {}'.format(cri))
-
-    return {'success': success, 'info': info}
-
-
-def exec_cmd_inside_of_container(name, namespace, command):
-    '''
-    Exec a command inside of a running container.
-
-    name
-        Name of the container. This is checked against the ``metadata.name``
-        field of a kubernetes pod.
-
-    namespace
-        Name of the namespace to search the container inside.
-
-    command
-        An array defining the command to run
-
-    .. code-block:: bash
-
-        salt '*' caasp_cri.exec_cmd_inside_of_container container_id='boring-elon' command='bash -c "cat /etc/hosts-caasp > /etc/hosts"'
-
-    '''
-    container_id = get_container_id(name, namespace)
-
-    if container_id is None:
-        return {'success': False,
-                'info': 'Cannot find specified container'}
-
-    cmd = "crictl --runtime-endpoint {socket} exec -s {container_id} {command}".format(
-            socket=cri_runtime_endpoint(),
-            container_id=container_id,
-            command=command)
-    result = __salt__['cmd.run_all'](cmd,
-                                     output_loglevel='trace',
-                                     python_shell=False)
-
-    info = ''
-    success = False
-
-    if result['retcode'] != 0:
-        info = result['stderr']
-    else:
-        info = result['stdout']
-        success = True
-
-    return {'success': success, 'info': info}
-
-
 def cri_service_name():
     '''
     Return a string holding the name of the service identifying the CRI.
@@ -324,69 +241,6 @@ def cri_runtime_endpoint():
     else:
         raise InvalidConfigError(
                 'Uknown CRI specified inside of pillars: {}'.format(cri))
-
-
-def _docker_cp_file_to_container(container_id, source, destination):
-    '''
-    Use ``docker cp`` to copy a file from the host into a running container
-    managed by docker
-    '''
-
-    cmd = 'docker cp {source} {container_id}:{destination}'.format(
-            source=source,
-            container_id=container_id,
-            destination=destination)
-    result = __salt__['cmd.run_all'](cmd,
-                                     output_loglevel='trace',
-                                     python_shell=False)
-
-    if result['retcode'] != 0:
-        return (False, result['stderr'])
-
-    return (True, '')
-
-
-def _crio_cp_file_to_container(container_id, source, destination):
-    '''
-    Use ``podman`` to copy a file from the host into a running container
-    managed by crio.
-    '''
-
-    cmd = 'podman mount {container_id}'.format(
-            container_id=container_id)
-    result = __salt__['cmd.run_all'](cmd,
-                                     output_loglevel='trace',
-                                     python_shell=False)
-
-    if result['retcode'] != 0:
-        return (
-                False,
-                'Error mounting container fs with podman: {}'.format(
-                    result['stderr']))
-
-    try:
-        if os.path.isdir(source):
-            shutil.copytree(source, destination)
-        else:
-            shutil.copy(source, destination)
-    except OSError as e:
-        return(
-                False,
-                'Error while copying file(s): {}'.format(e))
-
-    cmd = 'podman unmount {container_id}'.format(
-            container_id=container_id)
-    result = __salt__['cmd.run_all'](cmd,
-                                     output_loglevel='trace',
-                                     python_shell=False)
-
-    if result['retcode'] != 0:
-        return (
-                False,
-                'Error unmounting container fs with podman: {}'.format(
-                    result['stderr']))
-
-    return (True, '')
 
 
 def __wait_CRI_socket():
