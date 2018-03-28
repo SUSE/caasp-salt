@@ -1,6 +1,5 @@
 {# In Kubernetes, /etc/hosts is mounted in from the host. file.blockreplace fails on this #}
-{# TODO: check if there's something special to do when moving completely to crio #}
-{% if salt['grains.get']('virtual_subtype', None) != 'Docker' %}
+{% if 'ca' not in salt['grains.get']('roles', []) %}
 /etc/hosts:
   file.blockreplace:
     # If markers are changed, also update etc-hosts/update-pre-reboot.sls

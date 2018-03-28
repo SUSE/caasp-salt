@@ -1,6 +1,5 @@
 {# In devenv, the transactional-update service does not exist on admin #}
-{# TODO: figure out what to do when crio is used #}
-{% if salt['grains.get']('virtual_subtype', None) != 'Docker' %}
+{% if 'ca' not in salt['grains.get']('roles', []) %}
 /etc/systemd/system/transactional-update.service.d/10-update-rebootmgr-options.conf:
   file.managed:
     - makedirs: true
