@@ -1,7 +1,8 @@
-Welcome!
+Welcome to SUSE CaaS Platform!
 
 Machine ID: {{ salt['grains.get']('machine_id', 'ERROR') }}
 Hostname: {{ salt['grains.get']('nodename', 'ERROR') }}
+Container Runtime: {{ salt.caasp_cri.cri_name() }}
 
 The roles of this node are:
 {%- for role in salt['grains.get']('roles', []) %}
