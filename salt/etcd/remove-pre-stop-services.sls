@@ -5,6 +5,7 @@
 # so it is not considered a node suffering some
 # transient failure...
 etcd-remove-member:
-  caasp_etcd.member_remove
+  caasp_etcd.member_remove:
+    - nodename: {{ salt['pillar.get']('nodename', grains['nodename']) }}
   # NOTE: we are not requiring /etc/hosts or the certificates
   #       because we are assuming this node was on high state

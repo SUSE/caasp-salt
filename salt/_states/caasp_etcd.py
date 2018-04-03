@@ -61,18 +61,25 @@ def member_add(name, **kwargs):
     # or, otherwise, etcd will refuse to join... (facepalm)
 
 
-def member_remove(name, **kwargs):
+def member_remove(name, nodename=None, **kwargs):
     '''
-    Remove this node from the etcd cluster
+    Remove a member from the etcd cluster
+
+    Arguments:
+
+    * `nodename`: (optional) the nodename for the member we
+                  want the ID for. if no name is provided (or empty),
+                  the local node will be used.
     '''
-    this_member_id = __salt__['caasp_etcd.get_member_id']()
-    if not this_member_id:
+    target_member_id = __salt__['caasp_etcd.get_member_id'](nodename=nodename)
+    if not target_member_id:
         return {
             'name': "member_remove.{0}".format(name),
             'result': False,
-            'comment': "Could not obtain member id."
+            'comment': "Could not obtain member id.",
+            'changes': {}
         }
 
-    name = 'member remove {}'.format(this_member_id)
-    log.debug('CaaS: removing etcd member %s', this_member_id)
+    name = 'member remove {}'.format(target_member_id)
+    log.debug('CaaS: removing etcd member %s', target_member_id)
     return etcdctl(name=name, **kwargs)
