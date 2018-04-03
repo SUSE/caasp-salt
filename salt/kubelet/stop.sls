@@ -23,23 +23,6 @@ drain-kubelet:
     - force: True
   {%- endif %}
 
-{%- if node_removal_in_progress %}
-
-# we must run the `delete node` when haproxy is still running.
-#   * in pre-stop-services, we have not cordoned the node yet
-#   * in pre-reboot, haproxy has been stopped
-# so we have to do it here...
-
-delete-node-from-kubernetes:
-  cmd.run:
-    - name: |-
-        kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} delete node {{ grains['nodename'] }}
-    - require:
-      - file: {{ pillar['paths']['kubeconfig'] }}
-      - drain-kubelet
-
-{%- endif %}
-
 kubelet:
   service.dead:
     - enable: False

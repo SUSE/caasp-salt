@@ -212,6 +212,13 @@ class TestGetReplacementFor(unittest.TestCase):
         self.assertIn('kube-minion', roles,
                       'kube-minion role not found in replacement')
 
+        # check we cannot use an excluded node
+        with self.assertRaises(ExecutionAborted):
+            replacement, roles = get_replacement_for(self.minion_1,
+                                                     replacement=self.minion_3,
+                                                     excluded=[self.minion_3],
+                                                     **self.get_replacement_for_kwargs)
+
     def test_invalid_etcd_replacement(self):
         '''
         Check get_replacement_for() realizes a minion

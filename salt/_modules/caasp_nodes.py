@@ -100,9 +100,10 @@ _PRIO_FUN = {
 }
 
 
-# filter out empty/None and sort a list
+# for a list `lst`, filter out empty/None, remove duplicates and sort it
 def _sanitize_list(lst):
     res = [x for x in lst if x]
+    res = list(set(res))
     res.sort()
     return res
 
@@ -239,6 +240,9 @@ def get_replacement_for(target, replacement='', **kwargs):
               target)
     elif replacement_provided and replacement in forbidden:
         abort('%s cannot be replaced by %s: the replacement has a "ca" or "admin" role',
+              target, replacement)
+    elif replacement_provided and replacement in excluded:
+        abort('%s cannot be replaced by %s: the replacement is in the list of nodes excluded',
               target, replacement)
 
     masters = get_from_args_or_with_expr(
