@@ -383,6 +383,17 @@ services-setup:
     - require:
       - cni-setup
 
+# Wait for deployments to have the expected number of pods running.
+super-master-wait-for-services:
+  salt.state:
+    - tgt: {{ super_master }}
+    - sls:
+      - addons.dns.deployment-wait
+      - addons.tiller.deployment-wait
+      - addons.dex.deployment-wait
+    - require:
+      - services-setup
+
 # Velum will connect to dex through the local haproxy instance in the admin node (because the
 # /etc/hosts include the external apiserver pointing to 127.0.0.1). Make sure that before calling
 # the orchestration done, we can access dex from the admin node as Velum would do.
@@ -394,7 +405,7 @@ admin-wait-for-services:
     - sls:
       - addons.dex.wait
     - require:
-      - services-setup
+      - super-master-wait-for-services
 
 # Remove the now defuct caasp_fqdn grain (Remove for 4.0).
 remove-caasp-fqdn-grain:
