@@ -173,6 +173,7 @@ def get_endpoints(with_id=False, skip_this=False, skip_removed=False, port=ETCD_
         error('no etcd members available!!')
         raise NoEtcdServersException()
 
+    etcd_members_lst.sort()
     return sep.join(etcd_members_lst)
 
 

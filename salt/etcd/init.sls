@@ -14,6 +14,9 @@ add-etcd-to-cluster:
     - require:
       - file: /etc/zypp/repos.d/containers.repo
   caasp_etcd.member_add:
+    - retry:
+        interval: 4
+        attempts: 15
     - require:
       - {{ pillar['ssl']['crt_file'] }}
       - {{ pillar['ssl']['key_file'] }}
