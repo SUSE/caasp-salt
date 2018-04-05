@@ -340,7 +340,8 @@ shutdown-target:
 # (it will appear as "unaccepted")
 remove-target-salt-key:
   salt.wheel:
-    - name: key.delete
+    - name: key.reject
+    - include_accepted: True
     - match: {{ target }}
     - require:
       - shutdown-target
