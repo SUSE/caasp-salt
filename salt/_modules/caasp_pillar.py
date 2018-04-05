@@ -20,9 +20,16 @@ def get(name, default=''):
     res = __salt__['pillar.get'](name, None)
     if res is None:
         res = default
+
     if isinstance(res, basestring):
+        try:
+            return int(res)
+        except ValueError:
+            pass
+
         if res.lower() in ["true", "yes", "on"]:
             return True
         elif res.lower() in ["false", "no", "off"]:
             return False
+
     return res
