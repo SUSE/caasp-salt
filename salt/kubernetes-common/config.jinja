@@ -24,3 +24,16 @@ KUBE_ENABLE_DAEMONSETS=true
 # How the controller-manager, scheduler, and proxy find the apiserver
 # note: we will configure everything with a kubeconfig file
 # KUBE_MASTER=""
+
+# Kubernetes feature gates, by default no feature gate is enabled.
+# Customers can enable feature gates **at their risk** by executing the
+# following command on the admin node:
+#
+#   docker exec $(docker ps | grep velum-dashboard | awk {'print $1'}) entrypoint.sh bundle exec rails runner "Pillar.apply(kubernetes_feature_gates: 'DevicePlugins=true')"
+#
+# This will set the KUBE_FEATURE_GATES flag to `DevicePlugins=true`
+{%- if salt.caasp_pillar.get('kubernetes:feature_gates', '') %}
+KUBE_FEATURE_GATES="--feature-gates={{ pillar['kubernetes']['feature_gates'] }}"
+{%- else %}
+KUBE_FEATURE_GATES=""
+{% endif %}
