@@ -137,7 +137,8 @@ def get_replacement_for_member():
         expr += ' and not G@roles:admin and not G@roles:ca'
         expr += ' and not G@bootstrap_in_progress:true'
         expr += ' and not G@update_in_progress:true'
-        expr += ' and not G@removal_in_progress:true'
+        expr += ' and not G@node_removal_in_progress:true'
+        expr += ' and not G@node_addition_in_progress:true'
         expr += ' and {}'.format(role)
 
         log.debug('CaaS: trying to find an etcd replacement with %s', expr)
@@ -220,12 +221,12 @@ def get_endpoints(with_id=False, skip_this=False, skip_removed=False, port=ETCD_
     It will skip
 
       * current node, when `skip_this=True`
-      * nodes with G@removal_in_progress=true, when `skip_removed=True`
+      * nodes with G@node_removal_in_progress=true, when `skip_removed=True`
 
     '''
     expr = 'G@roles:etcd'
     if skip_removed:
-        expr += ' and not G@removal_in_progress:true'
+        expr += ' and not G@node_removal_in_progress:true'
 
     etcd_members_lst = []
     for (node_id, name) in _get_grain(expr).items():

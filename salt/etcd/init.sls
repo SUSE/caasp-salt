@@ -3,8 +3,8 @@ include:
   - ca-cert
   - cert
 
-{%- set addition_in_progress = salt['grains.get']('addition_in_progress', False) %}
-{%- if addition_in_progress %}
+{%- set node_addition_in_progress = salt['grains.get']('node_addition_in_progress', False) %}
+{%- if node_addition_in_progress %}
 
 # add the member to the cluster _before_ `etcd` is started
 # then `etcd` will have to be started with the `existing` flag
@@ -72,7 +72,7 @@ etcd:
       - {{ pillar['ssl']['key_file'] }}
       - {{ pillar['ssl']['ca_file'] }}
       - file: /etc/sysconfig/etcd
-    {%- if addition_in_progress %}
+    {%- if node_addition_in_progress %}
       - add-etcd-to-cluster
     {%- endif %}
   # wait until etcd is actually up and running
