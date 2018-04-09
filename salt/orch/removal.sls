@@ -164,13 +164,26 @@
  # set grains
  #############################}
 
+# Ensure we mark all nodes with the "as node is being removed" grain.
+# This will ensure the update-etc-hosts orchestration is not run.
+set-cluster-wide-removal-grain:
+  salt.function:
+    - tgt: 'P@roles:(kube-master|kube-minion|etcd)'
+    - tgt_type: compound
+    - name: grains.setval
+    - arg:
+      - removal_in_progress
+      - true
+
 assign-removal-grain:
   salt.function:
     - tgt: {{ target }}
     - name: grains.setval
     - arg:
-      - removal_in_progress
+      - node_removal_in_progress
       - true
+    - require:
+      - set-cluster-wide-removal-grain
 
 {%- if replacement %}
 
@@ -179,8 +192,11 @@ assign-addition-grain:
     - tgt: {{ replacement }}
     - name: grains.setval
     - arg:
-      - addition_in_progress
+      - node_addition_in_progress
       - true
+    - require:
+      - set-cluster-wide-removal-grain
+      - assign-removal-grain
 
   {#- and then we can assign these (new) roles to the replacement #}
   {% for role in replacement_roles %}
@@ -207,6 +223,7 @@ sync-all:
       - mine.update
       - saltutil.sync_all
     - require:
+      - set-cluster-wide-removal-grain
       - assign-removal-grain
   {%- for role in replacement_roles %}
       - assign-{{ role }}-role-to-replacement
@@ -241,7 +258,7 @@ remove-addition-grain:
     - tgt: {{ replacement }}
     - name: grains.delval
     - arg:
-      - addition_in_progress
+      - node_addition_in_progress
     - kwarg:
         destructive: True
     - require:
@@ -388,7 +405,7 @@ remove-target-salt-key:
   {%- set affected_expr = 'G@bootstrap_complete:true' +
                           ' and not G@bootstrap_in_progress:true' +
                           ' and not G@update_in_progress:true' +
-                          ' and not G@removal_in_progress:true' +
+                          ' and not G@node_removal_in_progress:true' +
                           ' and P@roles:(' + affected_roles|join('|') + ')' +
                           ' and not L@' + excluded_nodes|join(',') %}
 
@@ -402,5 +419,17 @@ highstate-affected-{{ affected_roles|join('-and-') }}:
     - batch: 1
     - require:
       - remove-target-salt-key
+
+# remove the we-are-removing-some-node grain in the cluster
+remove-cluster-wide-removal-grain:
+  salt.function:
+    - tgt: 'P@roles:(kube-master|kube-minion|etcd)'
+    - name: grains.delval
+    - arg:
+      - removal_in_progress
+    - kwarg:
+        destructive: True
+    - require:
+      - highstate-affected-{{ affected_roles|join('-and-') }}
 
 {% endif %}
