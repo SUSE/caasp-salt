@@ -4,6 +4,8 @@ base:
     - ca
   'roles:(admin|kube-(master|minion))':
     - match: grain_pcre
+    - ca-cert
+    - cert
     - swap
     - etc-hosts
     - proxy
@@ -25,11 +27,9 @@ base:
     - kube-scheduler
   'roles:kube-(master|minion)':
     - match: grain_pcre
-    - ca-cert
     - repositories
     - motd
     - users
-    - cert
     - docker
     - container-feeder
     - kubelet
