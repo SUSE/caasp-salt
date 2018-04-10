@@ -6,10 +6,10 @@
 driver = "btrfs"
 
 # Temporary storage location
-runroot = "{{ pillar['crio']['dirs']['root'] }}"
+runroot = "{{ pillar['cri']['crio']['dirs']['root'] }}"
 
 # Primary Read/Write location of container storage
-graphroot = "{{ pillar['crio']['dirs']['runroot'] }}"
+graphroot = "{{ pillar['cri']['crio']['dirs']['runroot'] }}"
 
 [storage.options]
 # AdditionalImageStores is used to pass paths to additional Read/Only image stores

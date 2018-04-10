@@ -1,7 +1,7 @@
 include:
   - kube-apiserver
   - kubectl-config
-  - cri-common
+  - cri
 
 /etc/kubernetes/addons:
   file.directory:

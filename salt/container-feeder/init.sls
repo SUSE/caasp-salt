@@ -1,5 +1,5 @@
 include:
-  - cri-common
+  - cri
 
 /etc/sysconfig/container-feeder:
   file.managed:
@@ -19,21 +19,21 @@ container-feeder:
   service.running:
     - enable: True
     - require:
-      {% if "admin" not in salt['grains.get']('roles', []) %}
+      {% if not salt.caasp_cri.needs_docker() %}
       # the admin node uses docker as CRI, requiring its state
       # will cause the docker daemon to be restarted, which will
       # lead to the premature termination of the orchestration.
       # Hence let's not require docker on the admin node.
       # This is not a big deal because the admin node has already
       # working since the boot time.
-      - pkg: {{ salt.caasp_cri.cri_package_name() }}
+      - pkg: {{ pillar['cri'][salt.caasp_cri.cri_name()]['package'] }}
       {% endif %}
       - file: /etc/containers/storage.conf
       - file: /etc/sysconfig/container-feeder
       - file: /etc/container-feeder.json
     - watch:
-      {% if "admin" not in salt['grains.get']('roles', []) %}
-      - service: {{ salt.caasp_cri.cri_service_name() }}
+      {% if not salt.caasp_cri.needs_docker() %}
+      - service: {{ pillar['cri'][salt.caasp_cri.cri_name()]['service'] }}
       {% endif %}
       - file: /etc/containers/storage.conf
       - file: /etc/sysconfig/container-feeder

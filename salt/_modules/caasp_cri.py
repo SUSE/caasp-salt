@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import json
-import logging
 import os.path
 import time
 from salt.exceptions import CommandExecutionError
@@ -16,8 +15,13 @@ except ImportError:
         Not yet defined by this version of salt
         '''
 
-log = logging.getLogger(__name__)
 
+class CRIRuntimeException(Exception):
+    pass
+
+
+_ROLES_REQUIRING_DOCKER = ('admin', 'ca')
+_SUPPORTED_CRIS = ('docker', 'crio')
 
 def __virtual__():
     return "caasp_cri"
@@ -31,16 +35,11 @@ def cri_name():
     this is needed because salt pillars exposed by Velum have precedence
     over everything.
     '''
-    roles_requiring_docker = ('admin', 'ca')
 
-    node_roles = __salt__['grains.get']('roles', [])
-    cri = __salt__['pillar.get']('cri:name', 'docker').lower()
+    if needs_docker():
+        return 'docker'
 
-    for role in node_roles:
-        if role in roles_requiring_docker:
-            return 'docker'
-
-    return cri
+    return __salt__['pillar.get']('cri:chosen', 'docker').lower()
 
 
 def get_container_id(name, namespace):
@@ -77,7 +76,12 @@ def get_container_id(name, namespace):
                 info={'errors': [result['stderr']]}
             )
 
-    ps_data = json.loads(result['stdout'])
+    try:
+        ps_data = json.loads(result['stdout'])
+    except Exception as e:
+        raise CRIRuntimeException('Cannot parse `crictl ps` json output: {}'.
+                                  format(e.message))
+
     if 'containers' not in ps_data:
         # this happens when no containers are running
         return None
@@ -168,60 +172,11 @@ def wait_for_container(name, namespace, timeout):
     expire = time.time() + timeout
 
     while time.time() < expire:
-        if get_container_id(name, namespace) is not None:
+        if get_container_id(name, namespace):
             return True
         time.sleep(0.3)
 
     return False
-
-
-def cri_service_name():
-    '''
-    Return a string holding the name of the service identifying the CRI.
-
-    This is used internally by our salt states to DRY them.
-    '''
-    if 'admin' in __salt__['grains.get']('roles', []):
-        return 'docker'
-
-    cri = cri_name()
-
-    if cri == 'docker':
-        return 'docker'
-    elif cri == 'crio':
-        return 'crio'
-    else:
-        raise InvalidConfigError(
-                'Uknown CRI specified inside of pillars: {}'.format(cri))
-
-
-def cri_salt_state_name():
-    '''
-    Return a string holding the name of the salt state that manages the CRI.
-
-    This is used internally by our salt states to DRY them.
-    '''
-    return cri_service_name()
-
-
-def cri_package_name():
-    '''
-    Return a string holding the name of the package providing the CRI
-
-    This is used internally by our salt states to DRY them.
-    '''
-    if 'admin' in __salt__['grains.get']('roles', []):
-        return 'docker'
-
-    cri = cri_name()
-
-    if cri == 'docker':
-        return 'docker'
-    elif cri == 'crio':
-        return 'cri-o'
-    else:
-        raise InvalidConfigError(
-                'Uknown CRI specified inside of pillars: {}'.format(cri))
 
 
 def cri_runtime_endpoint():
@@ -229,18 +184,8 @@ def cri_runtime_endpoint():
     Return the path to the socket required by crictl to communicate
     with the CRI
     '''
-    if 'admin' in __salt__['grains.get']('roles', []):
-        return '/var/run/dockershim.sock'
 
-    cri = cri_name()
-
-    if cri == 'docker':
-        return '/var/run/dockershim.sock'
-    elif cri == 'crio':
-        return '/var/run/crio/crio.sock'
-    else:
-        raise InvalidConfigError(
-                'Uknown CRI specified inside of pillars: {}'.format(cri))
+    return __pillar__['cri'][cri_name()]['socket']
 
 
 def __wait_CRI_socket():
@@ -261,3 +206,13 @@ def __wait_CRI_socket():
         if os.path.exists(socket):
             return
         time.sleep(0.3)
+
+
+def needs_docker():
+    '''
+    Return true if the minion must use docker as CRI despite of what is
+    configured inside of the pillars.
+    '''
+
+    node_roles = __salt__['grains.get']('roles', [])
+    return any(role in _ROLES_REQUIRING_DOCKER for role in node_roles)

@@ -1,12 +1,12 @@
 /etc/crictl.yaml:
   file.managed:
-    - source: salt://cri-common/crictl.yaml.jinja
+    - source: salt://cri/crictl.yaml.jinja
     - template: jinja
 
 /etc/containers/storage.conf:
 {% if salt.caasp_cri.cri_name() == 'crio' %}
   file.managed:
-    - source: salt://cri-common/storage.conf.jinja
+    - source: salt://cri/storage.conf.jinja
     - template: jinja
 {% else %}
   # this file is only needed by crio, however container-feeder depends on it

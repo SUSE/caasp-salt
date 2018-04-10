@@ -152,7 +152,7 @@ etcd-setup:
       - kube-apiserver.stop
       - kube-controller-manager.stop
       - kube-scheduler.stop
-      - {{ salt.caasp_cri.cri_service_name() + '.stop' }}
+      - cri.stop
       - etcd.stop
     - require:
         - etcd-setup
@@ -251,7 +251,7 @@ etcd-setup:
       - container-feeder.stop
       - kubelet.stop
       - kube-proxy.stop
-      - {{ salt.ccaasp_cri.cri_service_name() + '.stop' }}
+      - cri.stop
       - etcd.stop
     - require:
       - pre-orchestration-migration

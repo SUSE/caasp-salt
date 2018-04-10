@@ -1,8 +1,5 @@
 from __future__ import absolute_import
-
-import logging
-
-log = logging.getLogger(__name__)
+from caasp_log import debug
 
 
 def stop_container_and_wait(name, namespace, timeout=60, **kwargs):
@@ -44,9 +41,9 @@ def stop_container_and_wait(name, namespace, timeout=60, **kwargs):
     stopped = __salt__['caasp_cri.stop_container'](name, namespace, **kwargs)
 
     if not stopped:
-        log.debug('CaaS: {namespace}.{name} container was not found running'.format(
-            namespace=namespace,
-            name=name))
+        debug('CaaS: {namespace}.{name} container was not found running'.format(
+              namespace=namespace,
+              name=name))
 
     return wait_for_container(name, namespace, timeout, **kwargs)
 

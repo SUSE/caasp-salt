@@ -6,8 +6,8 @@
 /var/lib/containers/storage:
   cmd.run:
     - name: |-
-        for subvolume in {{pillar['crio']['dirs']['root']}}/btrfs/subvolumes/* ; do
+        for subvolume in {{pillar['cri']['crio']['dirs']['root']}}/btrfs/subvolumes/* ; do
           btrfs subvolume delete $subvolume
         done
-        rm -rf {{pillar['crio']['dirs']['root']}}*
-        rm -rf {{pillar['crio']['dirs']['runroot']}}*
+        rm -rf {{pillar['cri']['crio']['dirs']['root']}}*
+        rm -rf {{pillar['cri']['crio']['dirs']['runroot']}}*

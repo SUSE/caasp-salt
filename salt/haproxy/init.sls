@@ -1,6 +1,6 @@
-{% if "admin" not in salt['grains.get']('roles', []) %}
+{% if not salt.caasp_cri.needs_docker() %}
 include:
-  - {{ salt.caasp_cri.cri_salt_state_name() }}
+  - {{ salt['pillar.get']('cri:chosen', 'docker') }}
   - kubelet
   - container-feeder
 {% endif %}

@@ -1,4 +1,3 @@
-{# In devenv, the transactional-update service does not exist on admin #}
 {% if 'ca' not in salt['grains.get']('roles', []) %}
 /etc/systemd/system/transactional-update.service.d/10-update-rebootmgr-options.conf:
   file.managed:
@@ -37,4 +36,3 @@ transactional_update_dummy_step:
   cmd.run:
     - name: "echo saltstack bug 14553"
 {% endif %}
-

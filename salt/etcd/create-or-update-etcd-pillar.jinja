@@ -4,23 +4,14 @@ import json
 import subprocess
 
 
-# This is set by salt, with jinja, when copying the file over to the minion
-CRI = '{{ salt.caasp_cri.cri_name() }}'
-
-
 def _cri_runtime_endpoint():
     '''
     Return the path to the socket required by crictl to communicate
-    with the CRI
+    with the CRI.
+
+    This is set by salt, with jinja, when copying the file over to the minion
     '''
-    # check the crio socket first, there might be cases when docker and crio
-    # are running at the same time
-    if CRI == 'docker':
-        return '/var/run/dockershim.sock'
-    elif CRI == 'crio':
-        return '/var/run/crio/crio.sock'
-    else:
-        raise RuntimeError('Cannot find a suitable CRI socket')
+    return '{{ salt.caasp_cri.cri_runtime_endpoint() }}'
 
 
 def _get_container_id(name, namespace):

@@ -33,7 +33,7 @@ KUBELET_ARGS="\
     {{ pillar['components']['kubelet']['args'] }} \
 {% if salt.caasp_cri.cri_name() == 'crio' -%}
     --container-runtime=remote \
-    --container-runtime-endpoint=/var/run/crio/crio.sock \
+    --container-runtime-endpoint={{ pillar['cri']['crio']['socket'] }} \
     --runtime-request-timeout=10m \
 {% endif -%}
     --client-ca-file={{ pillar['ssl']['ca_file'] }} \

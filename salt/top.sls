@@ -5,10 +5,10 @@ base:
   'roles:(admin|kube-master|kube-minion|etcd)':
     - match: grain_pcre
     - ca-cert
-    - cri-common
+    - cri
     - container-feeder
-    {% if 'admin' not in grains.get('roles', []) %}
-    - {{ salt.caasp_cri.cri_salt_state_name() }}
+    {% if not salt.caasp_cri.needs_docker() %}
+    - {{ salt['pillar.get']('cri:chosen', 'docker') }}
     {% endif %}
     - swap
     - etc-hosts
