@@ -1,46 +1,54 @@
+# note: this module can be directly imported from other
+#       Salt modules. Do not do the same for other modules:
+#       use __salt__['caasp_module.function'](args)
+#
 from __future__ import absolute_import
 
 import logging
 
-log = logging.getLogger(__name__)
+from salt.exceptions import SaltException
+
+log = logging.getLogger('CaaS')
 
 
-class ExecutionAborted(Exception):
+_CAAS_PREFIX = '[CaaS]: '
+
+
+class ExecutionAborted(SaltException):
     pass
 
 
-def abort(*args, **kwargs):
+def abort(msg, *args, **kwargs):
     '''
     Abort the Salt execution with an error
     '''
-    # TODO: use the builtin function (https://docs.saltstack.com/en/latest/topics/jinja/index.html#logs)
-    #       once we Salt>2017.7.0
-    log.error(*args, **kwargs)
-    raise ExecutionAborted()
+    error(msg, *args, **kwargs)
+    raise ExecutionAborted(msg % args)
 
 
-def error(*args, **kwargs):
+def error(msg, *args, **kwargs):
     '''
     Log a error message
     '''
-    # TODO: use the builtin function (https://docs.saltstack.com/en/latest/topics/jinja/index.html#logs)
-    #       once we Salt>2017.7.0
-    log.error(*args, **kwargs)
+    log.error(_CAAS_PREFIX + msg % args, **kwargs)
 
 
-def warn(*args, **kwargs):
+def warn(msg, *args, **kwargs):
     '''
     Log a warning message
     '''
-    # TODO: use the builtin function (https://docs.saltstack.com/en/latest/topics/jinja/index.html#logs)
-    #       once we Salt>2017.7.0
-    log.warn(*args, **kwargs)
+    log.warn(_CAAS_PREFIX + msg % args, **kwargs)
 
 
-def debug(*args, **kwargs):
+def info(msg, *args, **kwargs):
+    '''
+    Log an info message
+    '''
+    log.info(_CAAS_PREFIX + msg % args, **kwargs)
+
+
+def debug(msg, *args, **kwargs):
     '''
     Log a debug message
     '''
-    # TODO: use the builtin function (https://docs.saltstack.com/en/latest/topics/jinja/index.html#logs)
-    #       once we Salt>2017.7.0
-    log.debug(*args, **kwargs)
+    log.debug(_CAAS_PREFIX + msg % args, **kwargs)

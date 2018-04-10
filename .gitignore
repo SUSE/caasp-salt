@@ -1,6 +1,7 @@
 .idea/
 Makefile
 *.tgz
+*.pyc
 
 # local config files
 config/master.d/99-local-*.conf

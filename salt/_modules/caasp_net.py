@@ -5,10 +5,6 @@
 
 from __future__ import absolute_import
 
-import logging
-
-LOG = logging.getLogger(__name__)
-
 
 def __virtual__():
     return "caasp_net"
@@ -62,6 +58,13 @@ def get_primary_ips_for(compound, **kwargs):
 
 
 def get_nodename(**kwargs):
-    host = kwargs.pop('host', _get_local_id())
-    
-    return _get_mine(host, 'nodename')[host]
+    '''
+    (given some optional 'host')
+    return the hostname
+    '''
+    _not_provided = object()
+    host = kwargs.pop('host', _not_provided)
+    if host is _not_provided:
+        return __salt__['grains.get']('nodename')
+    else:
+        return _get_mine(host, 'nodename')[host]

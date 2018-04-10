@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
-import logging
 import subprocess
 
-log = logging.getLogger(__name__)
+# note: do not import caasp modules other than caasp_log
+from caasp_log import abort, debug, error, info, warn
 
 # minimum number of etcd masters we recommend
 MIN_RECOMMENDED_MEMBER_COUNT = 3
@@ -14,14 +14,6 @@ ETCD_CLIENT_PORT = 2379
 
 def __virtual__():
     return "caasp_etcd"
-
-
-# Grain used for getting nodes
-_GRAIN_NAME = 'nodename'
-
-
-class OnlyOnMasterException(Exception):
-    pass
 
 
 class NoEtcdServersException(Exception):
@@ -39,30 +31,7 @@ def _optimal_etcd_number(num_nodes):
         return 1
 
 
-def _get_grain(expr, grain=_GRAIN_NAME, type='compound'):
-    if __opts__['__role'] == 'master':
-        # 'mine.get' is not available in the master: it returns nothing
-        # in that case, we should use "saltutil.runner"... uh?
-        return __salt__['saltutil.runner']('mine.get',
-                                           tgt=expr,
-                                           fun=grain, tgt_type=type)
-    else:
-        return __salt__['mine.get'](expr, grain, expr_form=type)
-
-
-def _get_this_name():
-    return __salt__['grains.get'](_GRAIN_NAME)
-
-
-def _get_num_kube(expr):
-    '''
-    Get the number of kubernetes nodes that in the cluster that match "expr"
-    '''
-    log.debug("CaaS: finding nodes that match '%s' in the cluster", expr)
-    return len(_get_grain(expr, type='grain').values())
-
-
-def get_cluster_size():
+def get_cluster_size(**kwargs):
     '''
     Determines the optimal/desired (but possible) etcd cluster size
 
@@ -71,20 +40,31 @@ def get_cluster_size():
     match the number nodes with the kube-master role, and if this is
     less than 3, it will bump it to 3 (or the number of nodes
     available if the number of nodes is less than 3).
+
+    Optional arguments:
+
+      * `masters`: list of current kubernetes masters
+      * `minions`: list of current kubernetes minions
+
     '''
     member_count = __salt__['pillar.get']('etcd:masters', None)
+
+    masters = __salt__['caasp_nodes.get_from_args_or_with_expr'](
+        'masters', kwargs, 'G@roles:kube-master')
+    minions = __salt__['caasp_nodes.get_from_args_or_with_expr'](
+        'minions', kwargs, 'G@roles:kube-minion')
 
     if not member_count:
         # A value has not been set in the pillar, calculate a "good" number
         # for the user.
-        num_masters = _get_num_kube("roles:kube-master")
+        num_masters = len(masters)
 
         member_count = _optimal_etcd_number(num_masters)
         if member_count < MIN_RECOMMENDED_MEMBER_COUNT:
             # Attempt to increase the number of etcd master to 3,
             # however, if we don't have 3 nodes in total,
             # then match the number of nodes we have.
-            increased_member_count = _get_num_kube("roles:kube-*")
+            increased_member_count = len(masters) + len(minions)
             increased_member_count = min(
                 MIN_RECOMMENDED_MEMBER_COUNT, increased_member_count)
 
@@ -92,8 +72,8 @@ def get_cluster_size():
             # (otherwise we could have some leader election problems)
             member_count = _optimal_etcd_number(increased_member_count)
 
-            log.warning("CaaS: etcd member count too low (%d), increasing to %d",
-                        num_masters, increased_member_count)
+            warn("etcd member count too low (%d), increasing to %d",
+                 num_masters, increased_member_count)
 
             # TODO: go deeper and look for candidates in nodes with
             #       no role (as get_replacement_for_member() does)
@@ -103,57 +83,15 @@ def get_cluster_size():
         member_count = int(member_count)
 
         if member_count < MIN_RECOMMENDED_MEMBER_COUNT:
-            log.warning("CaaS: etcd member count too low (%d), consider increasing "
-                        "to %d", member_count, MIN_RECOMMENDED_MEMBER_COUNT)
+            warn("etcd member count too low (%d), consider increasing "
+                 "to %d", member_count, MIN_RECOMMENDED_MEMBER_COUNT)
 
     member_count = max(1, member_count)
-    log.debug("CaaS: using member count = %d", member_count)
+    debug("using member count = %d", member_count)
     return member_count
 
 
-def get_replacement_for_member():
-    '''
-    Get a node that can replace a etcd member
-
-    A valid replacement is a node that:
-
-      1) is not 'admin' or 'ca'
-      2) is not an etcd member
-      2) is not going to be removed/added/updated
-      3) (in preference order)
-          1) has no role assigned
-          2) is a master
-          3) is a minion
-
-    Returns '' if no replacement can be found.
-    '''
-
-    prio_roles = ['not G@roles:kube-(master|minion)',
-                  'G@roles:kube-master',
-                  'G@roles:kube-minion']
-    for role in prio_roles:
-        expr = ''
-        expr += 'not G@roles:etcd'
-        expr += ' and not G@roles:admin and not G@roles:ca'
-        expr += ' and not G@bootstrap_in_progress:true'
-        expr += ' and not G@update_in_progress:true'
-        expr += ' and not G@node_removal_in_progress:true'
-        expr += ' and not G@node_addition_in_progress:true'
-        expr += ' and {}'.format(role)
-
-        log.debug('CaaS: trying to find an etcd replacement with %s', expr)
-        ids = _get_grain(expr).keys()
-        if len(ids) > 0:
-            log.debug('CaaS: ... candidates for replacement: %s', str(ids))
-            return ids[0]
-        else:
-            log.debug('CaaS: ... no candidates found')
-
-    log.error('CaaS: no etcd replacement could be found')
-    return ''
-
-
-def get_additional_etcd_members():
+def get_additional_etcd_members(num_wanted=None, **kwargs):
     '''
     Taking into account
 
@@ -162,54 +100,48 @@ def get_additional_etcd_members():
          cluster (obtained with `get_cluster_size()`)
 
     get a list of additional nodes (IDs) that should run `etcd` too.
+
+    Optional arguments:
+
+      * `etcd_members`: list of current etcd members
+      * `excluded`: list of nodes to exclude
     '''
-    # machine IDs in the cluster that are currently etcd servers
-    current_etcd_members = _get_grain('G@roles:etcd').keys()
+    excluded = kwargs.get('excluded', [])
+
+    current_etcd_members = __salt__['caasp_nodes.get_from_args_or_with_expr'](
+        'etcd_members', kwargs, 'G@roles:etcd')
     num_current_etcd_members = len(current_etcd_members)
 
     # the number of etcd masters that should be in the cluster
-    num_wanted_etcd_members = get_cluster_size()
+    num_wanted_etcd_members = num_wanted or get_cluster_size(**kwargs)
     #... and the number we are missing
     num_additional_etcd_members = num_wanted_etcd_members - num_current_etcd_members
-    log.debug(
-        'get_additional_etcd_members: curr:{} wanted:{} -> {} missing'.format(num_current_etcd_members, num_wanted_etcd_members, num_additional_etcd_members))
 
-    new_etcd_members = []
+    if num_additional_etcd_members <= 0:
+        debug('get_additional_etcd_members: we dont need more etcd members')
+        return []
 
-    if num_additional_etcd_members > 0:
+    debug('get_additional_etcd_members: curr:%d wanted:%d -> %d missing',
+          num_current_etcd_members, num_wanted_etcd_members, num_additional_etcd_members)
 
-        masters_no_etcd = _get_grain(
-            'G@roles:kube-master and not G@roles:etcd').keys()
+    # Get a list of `num_additional_etcd_members` nodes that could be used
+    # for running etcd. A valid node is a node that:
+    #
+    #   1) is not the `admin` or `ca`
+    #   2) has no `etcd` role (bootstrapped or not)
+    #   2) is not being removed/added/updated
+    #   3) (in preference order, first for non bootstrapped nodes)
+    #       1) has no role assigned
+    #       2) is a master
+    #       3) is a minion
+    #
+    new_etcd_members = __salt__['caasp_nodes.get_with_prio_for_role'](
+        num_additional_etcd_members, 'etcd',
+        excluded=current_etcd_members + excluded)
 
-        # get k8s masters until we complete the etcd cluster
-        masters_and_etcd = masters_no_etcd[:num_additional_etcd_members]
-        new_etcd_members = new_etcd_members + masters_and_etcd
-        num_additional_etcd_members = num_additional_etcd_members - \
-            len(masters_and_etcd)
-        log.debug(
-            'CaaS: get_additional_etcd_members: taking {} masters -> {} missing'.format(len(masters_and_etcd), num_additional_etcd_members))
-
-        # if we have run out of k8s masters and we do not have
-        # enough etcd members, go for the k8s workers too...
-        if num_additional_etcd_members > 0:
-            workers_no_etcd = _get_grain(
-                'G@roles:kube-minion and not G@roles:etcd').keys()
-
-            workers_and_etcd = workers_no_etcd[:num_additional_etcd_members]
-            new_etcd_members = new_etcd_members + workers_and_etcd
-            num_additional_etcd_members = num_additional_etcd_members - \
-                len(workers_and_etcd)
-            log.debug(
-                'CaaS: get_additional_etcd_members: taking {} minions -> {} missing'.format(len(workers_and_etcd), num_additional_etcd_members))
-
-            # TODO: if num_additional_etcd_members is still >0,
-            #       fail/raise/message/something...
-            if num_additional_etcd_members > 0:
-                log.error(
-                    'CaaS: get_additional_etcd_members: cannot satisfy the {} members missing'.format(num_additional_etcd_members))
-
-            # TODO: go deeper and look for candidates in nodes with
-            #       no role (as get_replacement_for_member() does)
+    if len(new_etcd_members) < num_additional_etcd_members:
+        error('get_additional_etcd_members: cannot satisfy the %s members missing',
+              num_additional_etcd_members)
 
     return new_etcd_members
 
@@ -229,8 +161,8 @@ def get_endpoints(with_id=False, skip_this=False, skip_removed=False, port=ETCD_
         expr += ' and not G@node_removal_in_progress:true'
 
     etcd_members_lst = []
-    for (node_id, name) in _get_grain(expr).items():
-        if skip_this and name == _get_this_name():
+    for (node_id, name) in __salt__['caasp_grains.get'](expr).items():
+        if skip_this and name == __salt__['caasp_net.get_nodename']():
             continue
         member_endpoint = 'https://{}:{}'.format(name, port)
         if with_id:
@@ -238,7 +170,7 @@ def get_endpoints(with_id=False, skip_this=False, skip_removed=False, port=ETCD_
         etcd_members_lst.append(member_endpoint)
 
     if len(etcd_members_lst) == 0:
-        log.error('CaaS: no etcd members available!!')
+        error('no etcd members available!!')
         raise NoEtcdServersException()
 
     return sep.join(etcd_members_lst)
@@ -272,16 +204,17 @@ def get_member_id():
     '''
     command = ["etcdctl"] + get_etcdctl_args() + ["member", "list"]
 
-    log.debug("CaaS: getting etcd member ID with: %s", command)
+    debug("getting etcd member ID with: %s", command)
     try:
-        this_url = 'https://{}:{}'.format(_get_this_name(), ETCD_CLIENT_PORT)
+        this_nodename = __salt__['caasp_net.get_nodename']()
+        this_url = 'https://{}:{}'.format(this_nodename, ETCD_CLIENT_PORT)
         members_output = subprocess.check_output(command)
         for member_line in members_output.splitlines():
             if this_url in member_line:
                 return member_line.split(':')[0]
 
     except Exception as e:
-        log.error("CaaS: cannot get member ID: %s", e)
-        log.error("CaaS: output: %s", members_output)
+        error("cannot get member ID: %s", e)
+        error("output: %s", members_output)
 
     return ''

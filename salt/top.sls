@@ -2,7 +2,7 @@ base:
   'roles:ca':
     - match: grain
     - ca
-  'roles:(admin|kube-(master|minion))':
+  'roles:(admin|kube-master|kube-minion|etcd)':
     - match: grain_pcre
     - swap
     - etc-hosts
@@ -23,7 +23,7 @@ base:
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
-  'roles:kube-(master|minion)':
+  'roles:(kube-master|kube-minion|etcd)':
     - match: grain_pcre
     - ca-cert
     - repositories

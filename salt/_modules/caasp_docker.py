@@ -1,9 +1,8 @@
 from __future__ import absolute_import
 
-import logging
 from urlparse import urlparse
 
-LOG = logging.getLogger(__name__)
+from caasp_log import abort, debug, error, warn
 
 
 def __virtual__():
@@ -24,7 +23,7 @@ def _get_hostname_and_port(url, default_port=None):
             port = None
 
     res = (hostname, port or default_port)
-    LOG.debug("%s parsed as %s", url, res)
+    debug("%s parsed as %s", url, res)
     return res
 
 
@@ -38,7 +37,7 @@ def get_registries_certs(lst, default_port=5000):
     '''
     certs = {}
 
-    LOG.debug('Finding certificates in: %s', lst)
+    debug('Finding certificates in: %s', lst)
     for registry in lst:
         try:
             url = registry.get('url')
@@ -52,7 +51,7 @@ def get_registries_certs(lst, default_port=5000):
                 if port:
                     host_port += ":" + str(port)
 
-                LOG.debug('Adding certificate for: %s', host_port)
+                debug('Adding certificate for: %s', host_port)
                 certs[host_port] = cert
 
                 if port:
@@ -65,28 +64,28 @@ def get_registries_certs(lst, default_port=5000):
                         # as he/she could just access "docker pull my-registry/some/image",
                         # and Docker would fail to find "my-registry/ca.crt"
                         name = hostname
-                        LOG.debug(
+                        debug(
                             'Using default port: adding certificate for "%s" too', name)
                         certs[name] = cert
                 else:
                     # the same happens if the user introduced a certificate for
                     # "my-registry": we must fix the "docker pull my-registry:5000/some/image" case...
                     name = hostname + ':' + str(default_port)
-                    LOG.debug(
+                    debug(
                         'Adding certificate for default port, "%s", too', name)
                     certs[name] = cert
 
         except Exception as e:
-            LOG.error('Could not parse certificate: %s', e)
+            error('Could not parse certificate: %s', e)
 
         try:
             mirrors = registry.get('mirrors', [])
             if mirrors:
-                LOG.debug('Looking recursively for certificates in mirrors')
+                debug('Looking recursively for certificates in mirrors')
                 certs_mirrors = get_registries_certs(mirrors,
                                                      default_port=default_port)
                 certs.update(certs_mirrors)
         except Exception as e:
-            LOG.error('Could not parse mirrors: %s', e)
+            error('Could not parse mirrors: %s', e)
 
     return certs
