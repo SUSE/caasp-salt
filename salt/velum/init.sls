@@ -1,7 +1,5 @@
 include:
   - etc-hosts
-  - ca-cert
-  - cert
 
 {% set names = [salt.caasp_pillar.get('dashboard_external_fqdn'),
                 salt.caasp_pillar.get('dashboard')] %}
