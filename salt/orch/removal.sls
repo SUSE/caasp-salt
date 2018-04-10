@@ -228,7 +228,7 @@ remove-target-salt-key:
 # the etcd server we have just removed (but they would
 # keep working fine as long as we had >1 etcd servers)
 
-{%- set affected_expr = salt.caasp_nodes.get_expr_affected_by(target,
+{%- set affected_expr = salt.caasp_nodes.get_expr_affected_by([target],
                                                               excluded=[replacement],
                                                               masters=masters,
                                                               minions=minions,

@@ -105,8 +105,9 @@ def get_additional_etcd_members(num_wanted=None, **kwargs):
 
       * `etcd_members`: list of current etcd members
       * `excluded`: list of nodes to exclude
+      * `only_from`: get nodes only from this pool of nodes
     '''
-    excluded = kwargs.get('excluded', [])
+    excluded = kwargs.pop('excluded', [])
 
     current_etcd_members = __salt__['caasp_nodes.get_from_args_or_with_expr'](
         'etcd_members', kwargs, 'G@roles:etcd')
@@ -137,13 +138,55 @@ def get_additional_etcd_members(num_wanted=None, **kwargs):
     #
     new_etcd_members = __salt__['caasp_nodes.get_with_prio_for_role'](
         num_additional_etcd_members, 'etcd',
-        excluded=current_etcd_members + excluded)
+        excluded=current_etcd_members + excluded, **kwargs)
 
     if len(new_etcd_members) < num_additional_etcd_members:
         error('get_additional_etcd_members: cannot satisfy the %s members missing',
               num_additional_etcd_members)
 
     return new_etcd_members
+
+
+def get_reorg(targets, **kwargs):
+    '''
+    Check if we should reorganize the etcd members
+
+    Returns a pair of lists with
+    * the new nodes that should run etcd.
+    * the old minions thata were running etcd
+    '''
+    assert isinstance(targets, list)
+
+    minions = __salt__['caasp_nodes.get_from_args_or_with_expr'](
+        'minions', kwargs, 'G@roles:kube-minion')
+    etcd_members = __salt__['caasp_nodes.get_from_args_or_with_expr'](
+        'etcd_members', kwargs, 'G@roles:etcd')
+
+    minions_with_etcd = __salt__['caasp_utils.intersect'](minions, etcd_members)
+    if not minions_with_etcd:
+        debug('get_reorg: no minion running etcd: etcd cluster is fine as it is')
+        return [], []
+
+    masters = __salt__['caasp_nodes.get_from_args_or_with_expr'](
+        'masters', kwargs, 'G@roles:kube-master')
+
+    new_etcds = []
+    old_etcds = []
+
+    for target in targets:
+        if (target in masters) and (target not in etcd_members):
+            debug('get_reorg: %s is a !etcd/k8s-master: looking for etcd/minions', target)
+
+            if minions_with_etcd:
+                old_etcd = minions_with_etcd.pop()
+                debug('get_reorg: minion %s is running etcd: migrating to %s', old_etcd, target)
+                new_etcds.append(target)
+                old_etcds.append(old_etcd)
+            else:
+                debug('get_reorg: no more minions running etcd: we are done')
+                break
+
+    return new_etcds, old_etcds
 
 
 def get_endpoints(with_id=False, skip_this=False, skip_removed=False, port=ETCD_CLIENT_PORT, sep=','):

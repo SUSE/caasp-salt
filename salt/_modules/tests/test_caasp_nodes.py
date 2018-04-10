@@ -110,6 +110,25 @@ class TestGetWithPrio(unittest.TestCase):
             self.assertEqual(counter['value'], 3,
                              'unexpected number of calls ({}) to get_with_expr()'.format(counter['value']))
 
+        counter = {'value': 0}
+
+        def mocked_get_with_expr(expr, **kwargs):
+            counter['value'] += 1
+            return [self.unassigned_node_1, self.unassigned_node_2, self.unassigned_node_3]
+
+        # same test, but providing a pool with only two nodes
+        with patch('caasp_nodes.get_with_expr',
+                   mocked_get_with_expr):
+            nodes = get_with_prio(3, 'etcd', etcd_prio,
+                                  only_from=[self.unassigned_node_1, self.unassigned_node_2])
+
+            self.assertIn(self.unassigned_node_1, nodes,
+                          'unassigned_node_1 not found in list')
+            self.assertIn(self.unassigned_node_2, nodes,
+                          'unassigned_node_2 not found in list')
+            self.assertNotIn(self.unassigned_node_3, nodes,
+                             'unassigned_node_3 found in list')
+
 
 class TestGetReplacementFor(unittest.TestCase):
     '''
@@ -314,7 +333,7 @@ class TestGetExprAffectedBy(unittest.TestCase):
         Calculate the exporession for matching nodes affected by
         a master (k8s master & etcd) node removal
         '''
-        affected_expr = get_expr_affected_by(self.master_1,
+        affected_expr = get_expr_affected_by([self.master_1],
                                              masters=self.masters,
                                              minions=self.minions,
                                              etcd_members=self.etcd_members)
@@ -334,7 +353,7 @@ class TestGetExprAffectedBy(unittest.TestCase):
         Calculate the expression for matching nodes affected by
         a etcd-only node removal
         '''
-        affected_expr = get_expr_affected_by(self.only_etcd_1,
+        affected_expr = get_expr_affected_by([self.only_etcd_1],
                                              masters=self.masters,
                                              minions=self.minions,
                                              etcd_members=self.etcd_members)
@@ -348,12 +367,12 @@ class TestGetExprAffectedBy(unittest.TestCase):
             self.assertIn(expr, affected_items,
                           '{} is not in affected in expr: {}'.format(expr, affected_expr))
 
-    def test_get_expr_affected_by_etcd_removal_with_excluded(self):
+    def test_get_expr_affected_by_etcd_and_minion_removal(self):
         '''
-        Same test, but with some excluded node
+        Calculate the expression for matching nodes affected by
+        a etcd and a minion node removal
         '''
-        affected_expr = get_expr_affected_by(self.only_etcd_1,
-                                             excluded=[self.master_2],
+        affected_expr = get_expr_affected_by([self.only_etcd_1, self.minion_2],
                                              masters=self.masters,
                                              minions=self.minions,
                                              etcd_members=self.etcd_members)
@@ -361,7 +380,45 @@ class TestGetExprAffectedBy(unittest.TestCase):
         affected_items = affected_expr.split(' and ')
         expected_matches = self.common_expected_affected_matches + [
             'P@roles:(etcd|kube-master)',
-            'not L@master_2,only_etcd_1']
+            'not L@minion_2,only_etcd_1']
+
+        for expr in expected_matches:
+            self.assertIn(expr, affected_items,
+                          '{} is not in affected in expr: {}'.format(expr, affected_expr))
+
+    def test_get_expr_affected_by_etcd_removal_with_excluded(self):
+        '''
+        Same test, but with some excluded node
+        '''
+        affected_expr = get_expr_affected_by([self.only_etcd_1],
+                                             excluded=[self.master_2, self.master_3],
+                                             masters=self.masters,
+                                             minions=self.minions,
+                                             etcd_members=self.etcd_members)
+
+        affected_items = affected_expr.split(' and ')
+        expected_matches = self.common_expected_affected_matches + [
+            'P@roles:(etcd|kube-master)',
+            'not L@master_2,master_3,only_etcd_1']
+
+        for expr in expected_matches:
+            self.assertIn(expr, affected_items,
+                          '{} is not in affected in expr: {}'.format(expr, affected_expr))
+
+        #
+        # check the `included` argument has more priority
+        #
+        affected_expr = get_expr_affected_by([self.only_etcd_1],
+                                             excluded=[self.master_2, self.master_3],
+                                             included=[self.master_2],
+                                             masters=self.masters,
+                                             minions=self.minions,
+                                             etcd_members=self.etcd_members)
+
+        affected_items = affected_expr  # we cannot split by ' and '... use the raw string
+        expected_matches = self.common_expected_affected_matches + [
+            'P@roles:(etcd|kube-master)',
+            'not L@master_3,only_etcd_1']
 
         for expr in expected_matches:
             self.assertIn(expr, affected_items,

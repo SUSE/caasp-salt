@@ -144,6 +144,20 @@ def get_with_expr(expr, **kwargs):
     return __salt__['caasp_grains.get'](' and '.join(expr_items)).keys()
 
 
+# some shortcuts for getting etcd servers, masters and minions:
+
+def get_etcd_members(**kwargs):
+    return get_with_expr('G@roles:etcd', **kwargs)
+
+
+def get_masters(**kwargs):
+    return get_with_expr('G@roles:kube-master', **kwargs)
+
+
+def get_minions(**kwargs):
+    return get_with_expr('G@roles:kube-minion', **kwargs)
+
+
 def get_from_args_or_with_expr(arg_name, args_dict, *args, **kwargs):
     '''
     Utility function for getting a list of nodes from either the kwargs
@@ -155,7 +169,8 @@ def get_from_args_or_with_expr(arg_name, args_dict, *args, **kwargs):
         return get_with_expr(*args, **kwargs)
 
 
-def get_with_prio(num, description, prio_rules, **kwargs):
+def get_with_prio(num, description, prio_rules,
+                  only_from=[], **kwargs):
     '''
     Get a list of `num` nodes that could be used for
     running some role.
@@ -165,18 +180,29 @@ def get_with_prio(num, description, prio_rules, **kwargs):
       1) is not the `admin` or `ca`
       2) dopes not currently have that role
       2) is not being removed/added/updated
+
+    Optional arguments:
+
+      * `only_from`: get nodes only from this pool of nodes
     '''
     new_nodes = []
     remaining = num
     for expr in prio_rules:
         debug('trying to find candidates for %s with %s',
               description, expr)
-        # get all the nodes matching the priority expression,
-        # but filtering out all the nodes we already have
+
+        # get all the nodes matching the priority expression
         candidates = get_with_expr(expr,
                                    exclude_admin=True, exclude_in_progress=True,
                                    **kwargs)
-        ids = [x for x in candidates if x not in new_nodes]
+
+        # ... but filtering out all the nodes we already have
+        ids = list(set(candidates) - set(new_nodes))
+
+        # ... and from the pool of nodes we can use
+        if only_from:
+            ids = list(set(ids) & set(only_from))
+
         if len(ids) > 0:
             new_ids = ids[:remaining]
             new_nodes = new_nodes + new_ids
@@ -412,10 +438,10 @@ def get_replacement_for(target, replacement='', **kwargs):
     return replacement, replacement_roles
 
 
-def get_expr_affected_by(target, **kwargs):
+def get_expr_affected_by(targets, **kwargs):
     '''
     Get an expression for matching nodes that are affected by the
-    addition/removal of `target`. Those affected nodes should
+    addition/removal of `targets`. Those affected nodes should
     be highstated in order to update their configuration.
 
     Some notes:
@@ -428,7 +454,10 @@ def get_expr_affected_by(target, **kwargs):
       * `exclude_in_progress`: (default=True) exclude any node with *_in_progress
       * `excluded`: list of nodes to exclude
       * `excluded_roles`: list of roles to exclude
+      * `included`: list of nodes to force to include (with higher precedence than `excluded`)
     '''
+    assert isinstance(targets, list)
+
     affected_items = []
     affected_roles = []
 
@@ -436,23 +465,24 @@ def get_expr_affected_by(target, **kwargs):
     masters = get_from_args_or_with_expr('masters', kwargs, 'G@roles:kube-master')
     minions = get_from_args_or_with_expr('minions', kwargs, 'G@roles:kube-minion')
 
-    if target in etcd_members:
-        # we must highstate:
-        # * etcd members (ie, peers list in /etc/sysconfig/etcd)
-        affected_roles.append('etcd')
-        # * api servers (ie, etcd endpoints in /etc/kubernetes/apiserver
-        affected_roles.append('kube-master')
+    for target in targets:
+        if target in etcd_members:
+            # we must highstate:
+            # * etcd members (ie, peers list in /etc/sysconfig/etcd)
+            affected_roles.append('etcd')
+            # * api servers (ie, etcd endpoints in /etc/kubernetes/apiserver
+            affected_roles.append('kube-master')
 
-    if target in masters:
-        # we must highstate:
-        # * admin (ie, haproxy)
-        affected_roles.append('admin')
-        # * minions (ie, haproxy)
-        affected_roles.append('kube-minion')
+        if target in masters:
+            # we must highstate:
+            # * admin (ie, haproxy)
+            affected_roles.append('admin')
+            # * minions (ie, haproxy)
+            affected_roles.append('kube-minion')
 
-    if target in minions:
-        # ok, ok, /etc/hosts will contain the old node, but who cares!
-        pass
+        if target in minions:
+            # ok, ok, /etc/hosts will contain the old node, but who cares!
+            pass
 
     if not affected_roles:
         debug('no roles affected by the removal/addition of %s', target)
@@ -469,15 +499,24 @@ def get_expr_affected_by(target, **kwargs):
         affected_items.append('not G@node_removal_in_progress:true')
         affected_items.append('not G@node_addition_in_progress:true')
 
-    excluded_nodes = _sanitize_list([target] + kwargs.get('excluded', []))
+    included_nodes = _sanitize_list(kwargs.get('included', []))
+    excluded_nodes = _sanitize_list(targets + kwargs.get('excluded', []))
+
     if excluded_nodes:
-        affected_items.append('not L@' + ','.join(excluded_nodes))
+        excluded_not_included = list(set(excluded_nodes) - set(included_nodes))
+        excluded_expr = 'not L@' + ','.join(_sanitize_list(excluded_not_included))
+        affected_items.append(excluded_expr)
 
     excluded_roles = _sanitize_list(kwargs.get('excluded_roles', []))
     if excluded_roles:
         affected_items.append('not P@roles:(' + '|'.join(excluded_roles) + ')')
 
-    return ' and '.join(affected_items)
+    expr = ' and '.join(affected_items)
+
+    if included_nodes:
+        expr = '( {} ) or L@{}'.format(expr, ','.join(included_nodes))
+
+    return expr
 
 
 def get_super_master(**kwargs):

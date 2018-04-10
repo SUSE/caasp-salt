@@ -26,6 +26,14 @@ def abort(msg, *args, **kwargs):
     raise ExecutionAborted(msg % args)
 
 
+def abort_if(expr, *args, **kwargs):
+    '''
+    Abort if expr is True
+    '''
+    if expr:
+        abort('Assertion failed', *args, **kwargs)
+
+
 def error(msg, *args, **kwargs):
     '''
     Log a error message
