@@ -1,4 +1,4 @@
-{%- set updates_all_target = 'P@roles:(admin|kube-(master|minion)) and ' +
+{%- set updates_all_target = 'P@roles:(admin|etcd|kube-(master|minion)) and ' +
                              'G@bootstrap_complete:true and ' +
                              'not G@bootstrap_in_progress:true and ' +
                              'not G@update_in_progress:true and ' +
