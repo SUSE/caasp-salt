@@ -305,8 +305,8 @@ class TestGetExprAffectedBy(unittest.TestCase):
             'G@bootstrap_complete:true',
             'not G@bootstrap_in_progress:true',
             'not G@update_in_progress:true',
-            'not G@removal_in_progress:true',
-            'not G@addition_in_progress:true'
+            'not G@node_removal_in_progress:true',
+            'not G@node_addition_in_progress:true'
         ]
 
     def test_get_expr_affected_by_master_removal(self):

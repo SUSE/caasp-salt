@@ -130,8 +130,8 @@ def get_with_expr(expr, **kwargs):
     if kwargs.get('exclude_in_progress', False):
         expr_items.append('not G@bootstrap_in_progress:true')
         expr_items.append('not G@update_in_progress:true')
-        expr_items.append('not G@removal_in_progress:true')
-        expr_items.append('not G@addition_in_progress:true')
+        expr_items.append('not G@node_removal_in_progress:true')
+        expr_items.append('not G@node_addition_in_progress:true')
 
     excluded = _sanitize_list(kwargs.get('excluded', []))
     if excluded:
@@ -466,8 +466,8 @@ def get_expr_affected_by(target, **kwargs):
     if kwargs.get('exclude_in_progress', True):
         affected_items.append('not G@bootstrap_in_progress:true')
         affected_items.append('not G@update_in_progress:true')
-        affected_items.append('not G@removal_in_progress:true')
-        affected_items.append('not G@addition_in_progress:true')
+        affected_items.append('not G@node_removal_in_progress:true')
+        affected_items.append('not G@node_addition_in_progress:true')
 
     excluded_nodes = _sanitize_list([target] + kwargs.get('excluded', []))
     if excluded_nodes:

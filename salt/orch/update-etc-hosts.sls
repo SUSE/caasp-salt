@@ -2,8 +2,7 @@
                              'G@bootstrap_complete:true and ' +
                              'not G@bootstrap_in_progress:true and ' +
                              'not G@update_in_progress:true and ' +
-                             'not G@node_removal_in_progress:true and ' +
-                             'not G@node_addition_in_progress:true' %}
+                             'not G@removal_in_progress:true' %}
 
 {%- if salt.saltutil.runner('mine.get', tgt=updates_all_target, fun='nodename', tgt_type='compound')|length > 0 %}
 update_pillar:
