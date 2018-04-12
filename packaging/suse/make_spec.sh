@@ -67,9 +67,13 @@ Requires:       salt
 %if 0%{?suse_version} >= 1500
 Requires:       python3-M2Crypto
 Requires:       python3-pyOpenSSL
+Requires:       python3-etcd
+Requires:       python3-pyroute2
 %else
 Requires:       python-m2crypto
 Requires:       python-pyOpenSSL
+Requires:       python-etcd
+Requires:       python-pyroute2
 %endif
 
 %description
