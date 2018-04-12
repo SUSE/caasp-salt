@@ -1,0 +1,18 @@
+def label = "mypod-${UUID.randomUUID().toString()}"
+
+podTemplate(label: label, containers: [
+        containerTemplate(name: 'opensuse', image: 'opensuse:42.3', ttyEnabled: true, command: 'cat'),
+]) {
+    node(label) {
+        stage('Integration Test') {
+            try {
+                container('opensuse') {
+                    sh 'echo tester'
+                }
+            } catch (Exception e) {
+                containerLog 'opensuse'
+                throw e
+            }
+        }
+    }
+}
