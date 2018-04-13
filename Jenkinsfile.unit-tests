@@ -9,7 +9,7 @@ podTemplate(label: label, containers: [
 
             try {
                 container('opensuse') {
-                    sh 'zypper in --no-confirm python-tox'
+                    sh 'zypper in --no-confirm python-pyOpenSSL python-tox'
                     sh 'tox -e unit'
                 }
             } catch (Exception e) {
