@@ -1,0 +1,77 @@
+# The privileged PodSecurityPolicy is intended to be given
+# only to trusted workloads. It provides for as few restrictions as possible
+# and should only be assigned to highly trusted users.
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: suse.caasp.psp.privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: docker/default
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
+spec:
+  # Privileged
+  privileged: true
+  # Volumes and File Systems
+  volumes:
+    # Kubernetes Pseudo Volume Types
+    - configMap
+    - secret
+    - emptyDir
+    - downwardAPI
+    - projected
+    - persistentVolumeClaim
+    # Kubernetes Host Volume Types
+    - hostPath
+    # Networked Storage
+    - nfs
+    - rbd
+    - cephFS
+    - glusterfs
+    - fc
+    - iscsi
+    # Cloud Volumes
+    - gcePersistentDisk
+    - awsElasticBlockStore
+    - azureDisk
+    - azureFile
+    - vsphereVolume
+  allowedFlexVolumes: []
+  #allowedHostPaths: []
+  readOnlyRootFilesystem: false
+  # Users and groups
+  runAsUser:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  # Privilege Escalation
+  allowPrivilegeEscalation: true
+  defaultAllowPrivilegeEscalation: true
+  # Capabilities
+  allowedCapabilities:
+    - '*'
+  defaultAddCapabilities: []
+  requiredDropCapabilities: []
+  # Host namespaces
+  hostPID: true
+  hostIPC: true
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  seLinux:
+    # SELinux is unsed in CaaSP
+    rule: 'RunAsAny'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: suse:caasp:psp:privileged
+rules:
+  - apiGroups: ['extensions']
+    resources: ['podsecuritypolicies']
+    verbs: ['use']
+    resourceNames: ['suse.caasp.psp.privileged']

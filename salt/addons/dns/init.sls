@@ -1,4 +1,4 @@
-{% if salt.caasp_pillar.get('addons:dns', False) %}
+{% if salt.caasp_pillar.get('addons:dns', True) %}
 
 include:
   - kube-apiserver

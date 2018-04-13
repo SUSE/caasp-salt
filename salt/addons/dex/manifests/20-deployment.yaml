@@ -26,6 +26,7 @@ spec:
         checksum/secret: {{ salt.hashutil.digest_file("/etc/kubernetes/addons/dex/15-secret.yaml", "sha256") }}
     spec:
       serviceAccountName: dex
+
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists
@@ -90,9 +91,11 @@ spec:
           items:
           - key: config.yaml
             path: config.yaml
+
       - name: tls
         secret:
           secretName: dex-tls
+
       - name: ca
         hostPath:
           path: {{ pillar['ssl']['ca_file'] }}

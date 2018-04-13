@@ -23,7 +23,7 @@ KUBE_ETCD_SERVERS="--etcd-cafile={{ pillar['ssl']['ca_file'] }} \
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}"
 
 # default admission control policies
-KUBE_ADMISSION_CONTROL="--admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,NodeRestriction,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds"
+KUBE_ADMISSION_CONTROL="--admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,NodeRestriction,PodSecurityPolicy,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds"
 
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
