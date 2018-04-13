@@ -4,10 +4,13 @@ podTemplate(label: label, containers: [
         containerTemplate(name: 'opensuse', image: 'opensuse:42.3', ttyEnabled: true, command: 'cat'),
 ]) {
     node(label) {
-        stage('Integration Test') {
+        stage('Unit Tests') {
+            checkout scm
+
             try {
                 container('opensuse') {
-                    sh 'echo tester'
+                    sh 'zypper in --yes python-tox'
+                    sh 'tox -e unit'
                 }
             } catch (Exception e) {
                 containerLog 'opensuse'

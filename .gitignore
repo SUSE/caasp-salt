@@ -2,6 +2,7 @@
 Makefile
 *.tgz
 *.pyc
+.tox
 
 # local config files
 config/master.d/99-local-*.conf
