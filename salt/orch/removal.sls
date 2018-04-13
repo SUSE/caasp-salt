@@ -97,6 +97,15 @@ highstate-replacement:
     - require:
       - sync-all
 
+kubelet-setup:
+  salt.state:
+    - tgt: {{ replacement }}
+    - sls:
+      - kubelet.configure-taints
+      - kubelet.configure-labels
+    - require:
+      - highstate-replacement
+
 set-bootstrap-complete-flag-in-replacement:
   salt.function:
     - tgt: {{ replacement }}
@@ -105,7 +114,7 @@ set-bootstrap-complete-flag-in-replacement:
       - bootstrap_complete
       - true
     - require:
-      - highstate-replacement
+      - kubelet-setup
 
 # remove the we-are-adding-this-node grain
 remove-addition-grain:
@@ -255,6 +264,6 @@ remove-cluster-wide-removal-grain:
     - kwarg:
         destructive: True
     - require:
-      - highstate-affected-{{ affected_roles|join('-and-') }}
+      - highstate-affected
 
 {% endif %}
