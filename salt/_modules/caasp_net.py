@@ -14,17 +14,14 @@ def _get_local_id():
     return __salt__['grains.get']('id')
 
 
-def _get_mine(*args, **kwargs):
-    return __salt__['mine.get'](*args, **kwargs)
-
-
 def get_iface_ip(iface, **kwargs):
     '''
     given an 'iface' (and an optional 'host' and list of 'ifaces'),
     return the IP address associated with 'iface'
     '''
     host = kwargs.pop('host', _get_local_id())
-    ifaces = kwargs.pop('ifaces', _get_mine(host, 'network.interfaces')[host])
+    all_ifaces = __salt__['caasp_grains.get'](host, 'network.interfaces', type='glob')
+    ifaces = kwargs.pop('ifaces', all_ifaces[host])
 
     return ifaces.get(iface).get('inet', [{}])[0].get('address')
 
@@ -35,7 +32,8 @@ def get_primary_iface(**kwargs):
     return the name of the primary iface (the iface associated with the default route)
     '''
     host = kwargs.pop('host', _get_local_id())
-    return _get_mine(host, 'network.default_route')[host][0]['interface']
+    all_routes = __salt__['caasp_grains.get'](host, 'network.default_route', type='glob')
+    return all_routes[host][0]['interface']
 
 
 def get_primary_ip(**kwargs):
@@ -52,7 +50,8 @@ def get_primary_ips_for(compound, **kwargs):
     nodes that match that expression
     '''
     res = []
-    for host in _get_mine(compound, 'network.interfaces', expr_form='compound').keys():
+    all_ifaces = __salt__['caasp_grains.get'](compound, 'network.interfaces')
+    for host in all_ifaces.keys():
         res.append(get_primary_ip(host=host, **kwargs))
     return res
 
@@ -60,11 +59,13 @@ def get_primary_ips_for(compound, **kwargs):
 def get_nodename(**kwargs):
     '''
     (given some optional 'host')
-    return the hostname
+    return the `nodename`
     '''
     _not_provided = object()
     host = kwargs.pop('host', _not_provided)
     if host is _not_provided:
+        assert __opts__['__role'] != 'master'
         return __salt__['grains.get']('nodename')
     else:
-        return _get_mine(host, 'nodename')[host]
+        all_nodenames = __salt__['caasp_grains.get'](host, 'nodename', type='glob')
+        return all_nodenames[host]
