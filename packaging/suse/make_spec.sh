@@ -47,7 +47,7 @@ cat <<EOF > ${NAME}.spec
 %endif
 
 %if 0%{?is_opensuse} && 0%{?suse_version} > 1500
-  %define _base_image tumbleweed
+  %define _base_image kubic
 %endif
 
 %{!?tmpfiles_create:%global tmpfiles_create systemd-tmpfiles --create}
@@ -64,8 +64,17 @@ Url:            https://github.com/kubic-project/salt
 Source:         ${SAFE_BRANCH}.tar.gz
 BuildRequires:  systemd-rpm-macros
 Requires:       salt
+%if 0%{?suse_version} >= 1500
+Requires:       python3-M2Crypto
+Requires:       python3-pyOpenSSL
+Requires:       python3-etcd
+Requires:       python3-pyroute2
+%else
 Requires:       python-m2crypto
 Requires:       python-pyOpenSSL
+Requires:       python-etcd
+Requires:       python-pyroute2
+%endif
 
 %description
 Salt scripts for deploying a Kubernetes cluster
