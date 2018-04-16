@@ -1,10 +1,8 @@
-# cleanup all the things we have created
+
+# some files that could contain sensitive information:
 
 /etc/kubernetes/config:
   file.absent
 
 /etc/kubernetes/openstack-config:
-  file.absent
-
-/var/lib/kubernetes:
   file.absent

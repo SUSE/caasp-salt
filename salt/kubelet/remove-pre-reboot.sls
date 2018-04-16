@@ -10,20 +10,10 @@ node-pem:
 {{ pillar['ssl']['kubelet_key'] }}:
   file.absent
 
-/etc/kubernetes/kubelet-initial:
-  file.absent
-
+# this file can contain sensitive information, so it must be removed too
 {{ pillar['paths']['kubelet_config'] }}:
   file.absent
 
+# and this one too
 /etc/kubernetes/openstack-config:
   file.absent
-
-wipe-var-lib-kubelet:
-  cmd.run:
-    - name: |-
-        mnts=`mount | grep kubelet | grep tmpfs | cut -f3 -d" "`
-        for i in $mnts ; do
-            umount $i
-        done
-        rm -rf /var/lib/kubelet/*
