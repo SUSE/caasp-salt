@@ -35,14 +35,23 @@ set-etcd-roles:
       - set-bootstrap-in-progress-flag
 {% endif %}
 
-sync-pillar:
-  salt.runner:
-    - name: saltutil.sync_pillar
+update-modules:
+  salt.function:
+    - tgt: '*'
+    - name: saltutil.sync_all
+    - kwarg:
+        refresh: True
     - require:
       - set-bootstrap-in-progress-flag
 {%- if additional_etcd_members|length > 0 %}
       - set-etcd-roles
 {%- endif %}
+
+sync-pillar:
+  salt.runner:
+    - name: saltutil.sync_pillar
+    - require:
+      - update-modules
 
 update-pillar:
   salt.function:
@@ -66,15 +75,6 @@ update-mine:
       - update-pillar
       - update-grains
 
-update-modules:
-  salt.function:
-    - tgt: '*'
-    - name: saltutil.sync_all
-    - kwarg:
-        refresh: True
-    - require:
-      - update-mine
-
 disable-rebootmgr:
   salt.state:
     - tgt: 'roles:(admin|kube-master|minion|etcd)'
@@ -82,7 +82,7 @@ disable-rebootmgr:
     - sls:
       - rebootmgr
     - require:
-      - update-modules
+      - update-mine
 
 etc-hosts-setup:
   salt.state:

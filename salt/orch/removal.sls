@@ -73,10 +73,10 @@ sync-all:
   salt.function:
     - tgt: '*'
     - names:
+      - saltutil.sync_all
       - saltutil.refresh_pillar
       - saltutil.refresh_grains
       - mine.update
-      - saltutil.sync_all
     - require:
       - set-cluster-wide-removal-grain
       - assign-removal-grain
