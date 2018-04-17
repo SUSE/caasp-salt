@@ -197,17 +197,25 @@ def get_etcdctl_args_str(**kwargs):
     return " ".join(get_etcdctl_args(**kwargs))
 
 
-def get_member_id():
+def get_member_id(nodename=None):
     '''
     Return the member ID (different from the node ID) for
-    this etcd member of the cluster.
+    a etcd member of the cluster.
+
+    Arguments:
+
+    * `nodename`: (optional) the nodename for the member we
+                  want the ID for. if no name is provided (or empty),
+                  the local node will be used.
     '''
     command = ["etcdctl"] + get_etcdctl_args() + ["member", "list"]
+
+    target_nodename = nodename or __salt__['caasp_net.get_nodename']()
 
     debug("getting etcd member ID with: %s", command)
     try:
         this_nodename = __salt__['caasp_net.get_nodename']()
-        this_url = 'https://{}:{}'.format(this_nodename, ETCD_CLIENT_PORT)
+        this_url = 'https://{}:{}'.format(target_nodename, ETCD_CLIENT_PORT)
         members_output = subprocess.check_output(command)
         for member_line in members_output.splitlines():
             if this_url in member_line:
