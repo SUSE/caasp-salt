@@ -214,11 +214,10 @@ def get_member_id(nodename=None):
 
     debug("getting etcd member ID with: %s", command)
     try:
-        this_nodename = __salt__['caasp_net.get_nodename']()
-        this_url = 'https://{}:{}'.format(target_nodename, ETCD_CLIENT_PORT)
+        target_url = 'https://{}:{}'.format(target_nodename, ETCD_CLIENT_PORT)
         members_output = subprocess.check_output(command)
         for member_line in members_output.splitlines():
-            if this_url in member_line:
+            if target_url in member_line:
                 return member_line.split(':')[0]
 
     except Exception as e:
