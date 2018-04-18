@@ -32,6 +32,7 @@ spec:
     - fc
     - iscsi
     # Cloud Volumes
+    - cinder
     - gcePersistentDisk
     - awsElasticBlockStore
     - azureDisk
