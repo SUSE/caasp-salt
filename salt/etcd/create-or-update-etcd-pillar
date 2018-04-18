@@ -1,3 +1,0 @@
-#!/bin/bash
-
-docker exec $(docker ps | grep velum-dashboard | awk '{print $1}') entrypoint.sh bundle exec rails runner 'ActiveRecord::Base.logger=nil; pillar = Pillar.find_or_create_by(pillar: "api:etcd_version"); pillar.value = "etcd3"; pillar.save'

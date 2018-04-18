@@ -1,5 +1,5 @@
 {# In Kubernetes, /etc/hosts is mounted in from the host. file.blockreplace fails on this #}
-{% if salt['grains.get']('virtual_subtype', None) != 'Docker' %}
+{% if 'ca' not in salt['grains.get']('roles', []) %}
 /etc/hosts:
   file.blockreplace:
     # If markers are changed, also update etc-hosts/update-pre-reboot.sls
@@ -20,6 +20,9 @@ dummy_step:
 {# So the old /etc/hosts will remain mounted in the container (as bind-mount works at inode level). #}
 {# For more info see https://github.com/kubic-project/salt/pull/265#issuecomment-337256898 #}
 {% if "admin" in salt['grains.get']('roles', []) %}
+{# WARNING: this code will have to be ported to not invoke `docker` once #}
+{# the admin node is switched to cri-o. Right now there's no way to copy #}
+{# a file from the host into a container managed by cri-o. #}
 update-velum-hosts:
   cmd.run:
     - name: |-

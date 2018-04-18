@@ -31,6 +31,11 @@ KUBELET_ARGS="\
   {% endif -%}
 {% endif -%}
     {{ pillar['components']['kubelet']['args'] }} \
+{% if salt.caasp_cri.cri_name() == 'crio' -%}
+    --container-runtime=remote \
+    --container-runtime-endpoint={{ pillar['cri']['crio']['socket'] }} \
+    --runtime-request-timeout=10m \
+{% endif -%}
     --client-ca-file={{ pillar['ssl']['ca_file'] }} \
     --require-kubeconfig \
     --network-plugin=cni \

@@ -5,6 +5,11 @@ base:
   'roles:(admin|kube-master|kube-minion|etcd)':
     - match: grain_pcre
     - ca-cert
+    - cri
+    - container-feeder
+    {% if not salt.caasp_cri.needs_docker() %}
+    - {{ salt['pillar.get']('cri:chosen', 'docker') }}
+    {% endif %}
     - swap
     - etc-hosts
     - proxy
@@ -30,7 +35,5 @@ base:
     - motd
     - users
     - cert
-    - docker
-    - container-feeder
     - kubelet
     - kube-proxy

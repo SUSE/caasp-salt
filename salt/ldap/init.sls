@@ -8,13 +8,9 @@
          extra_alt_names = alt_names(names)) }}
 
 openldap_restart:
-  cmd.run:
-    - name: |-
-        openldap_id=$(docker ps | grep "openldap" | awk '{print $1}')
-        if [ -n "$openldap_id" ]; then
-            # Don't allow this state to fail if docker restart fails, this avoids
-            # a race condition between `docker ps` and `docker restart`
-            docker restart $openldap_id || :
-        fi
+  caasp_cri.stop_container_and_wait:
+    - name: openldap
+    - namespace: default
+    - timeout: 60
     - onchanges:
       - caasp_retriable: {{ pillar['ssl']['ldap_crt'] }}

@@ -165,7 +165,7 @@ stop-services-in-target:
   {%- endif %}
       - kubelet.stop
       - kube-proxy.stop
-      - docker.stop
+      - cri.stop
   {%- if target in etcd_members %}
       - etcd.stop
   {%- endif %}
@@ -192,7 +192,7 @@ cleanups-in-target-before-rebooting:
       - kube-proxy.remove-pre-reboot
       - kubelet.remove-pre-reboot
       - kubectl-config.remove-pre-reboot
-      - docker.remove-pre-reboot
+      - cri.remove-pre-reboot
       - cni.remove-pre-reboot
   {%- if target in etcd_members %}
       - etcd.remove-pre-reboot
