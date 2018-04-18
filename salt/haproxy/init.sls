@@ -62,8 +62,10 @@ haproxy-restart:
     - timeout: 60
     - onchanges:
       - file: /etc/caasp/haproxy/haproxy.cfg
+{% if not salt.caasp_cri.needs_docker() %}
     - require:
       - service: container-feeder
+{% endif %}
 
 
 {% if 'admin' in salt['grains.get']('roles', []) %}
