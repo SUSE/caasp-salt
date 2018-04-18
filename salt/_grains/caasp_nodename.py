@@ -2,6 +2,10 @@
 
 import salt.grains.core
 
+assert '__opts__' in globals()
+salt.grains.core.__opts__ = __opts__
+
+
 def caasp_nodename():
     """
     Override core.hostname grain to provide lowercased items
