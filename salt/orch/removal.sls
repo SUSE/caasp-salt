@@ -217,8 +217,7 @@ shutdown-target:
     # (we don't need to wait for the node:
     # just forget about it...)
 
-# remove the Salt key
-# (it will appear as "unaccepted")
+# remove the Salt key and the mine for the target
 remove-target-salt-key:
   salt.wheel:
     - name: key.reject
@@ -226,6 +225,14 @@ remove-target-salt-key:
     - match: {{ target }}
     - require:
       - shutdown-target
+
+# remove target's data in the Salt Master's cache
+remove-target-mine:
+  salt.runner:
+    - name: cache.clear_all
+    - tgt: '{{ target }}'
+    - require:
+      - remove-target-salt-key
 
 # revoke certificates
 # TODO
@@ -242,8 +249,18 @@ remove-target-salt-key:
                                                               masters=masters,
                                                               minions=minions,
                                                               etcd_members=etcd_members) %}
-{%- if affected_expr %}
-  {%- do salt.caasp_log.debug('will high-state machines affected by removal: %s', affected_expr) %}
+
+{%- do salt.caasp_log.debug('will high-state machines affected by removal: %s', affected_expr) %}
+
+# make sure the cluster has up-to-date state
+sync-after-removal:
+  salt.function:
+    - tgt: '*'
+    - names:
+      - saltutil.clear_cache
+      - mine.update
+    - require:
+      - remove-target-mine
 
 highstate-affected:
   salt.state:
@@ -252,7 +269,7 @@ highstate-affected:
     - highstate: True
     - batch: 1
     - require:
-      - remove-target-salt-key
+      - sync-after-removal
 
 # remove the we-are-removing-some-node grain in the cluster
 remove-cluster-wide-removal-grain:
@@ -265,5 +282,3 @@ remove-cluster-wide-removal-grain:
         destructive: True
     - require:
       - highstate-affected
-
-{% endif %}
