@@ -1,9 +1,7 @@
 # must provide the node (id) to be removed in the 'target' pillar
 {%- set target = salt['pillar.get']('target') %}
-{%- set target_nodename = salt.saltutil.runner('mine.get', tgt=target, fun='nodename')[target] %}
 
 {%- set super_master = salt.saltutil.runner('manage.up', tgt='G@roles:kube-master and not ' + target, expr_form='compound')|first %}
-{%- set etcd_members = salt.saltutil.runner('manage.up', tgt='roles:etcd', expr_form='grain') %}
 
 set-cluster-wide-removal-grain:
   salt.function:
@@ -22,24 +20,15 @@ sync-all:
       - mine.update
       - saltutil.sync_all
 
-{%- if target in etcd_members %}
-unregister-{{ target }}-etcd:
+unregister-{{ target }}:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
-        - etcd.remove-pre-stop-services
+        - cleanup.remove-post-orchestration
     - fail_minions: {{ super_master }}
     - pillar:
-        nodename: {{ target_nodename }}
-{%- endif %}
-
-unregister-{{ target }}-kubelet:
-  salt.function:
-    - tgt: {{ super_master }}
-    - name: cmd.run
-    - fail_minions: {{ super_master }}
-    - arg:
-        - kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} delete node {{ target_nodename }}
+        target: {{ target }}
+        forced: True
 
 remove-cluster-wide-removal-grain:
   salt.function:
