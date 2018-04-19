@@ -7,7 +7,7 @@ crio:
     - name: cri-o
   file.managed:
     - name: /etc/crio/crio.conf
-    - source: salt://crio/crio.conf.jinja
+    - source: salt://cri/crio/crio.conf.jinja
     - template: jinja
     - require_in:
       - kubelet
@@ -27,7 +27,7 @@ crio-reload-config:
 
 /etc/systemd/system/kubelet.service.d/kubelet.conf:
   file.managed:
-    - source: salt://crio/kubelet.conf
+    - source: salt://cri/crio/kubelet.conf
     - makedirs: True
     - require_in:
       - kubelet

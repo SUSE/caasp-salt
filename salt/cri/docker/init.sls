@@ -1,3 +1,4 @@
+
 include:
   - repositories
 
@@ -56,7 +57,7 @@ include:
 
 /etc/docker/daemon.json:
   file.managed:
-    - source: salt://docker/daemon.json.jinja
+    - source: salt://cri/docker/daemon.json.jinja
     - template: jinja
     - makedirs: True
 

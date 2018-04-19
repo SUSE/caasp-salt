@@ -1,6 +1,6 @@
 {% if not salt.caasp_cri.needs_docker() %}
 include:
-  - {{ salt['pillar.get']('cri:chosen', 'docker') }}
+  - cri/{{ salt['pillar.get']('cri:chosen', 'docker') }}
   - kubelet
   - container-feeder
 {% endif %}

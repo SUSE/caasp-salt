@@ -26,3 +26,6 @@ podman:
     # flannel network, which is useful for debugging.
     - require:
       - pkg: podman
+
+include:
+  - cri/{{ pillar['cri'][salt.caasp_cri.cri_name()]['service'] }}
