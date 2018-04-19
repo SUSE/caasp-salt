@@ -50,3 +50,6 @@ ssl:
 
   kube_proxy_key: '/etc/pki/kube-proxy.key'
   kube_proxy_crt: '/etc/pki/kube-proxy.crt'
+
+  cilium_key: '/etc/pki/cilium.key'
+  cilium_crt: '/etc/pki/cilium.crt'

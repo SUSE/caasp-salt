@@ -1,0 +1,171 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: cilium
+  namespace: kube-system
+spec:
+  updateStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      # Specifies the maximum number of Pods that can be unavailable during the update process.
+      # The current default value is 1 or 100% for daemonsets; Adding an explicit value here
+      # to avoid confusion, as the default value is specific to the type (daemonset/deployment).
+      maxUnavailable: "100%"
+  selector:
+    matchLabels:
+      k8s-app: cilium
+      kubernetes.io/cluster-service: "true"
+  template:
+    metadata:
+      labels:
+        k8s-app: cilium
+        kubernetes.io/cluster-service: "true"
+      annotations:
+        # This annotation plus the CriticalAddonsOnly toleration makes
+        # cilium to be a critical pod in the cluster, which ensures cilium
+        # gets priority scheduling.
+        # https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/tolerations: >-
+          [{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]
+    spec:
+      serviceAccountName: cilium
+      initContainers:
+      - name: install-cni-conf
+        image: {{ pillar['cilium']['image'] }}
+        command:
+          - /bin/sh
+          - "-c"
+          - "cp -f /etc/cni/net.d/10-cilium-cni.conf /host/etc/cni/net.d/10-cilium-cni.conf"
+        volumeMounts:
+        - name: host-cni-conf
+          mountPath: /host/etc/cni/net.d
+      - name: install-cni-bin
+        image: {{ pillar['cilium']['image'] }}
+        command:
+          - /bin/sh
+          - "-c"
+          - "cp -f /usr/lib/cni/* /host/opt/cni/bin/"
+        volumeMounts:
+        - name: host-cni-bin
+          mountPath: /host/opt/cni/bin/
+
+      containers:
+      - image: {{ pillar['cilium']['image'] }}
+        imagePullPolicy: IfNotPresent
+        name: cilium-agent
+        command: [ "cilium-agent" ]
+        args:
+          - "--debug=$(CILIUM_DEBUG)"
+          - "--disable-envoy-version-check"
+          - "-t=vxlan"
+          - "--kvstore=etcd"
+          - "--kvstore-opt=etcd.config=/var/lib/etcd-config/etcd.config"
+          - "--disable-ipv4=$(DISABLE_IPV4)"
+        ports:
+          - name: prometheus
+            containerPort: 9090
+        lifecycle:
+          preStop:
+            exec:
+              command:
+                - "rm -f /host/etc/cni/net.d/10-cilium-cni.conf /host/opt/cni/bin/cilium-cni"
+        env:
+          - name: "K8S_NODE_NAME"
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: "CILIUM_DEBUG"
+            valueFrom:
+              configMapKeyRef:
+                name: cilium-config
+                key: debug
+          - name: "DISABLE_IPV4"
+            valueFrom:
+              configMapKeyRef:
+                name: cilium-config
+                key: disable-ipv4
+        livenessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+          # The initial delay for the liveness probe is intentionally large to
+          # avoid an endless kill & restart cycle if in the event that the initial
+          # bootstrapping takes longer than expected.
+          initialDelaySeconds: 120
+          failureThreshold: 10
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+          - name: bpf-maps
+            mountPath: /sys/fs/bpf
+          - name: cilium-run
+            mountPath: /var/run/cilium
+          - name: host-cni-bin
+            mountPath: /host/opt/cni/bin/
+          - name: host-cni-conf
+            mountPath: /host/etc/cni/net.d
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+            readOnly: true
+          - name: etcd-config-path
+            mountPath: /var/lib/etcd-config
+            readOnly: true
+          - name: etcd-certs
+            mountPath: /etc/pki
+            readOnly: true
+        securityContext:
+          capabilities:
+            add:
+              - "NET_ADMIN"
+          privileged: true
+      hostNetwork: true
+      volumes:
+          # To keep state between restarts / upgrades
+        - name: cilium-run
+          hostPath:
+            path: /var/run/cilium
+          # To keep state between restarts / upgrades
+        - name: bpf-maps
+          hostPath:
+            path: /sys/fs/bpf
+          # To read docker events from the node
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+          # To install cilium cni plugin in the host
+        - name: host-cni-bin
+          hostPath:
+            path: {{ pillar['cni']['dirs']['bin'] }}
+          # To install cilium cni configuration in the host
+        - name: host-cni-conf
+          hostPath:
+              path: {{ pillar['cni']['dirs']['conf'] }}
+          # To read the etcd config stored in config maps
+        - name: etcd-config-path
+          configMap:
+            name: cilium-config
+            items:
+            - key: etcd-config
+              path: etcd.config
+        - name: etcd-certs
+          hostPath:
+            path: /etc/pki
+      restartPolicy: Always
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: node.cloudprovider.kubernetes.io/uninitialized
+        value: "true"
+      # Mark cilium's pod as critical for rescheduling
+      - key: CriticalAddonsOnly
+        operator: "Exists"
+
