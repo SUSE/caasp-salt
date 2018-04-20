@@ -15,3 +15,9 @@ components:
   proxy:
     # Extra arguments to be passed to kube-proxy.
     args: ''
+
+# kubernetes feature gates to be enabled
+# https://kubernetes.io/docs/reference/feature-gates/
+# params passed to the --feature-gates cli flag.
+kubernetes:
+  feature_gates: ''
