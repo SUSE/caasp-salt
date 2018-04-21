@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
-import salt.grains.core
+import platform
 
-assert '__opts__' in globals()
-salt.grains.core.__opts__ = __opts__
+import salt.grains.core
 
 
 def caasp_nodename():
@@ -12,11 +11,11 @@ def caasp_nodename():
     localhost, fqdn, host, domain, nodename
     """
     hn = salt.grains.core.hostname()
-    os_data = salt.grains.core.os_data()
+    raw_nodename = platform.uname()[1]
     return dict(
         domain = hn['domain'].lower(),
         fqdn = hn['fqdn'].lower(),
         host = hn['host'].lower(),
         localhost = hn['localhost'].lower(),
-        nodename = os_data['nodename'].lower()
+        nodename = raw_nodename.lower()
     )
