@@ -22,9 +22,9 @@
   {%- endif %}
 {%- endif %}
 
-{%- set etcd_members = salt.saltutil.runner('mine.get', tgt='G@roles:etcd',        fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set masters      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set minions      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set etcd_members = salt.caasp_nodes.get_etcd_members() %}
+{%- set masters      = salt.caasp_nodes.get_masters() %}
+{%- set minions      = salt.caasp_nodes.get_minions() %}
 
 {%- set super_master_tgt = salt.caasp_nodes.get_super_master(masters=masters,
                                                              excluded=[target] + nodes_down) %}

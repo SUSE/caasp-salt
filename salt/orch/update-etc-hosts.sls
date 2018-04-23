@@ -5,7 +5,7 @@
                              'not G@removal_in_progress:true and ' +
                              'not G@force_removal_in_progress:true' %}
 
-{%- if salt.saltutil.runner('mine.get', tgt=updates_all_target, fun='nodename', tgt_type='compound')|length > 0 %}
+{%- if salt.caasp_nodes.get_with_expr(updates_all_target)|length > 0 %}
 update_pillar:
   salt.function:
     - tgt: {{ updates_all_target }}

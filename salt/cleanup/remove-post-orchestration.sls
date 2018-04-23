@@ -24,7 +24,7 @@ include:
 # etcd node
 ###############
 
-{%- set etcd_members = salt.caasp_nodes.get_with_expr('G@roles:etcd', booted=True) %}
+{%- set etcd_members = salt.caasp_nodes.get_etcd_members(booted=True) %}
 {%- if forced or target in etcd_members %}
 
 etcd-remove-member:

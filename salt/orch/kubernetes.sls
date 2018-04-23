@@ -1,8 +1,8 @@
 {%- set default_batch = 5 %}
 
-{%- set etcd_members = salt.saltutil.runner('mine.get', tgt='G@roles:etcd',        fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set masters      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set minions      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set etcd_members = salt.caasp_nodes.get_etcd_members() %}
+{%- set masters      = salt.caasp_nodes.get_masters() %}
+{%- set minions      = salt.caasp_nodes.get_minions() %}
 
 {%- set super_master = masters|first %}
 

@@ -2,8 +2,7 @@
 # Configuration for the reboot manager
 ##################################################
 
-{%- set etcd_members = salt['mine.get']('G@roles:etcd', 'nodename', expr_form='compound').values() %}
-{%- set etcd_server = etcd_members|first %}
+{%- set etcd_server = salt.caasp_nodes.get_etcd_members()|first %}
 
 {% set reboot_uri = "https://" + etcd_server + ":2379/v2/keys/" + pillar['reboot']['directory'] + "/" +
          pillar['reboot']['group'] %}

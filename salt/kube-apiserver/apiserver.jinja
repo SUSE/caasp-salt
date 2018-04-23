@@ -31,7 +31,7 @@ KUBE_ADMISSION_CONTROL="--admission-control={{ kube_admission_control|join(',') 
 
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
-               --apiserver-count={{ salt['mine.get']('roles:kube-master', 'nodename', expr_form='grain').values()|length }} \
+               --apiserver-count={{ salt.caasp_nodes.get_masters()|length }} \
 {%- if cloud_provider %}
                --cloud-provider={{ pillar['cloud']['provider'] }} \
   {%- if cloud_provider == 'openstack' %}
