@@ -280,5 +280,3 @@ remove-cluster-wide-removal-grain:
       - removal_in_progress
     - kwarg:
         destructive: True
-    - require:
-      - highstate-affected
