@@ -1,6 +1,3 @@
-include:
-  - kubectl-config
-
 {%- set target = salt.caasp_pillar.get('target') %}
 {%- set forced = salt.caasp_pillar.get('forced', False) %}
 
@@ -10,8 +7,11 @@ include:
 # k8s cluster
 ###############
 
-{%- set k8s_nodes = salt.caasp_nodes.get_with_expr('G@roles:kube-master', booted=True) %}
+{%- set k8s_nodes = salt.caasp_nodes.get_with_expr('P@roles:(kube-master|kube-minion)', booted=True) %}
 {%- if forced or target in k8s_nodes %}
+
+include:
+  - kubectl-config
 
 {%- from '_macros/kubectl.jinja' import kubectl with context %}
 
@@ -31,4 +31,12 @@ etcd-remove-member:
   caasp_etcd.member_remove:
   - nodename: {{ nodename }}
 
+{%- endif %}
+
+
+{%- if not (forced or target in k8s_nodes + etcd_members) %}
+{# Make suse we do not generate an empty file if target is not a etcd/master #}
+dummy_step:
+  cmd.run:
+    - name: "echo saltstack bug 14553"
 {%- endif %}

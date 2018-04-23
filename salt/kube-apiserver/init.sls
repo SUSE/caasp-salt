@@ -53,27 +53,29 @@ kube-apiserver:
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}
-  # wait until the API server is actually up and running
-  http.wait_for_successful_query:
-    {% set api_server = "api." + pillar['internal_infra_domain']  -%}
-    {% set api_ssl_port = pillar['api']['int_ssl_port'] -%}
-    - name:       {{ 'https://' + api_server + ':' + api_ssl_port }}/healthz
+
+#
+# Wait for (in order)
+# 1. the local ("internal") API server
+# 2. the API-through-haproxy, to be answering on any location. Even if our
+#    local instance is already up, it could happen that HAProxy did not
+#    yet realize it's up, so let's wait until HAProxy agrees with us.
+#
+{%- set api_server = 'api.' + pillar['internal_infra_domain'] %}
+
+{%- for port in ['int_ssl_port', 'ssl_port'] %}
+
+kube-apiserver-wait-port-{{ port }}:
+  caasp_retriable.retry:
+    - target:     http.wait_for_successful_query
+    - name:       {{ 'https://' + api_server + ':' + pillar['api'][port] }}/healthz
     - wait_for:   300
+    # retry just in case the API server returns a transient error
+    - retry:
+        attempts: 3
     - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
     - status:     200
     - watch:
       - service:  kube-apiserver
 
-# Wait for the kube-apiserver to be answering on any location. Even if our local instance is already
-# up, it could happen that HAProxy did not yet realize it's up, so let's wait until HAProxy agrees
-# with us.
-kube-apiserver-up:
-  http.wait_for_successful_query:
-    {% set api_server = "api." + pillar['internal_infra_domain']  -%}
-    {% set api_ssl_port = pillar['api']['ssl_port'] -%}
-    - name:       {{ 'https://' + api_server + ':' + api_ssl_port }}/healthz
-    - wait_for:   300
-    - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
-    - status:     200
-    - watch:
-      - service:  kube-apiserver
+{% endfor %}
