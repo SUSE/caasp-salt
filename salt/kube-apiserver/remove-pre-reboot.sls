@@ -8,6 +8,3 @@
 
 {{ pillar['ssl']['kube_apiserver_key'] }}:
   file.absent
-
-/etc/kubernetes/apiserver:
-  file.absent

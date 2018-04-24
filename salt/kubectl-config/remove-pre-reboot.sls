@@ -5,9 +5,3 @@
 
 {{ pillar['ssl']['kubectl_key'] }}:
   file.absent
-
-{{ pillar['paths']['kubeconfig'] }}:
-  file.absent
-
-/root/.kube:
-  file.absent

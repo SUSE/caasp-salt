@@ -8,6 +8,3 @@
 
 {{ pillar['ssl']['kube_scheduler_key'] }}:
   file.absent
-
-{{ pillar['paths']['kube_scheduler_config'] }}:
-  file.absent

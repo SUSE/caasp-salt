@@ -11,6 +11,3 @@
 
 {{ pillar['paths']['service_account_key'] }}:
   file.absent
-
-{{ pillar['paths']['kube_controller_mgr_config'] }}:
-  file.absent

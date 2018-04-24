@@ -8,6 +8,3 @@
 
 {{ pillar['ssl']['kube_proxy_key'] }}:
   file.absent
-
-{{ pillar['paths']['kube_proxy_config'] }}:
-  file.absent

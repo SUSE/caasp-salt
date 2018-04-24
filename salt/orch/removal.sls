@@ -193,12 +193,7 @@ cleanups-in-target-before-rebooting:
       - kubelet.remove-pre-reboot
       - kubectl-config.remove-pre-reboot
       - cri.remove-pre-reboot
-      - cni.remove-pre-reboot
-  {%- if target in etcd_members %}
-      - etcd.remove-pre-reboot
-  {%- endif %}
-      - etc-hosts.remove-pre-reboot
-      - motd.remove-pre-reboot
+      - cert.remove-pre-reboot
       - cleanup.remove-pre-reboot
     - require:
       - stop-services-in-target
