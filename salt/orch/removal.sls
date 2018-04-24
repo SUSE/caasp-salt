@@ -1,23 +1,44 @@
-# must provide the node (id) to be removed in the 'target' pillar
+{#- must provide the node (id) to be removed in the 'target' pillar #}
 {%- set target = salt['pillar.get']('target') %}
+
+{#- ... and we can provide an optional replacement node #}
+{%- set replacement = salt['pillar.get']('replacement', '') %}
+
+{#- Get a list of nodes seem to be down or unresponsive #}
+{#- This sends a "are you still there?" message to all #}
+{#- the nodes and wait for a response, so it takes some time. #}
+{#- Hopefully this list will not be too long... #}
+{%- set nodes_down = salt.saltutil.runner('manage.down') %}
+{%- if not nodes_down %}
+  {%- do salt.caasp_log.debug('all nodes seem to be up') %}
+  {%- set all_responsive_nodes_tgt = 'P@roles:(etcd|kube-master|kube-minion)' %}
+{%- else %}
+  {%- do salt.caasp_log.debug('nodes "%s" seem to be down', nodes_down|join(',')) %}
+  {%- set all_responsive_nodes_tgt = 'not L@' + nodes_down|join(',')
+                                   + ' and P@roles:(etcd|kube-master|kube-minion)' %}
+
+  {%- if target in nodes_down %}
+    {%- do salt.caasp_log.abort('target is unresponsive, forced removal must be used') %}
+  {%- endif %}
+{%- endif %}
 
 {%- set etcd_members = salt.saltutil.runner('mine.get', tgt='G@roles:etcd',        fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set masters      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set minions      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion', fun='network.interfaces', tgt_type='compound').keys() %}
 
-{#- ... and we can provide an optional replacement node #}
-{%- set replacement = salt['pillar.get']('replacement', '') %}
+{%- set super_master_tgt = salt.caasp_nodes.get_super_master(masters=masters,
+                                                             excluded=[target] + nodes_down) %}
+{%- if not super_master_tgt %}
+  {%- do salt.caasp_log.abort('(after removing %s) no masters are reachable', target) %}
+{%- endif %}
 
 {#- try to use the user-provided replacement or find a replacement by ourselves #}
 {#- if no valid replacement can be used/found, `replacement` will be '' #}
 {%- set replacement, replacement_roles = salt.caasp_nodes.get_replacement_for(target, replacement,
                                                                               masters=masters,
                                                                               minions=minions,
-                                                                              etcd_members=etcd_members) %}
-
-{##############################
- # set grains
- #############################}
+                                                                              etcd_members=etcd_members,
+                                                                              excluded=nodes_down) %}
 
 # Ensure we mark all nodes with the "as node is being removed" grain.
 # This will ensure the update-etc-hosts orchestration is not run.
@@ -30,6 +51,23 @@ set-cluster-wide-removal-grain:
       - removal_in_progress
       - true
 
+# make sure we have a solid ground before starting the removal
+# (ie, expired certs produce really funny errors)
+update-config:
+  salt.state:
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - sls:
+      - etc-hosts
+      - ca-cert
+      - cert
+    - require:
+      - set-cluster-wide-removal-grain
+
+{##############################
+ # set grains
+ #############################}
+
 assign-removal-grain:
   salt.function:
     - tgt: {{ target }}
@@ -38,47 +76,47 @@ assign-removal-grain:
       - node_removal_in_progress
       - true
     - require:
-      - set-cluster-wide-removal-grain
+      - update-config
 
 {%- if replacement %}
 
 assign-addition-grain:
   salt.function:
-    - tgt: {{ replacement }}
+    - tgt: '{{ replacement }}'
     - name: grains.setval
     - arg:
       - node_addition_in_progress
       - true
     - require:
-      - set-cluster-wide-removal-grain
-      - assign-removal-grain
+      - update-config
 
   {#- and then we can assign these (new) roles to the replacement #}
   {% for role in replacement_roles %}
 assign-{{ role }}-role-to-replacement:
   salt.function:
-    - tgt: {{ replacement }}
+    - tgt: '{{ replacement }}'
     - name: grains.append
     - arg:
       - roles
       - {{ role }}
     - require:
-      - assign-removal-grain
+      - update-config
       - assign-addition-grain
-  {%- endfor %}
+  {% endfor %}
 
 {%- endif %} {# replacement #}
 
 sync-all:
   salt.function:
-    - tgt: '*'
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
     - names:
       - saltutil.refresh_pillar
       - saltutil.refresh_grains
       - mine.update
       - saltutil.sync_all
     - require:
-      - set-cluster-wide-removal-grain
+      - update-config
       - assign-removal-grain
   {%- for role in replacement_roles %}
       - assign-{{ role }}-role-to-replacement
@@ -92,7 +130,7 @@ sync-all:
 
 highstate-replacement:
   salt.state:
-    - tgt: {{ replacement }}
+    - tgt: '{{ replacement }}'
     - highstate: True
     - require:
       - sync-all
@@ -108,7 +146,7 @@ kubelet-setup:
 
 set-bootstrap-complete-flag-in-replacement:
   salt.function:
-    - tgt: {{ replacement }}
+    - tgt: '{{ replacement }}'
     - name: grains.setval
     - arg:
       - bootstrap_complete
@@ -119,7 +157,7 @@ set-bootstrap-complete-flag-in-replacement:
 # remove the we-are-adding-this-node grain
 remove-addition-grain:
   salt.function:
-    - tgt: {{ replacement }}
+    - tgt: '{{ replacement }}'
     - name: grains.delval
     - arg:
       - node_addition_in_progress
@@ -137,21 +175,6 @@ remove-addition-grain:
 
 # the replacement should be ready at this point:
 # we can remove the old node running in {{ target }}
-
-{%- if target in etcd_members %} {# we are only doing this for etcd at the moment... #}
-prepare-target-removal:
-  salt.state:
-    - tgt: {{ target }}
-    - sls:
-  {%- if target in etcd_members %}
-      - etcd.remove-pre-stop-services
-  {%- endif %}
-    - require:
-      - sync-all
-  {%- if replacement %}
-      - set-bootstrap-complete-flag-in-replacement
-  {%- endif %}
-{%- endif %}
 
 stop-services-in-target:
   salt.state:
@@ -171,9 +194,9 @@ stop-services-in-target:
   {%- endif %}
     - require:
       - sync-all
-  {%- if target in etcd_members %}
-      - prepare-target-removal
-  {%- endif %}
+    {%- if replacement %}
+      - remove-addition-grain
+    {%- endif %}
 
 # remove any other configuration in the machines
 cleanups-in-target-before-rebooting:
@@ -212,14 +235,30 @@ shutdown-target:
     # (we don't need to wait for the node:
     # just forget about it...)
 
-# remove the Salt key and the mine for the target
+# do any cluster-scope removals in the super_master
+remove-from-cluster-in-super-master:
+  salt.state:
+    - tgt: '{{ super_master_tgt }}'
+    - pillar:
+        target: {{ target }}
+    - sls:
+      - cleanup.remove-post-orchestration
+    - require:
+      - sync-all
+      - shutdown-target
+    {%- if replacement %}
+      - remove-addition-grain
+    {%- endif %}
+
+# remove the Salt key
+# (it will appear as "unaccepted")
 remove-target-salt-key:
   salt.wheel:
     - name: key.reject
     - include_accepted: True
     - match: {{ target }}
     - require:
-      - shutdown-target
+      - remove-from-cluster-in-super-master
 
 # remove target's data in the Salt Master's cache
 remove-target-mine:
@@ -239,18 +278,18 @@ remove-target-mine:
 # the etcd server we have just removed (but they would
 # keep working fine as long as we had >1 etcd servers)
 
-{%- set affected_expr = salt.caasp_nodes.get_expr_affected_by(target,
-                                                              excluded=[replacement],
-                                                              masters=masters,
-                                                              minions=minions,
-                                                              etcd_members=etcd_members) %}
-
-{%- do salt.caasp_log.debug('will high-state machines affected by removal: %s', affected_expr) %}
+{%- set affected_tgt = salt.caasp_nodes.get_expr_affected_by(target,
+                                                             excluded=[replacement] + nodes_down,
+                                                             masters=masters,
+                                                             minions=minions,
+                                                             etcd_members=etcd_members) %}
+{%- do salt.caasp_log.debug('will high-state machines affected by removal: "%s"', affected_tgt) %}
 
 # make sure the cluster has up-to-date state
 sync-after-removal:
   salt.function:
-    - tgt: '*'
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
     - names:
       - saltutil.clear_cache
       - mine.update
@@ -259,7 +298,7 @@ sync-after-removal:
 
 highstate-affected:
   salt.state:
-    - tgt: {{ affected_expr }}
+    - tgt: '{{ affected_tgt }}'
     - tgt_type: compound
     - highstate: True
     - batch: 1

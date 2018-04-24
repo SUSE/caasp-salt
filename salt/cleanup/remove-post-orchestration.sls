@@ -10,7 +10,7 @@ include:
 # k8s cluster
 ###############
 
-{%- set k8s_nodes = salt['mine.get']('roles:(kube-master|kube-minion)', 'nodename', expr_form='grain_pcre').keys() %}
+{%- set k8s_nodes = salt.caasp_nodes.get_with_expr('G@roles:kube-master', booted=True) %}
 {%- if forced or target in k8s_nodes %}
 
 {%- from '_macros/kubectl.jinja' import kubectl with context %}
@@ -24,7 +24,7 @@ include:
 # etcd node
 ###############
 
-{%- set etcd_members = salt['mine.get']('roles:etcd', 'nodename', expr_form='grain').keys() %}
+{%- set etcd_members = salt.caasp_nodes.get_with_expr('G@roles:etcd', booted=True) %}
 {%- if forced or target in etcd_members %}
 
 etcd-remove-member:

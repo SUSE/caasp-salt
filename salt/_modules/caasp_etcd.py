@@ -173,6 +173,7 @@ def get_endpoints(with_id=False, skip_this=False, skip_removed=False, port=ETCD_
         error('no etcd members available!!')
         raise NoEtcdServersException()
 
+    etcd_members_lst.sort()
     return sep.join(etcd_members_lst)
 
 
@@ -221,7 +222,7 @@ def get_member_id(nodename=None):
                 return member_line.split(':')[0]
 
     except Exception as e:
-        error("cannot get member ID: %s", e)
-        error("output: %s", members_output)
+        error('cannot get member ID for "%s": %s', e, this_nodename)
+        error('output: %s', members_output)
 
     return ''

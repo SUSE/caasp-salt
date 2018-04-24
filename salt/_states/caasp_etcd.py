@@ -21,13 +21,22 @@ ETCD_PEER_PORT = 2380
 def etcdctl(name, retry={}, **kwargs):
     '''
     Run an etcdctl command
+
+    Arguments:
+
+    In addition to all the arguments supported by the `caasp_cmd.run` state.
+
+    * `skip_this`: (optional) skip current node when calculating the list of etcd endpoints.
+
     '''
     retry_ = {'attempts': DEFAULT_ATTEMPTS,
               'interval': DEFAULT_ATTEMPTS_INTERVAL,
               'until': None}
     retry_.update(retry)
 
-    args = __salt__['caasp_etcd.get_etcdctl_args_str']()
+    skip_this = kwargs.pop('skip_this', False)
+
+    args = __salt__['caasp_etcd.get_etcdctl_args_str'](skip_this=skip_this)
     cmd = 'etcdctl {} {}'.format(args, name)
     log.debug('CaaS: running etcdctl as: %s', cmd)
 
@@ -53,7 +62,7 @@ def member_add(name, **kwargs):
 
     name = 'member add {} {}'.format(this_id, this_peer_url)
     log.debug('CaaS: adding etcd member')
-    return etcdctl(name=name, **kwargs)
+    return etcdctl(name=name, skip_this=True, **kwargs)
 
     # once the member has been added to the cluster, we
     # must make sure etcd joins an "existing" cluster.
