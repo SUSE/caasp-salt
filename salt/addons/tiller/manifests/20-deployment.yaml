@@ -34,7 +34,7 @@ spec:
       - env:
         - name: TILLER_NAMESPACE
           value: kube-system
-        image: sles12/tiller:2.7.2
+        image: sles12/tiller:2.8.2
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
