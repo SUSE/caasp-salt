@@ -37,3 +37,4 @@ base:
     - cert
     - kubelet
     - kube-proxy
+    - cni/cilium
