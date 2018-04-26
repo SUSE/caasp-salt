@@ -4,6 +4,7 @@ include:
   - cert
   - kubernetes-common
   - kubectl-config
+  - swap
 
 /etc/kubernetes/kubelet-initial:
   file.managed:
@@ -82,6 +83,7 @@ kubelet:
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial
       - kubelet-config
+      - cmd: unmount-swaps
   caasp_retriable.retry:
     - name: iptables-kubelet
     - target: iptables.append
