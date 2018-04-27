@@ -222,7 +222,7 @@ def get_member_id(nodename=None):
                 return member_line.split(':')[0]
 
     except Exception as e:
-        error('cannot get member ID for "%s": %s', e, this_nodename)
+        error('cannot get member ID for "%s": %s', e, target_nodename)
         error('output: %s', members_output)
 
     return ''
