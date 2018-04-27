@@ -37,6 +37,14 @@ update_modules:
     - require:
       - salt: update_mine
 
+admin-setup:
+  salt.state:
+    - tgt: 'roles:admin'
+    - tgt_type: grain
+    - highstate: True
+    - require:
+      - update_modules
+
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and G@tx_update_reboot_needed:true', fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
