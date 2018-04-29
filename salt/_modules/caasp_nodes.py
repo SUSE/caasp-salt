@@ -467,6 +467,9 @@ def get_expr_affected_by(target, **kwargs):
     affected_roles.sort()
     affected_items.append('P@roles:(' + '|'.join(affected_roles) + ')')
 
+    # exclude some roles
+    affected_items.append('not G@roles:ca')
+
     if kwargs.get('exclude_in_progress', True):
         affected_items.append('not G@bootstrap_in_progress:true')
         affected_items.append('not G@update_in_progress:true')

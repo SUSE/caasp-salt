@@ -8,14 +8,14 @@
 {#- This sends a "are you still there?" message to all #}
 {#- the nodes and wait for a response, so it takes some time. #}
 {#- Hopefully this list will not be too long... #}
+{%- set all_responsive_nodes_tgt = 'not G@roles:ca' %}
+
 {%- set nodes_down = salt.saltutil.runner('manage.down') %}
 {%- if not nodes_down %}
   {%- do salt.caasp_log.debug('all nodes seem to be up') %}
-  {%- set all_responsive_nodes_tgt = 'P@roles:(etcd|kube-master|kube-minion)' %}
 {%- else %}
   {%- do salt.caasp_log.debug('nodes "%s" seem to be down', nodes_down|join(',')) %}
-  {%- set all_responsive_nodes_tgt = 'not L@' + nodes_down|join(',')
-                                   + ' and P@roles:(etcd|kube-master|kube-minion)' %}
+  {%- set all_responsive_nodes_tgt = all_responsive_nodes_tgt + ' and not L@' + nodes_down|join(',') %}
 
   {%- if target in nodes_down %}
     {%- do salt.caasp_log.abort('target is unresponsive, forced removal must be used') %}
@@ -44,7 +44,7 @@
 # This will ensure the update-etc-hosts orchestration is not run.
 set-cluster-wide-removal-grain:
   salt.function:
-    - tgt: 'P@roles:(kube-master|kube-minion|etcd)'
+    - tgt: '{{ all_responsive_nodes_tgt }}'
     - tgt_type: compound
     - name: grains.setval
     - arg:
@@ -55,7 +55,7 @@ set-cluster-wide-removal-grain:
 # (ie, expired certs produce really funny errors)
 update-config:
   salt.state:
-    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt: 'P@roles:(kube-master|kube-minion|etcd) and {{ all_responsive_nodes_tgt }}'
     - tgt_type: compound
     - sls:
       - etc-hosts
@@ -70,7 +70,7 @@ update-config:
 
 assign-removal-grain:
   salt.function:
-    - tgt: {{ target }}
+    - tgt: '{{ target }}'
     - name: grains.setval
     - arg:
       - node_removal_in_progress
@@ -114,13 +114,22 @@ sync-all:
       - saltutil.refresh_pillar
       - saltutil.refresh_grains
       - mine.update
-      - saltutil.sync_all
     - require:
       - update-config
       - assign-removal-grain
   {%- for role in replacement_roles %}
       - assign-{{ role }}-role-to-replacement
   {%- endfor %}
+
+update-modules:
+  salt.function:
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - name: saltutil.sync_all
+    - kwarg:
+        refresh: True
+    - require:
+      - sync-all
 
 {##############################
  # replacement setup
@@ -133,11 +142,11 @@ highstate-replacement:
     - tgt: '{{ replacement }}'
     - highstate: True
     - require:
-      - sync-all
+      - update-modules
 
 kubelet-setup:
   salt.state:
-    - tgt: {{ replacement }}
+    - tgt: '{{ replacement }}'
     - sls:
       - kubelet.configure-taints
       - kubelet.configure-labels
@@ -178,7 +187,7 @@ remove-addition-grain:
 
 stop-services-in-target:
   salt.state:
-    - tgt: {{ target }}
+    - tgt: '{{ target }}'
     - sls:
       - container-feeder.stop
   {%- if target in masters %}
@@ -193,15 +202,15 @@ stop-services-in-target:
       - etcd.stop
   {%- endif %}
     - require:
-      - sync-all
-    {%- if replacement %}
+      - update-modules
+  {%- if replacement %}
       - remove-addition-grain
-    {%- endif %}
+  {%- endif %}
 
 # remove any other configuration in the machines
 cleanups-in-target-before-rebooting:
   salt.state:
-    - tgt: {{ target }}
+    - tgt: '{{ target }}'
     - sls:
   {%- if target in masters %}
       - kube-apiserver.remove-pre-reboot
@@ -223,7 +232,7 @@ cleanups-in-target-before-rebooting:
 # shutdown the node
 shutdown-target:
   salt.function:
-    - tgt: {{ target }}
+    - tgt: '{{ target }}'
     - name: cmd.run
     - arg:
       - sleep 15; systemctl poweroff
@@ -243,14 +252,9 @@ remove-from-cluster-in-super-master:
     - sls:
       - cleanup.remove-post-orchestration
     - require:
-      - sync-all
       - shutdown-target
-    {%- if replacement %}
-      - remove-addition-grain
-    {%- endif %}
 
-# remove the Salt key
-# (it will appear as "unaccepted")
+# remove the Salt key and the mine for the target
 remove-target-salt-key:
   salt.wheel:
     - name: key.reject
@@ -277,12 +281,14 @@ remove-target-mine:
 # the etcd server we have just removed (but they would
 # keep working fine as long as we had >1 etcd servers)
 
-{%- set affected_tgt = salt.caasp_nodes.get_expr_affected_by(target,
-                                                             excluded=[replacement] + nodes_down,
-                                                             masters=masters,
-                                                             minions=minions,
-                                                             etcd_members=etcd_members) %}
-{%- do salt.caasp_log.debug('will high-state machines affected by removal: "%s"', affected_tgt) %}
+{%- set affected_expr = salt.caasp_nodes.get_expr_affected_by(target,
+                                                              excluded=[replacement] + nodes_down,
+                                                              masters=masters,
+                                                              minions=minions,
+                                                              etcd_members=etcd_members) %}
+
+{%- if affected_expr %}
+  {%- do salt.caasp_log.debug('will high-state machines affected by removal: %s', affected_expr) %}
 
 # make sure the cluster has up-to-date state
 sync-after-removal:
@@ -295,19 +301,32 @@ sync-after-removal:
     - require:
       - remove-target-mine
 
+update-modules-after-removal:
+  salt.function:
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - name: saltutil.sync_all
+    - kwarg:
+        refresh: True
+    - require:
+      - sync-after-removal
+
 highstate-affected:
   salt.state:
-    - tgt: '{{ affected_tgt }}'
+    - tgt: '{{ affected_expr }}'
     - tgt_type: compound
     - highstate: True
     - batch: 1
     - require:
-      - sync-after-removal
+      - update-modules-after-removal
+
+{%- endif %} {# affected_expr #}
 
 # remove the we-are-removing-some-node grain in the cluster
 remove-cluster-wide-removal-grain:
   salt.function:
-    - tgt: 'P@roles:(kube-master|kube-minion|etcd)'
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
     - name: grains.delval
     - arg:
       - removal_in_progress
