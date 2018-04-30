@@ -27,7 +27,7 @@
                        "kubernetes.default.svc",
                        "api",
                        "api." + pillar['internal_infra_domain'],
-                       salt.caasp_pillar.get('api:server:external_fqdn'),
+                       salt.caasp_net.get_external_api_fqdn(),
                        salt.caasp_pillar.get('api:cluster_ip')] +
                        salt.caasp_pillar.get('api:server:extra_names', []) +
                        salt.caasp_pillar.get('api:server:extra_ips', []) +

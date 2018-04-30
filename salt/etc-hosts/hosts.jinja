@@ -3,9 +3,9 @@
 {%- set this_roles    = salt['grains.get']('roles', []) %}
 
 {%- set internal_fqdn = "api api." + pillar['internal_infra_domain'] -%}
-{%- set external_fqdn = "" -%}
-{%- if not salt['caasp_filters.is_ip'](pillar['api']['server']['external_fqdn']) -%}
-{%- set external_fqdn = pillar['api']['server']['external_fqdn'] -%}
+{%- set external_fqdn = salt.caasp_net.get_external_api_fqdn() -%}
+{%- if salt['caasp_filters.is_ip'](external_fqdn) -%}
+  {%- set external_fqdn = '' -%}
 {%- endif -%}
 
 {%- macro nodes_entries(expr) -%}
