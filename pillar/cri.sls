@@ -1,6 +1,6 @@
 cri:
   chosen: 'docker'
-  socket_timeout: 10
+  socket_timeout: 20
   docker:
     description: Docker open-source container engine
     package: docker
