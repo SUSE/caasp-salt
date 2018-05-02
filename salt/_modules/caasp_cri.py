@@ -199,13 +199,18 @@ def __wait_CRI_socket():
     '''
 
     socket = cri_runtime_endpoint()
-    timeout = int(__salt__['pillar.get']('cri:socket_timeout', '10'))
+    timeout = int(__salt__['pillar.get']('cri:socket_timeout', '20'))
     expire = time.time() + timeout
 
     while time.time() < expire:
         if os.path.exists(socket):
             return
         time.sleep(0.3)
+
+    raise CommandExecutionError(
+        'CRI socket did not become ready',
+        info={'errors': ['CRI socket did not become ready']}
+    )
 
 
 def needs_docker():
