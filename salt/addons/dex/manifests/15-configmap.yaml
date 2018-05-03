@@ -6,7 +6,7 @@ metadata:
   namespace: kube-system
 data:
   config.yaml: |
-    issuer: "https://{{ pillar['api']['server']['external_fqdn'] }}:{{ pillar['dex']['node_port'] }}"
+    issuer: "https://{{ salt.caasp_net.get_external_api_fqdn() }}:{{ pillar['dex']['node_port'] }}"
     storage:
       type: kubernetes
       config:

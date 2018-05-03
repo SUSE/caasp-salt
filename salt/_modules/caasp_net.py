@@ -5,6 +5,11 @@
 
 from __future__ import absolute_import
 
+# note: do not import caasp modules other than caasp_log
+from caasp_log import abort, debug, error, info, warn
+
+
+EXTERNAL_API_FQDN_PILLAR = 'api:server:external_fqdn'
 
 def __virtual__():
     return "caasp_net"
@@ -68,3 +73,18 @@ def get_nodename(host=None, **kwargs):
     else:
         all_nodenames = __salt__['caasp_grains.get'](host, 'nodename', type='glob')
         return all_nodenames[host]
+
+def get_external_api_fqdn():
+    '''
+    Get the external FQDN from the pillar, or provide a reasonable default value
+    '''
+    external_fqdn = __salt__['caasp_pillar.get'](EXTERNAL_API_FQDN_PILLAR)
+    if not external_fqdn:
+        warn('no external fqdn specified in the pillar %s', external_fqdn)
+        try:
+            external_fqdn = get_primary_ips_for('G@roles:kube-master')[0]
+            info('using a master IP: %s', external_fqdn)
+        except:
+            external_fqdn = ''
+
+    return external_fqdn
