@@ -36,7 +36,7 @@ etcd-remove-member:
 
 {%- if not (forced or target in k8s_nodes + etcd_members) %}
 {# Make suse we do not generate an empty file if target is not a etcd/master #}
-dummy_step:
+remove-post-orchestration-dummy:
   cmd.run:
     - name: "echo saltstack bug 14553"
 {%- endif %}

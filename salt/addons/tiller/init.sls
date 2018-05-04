@@ -21,7 +21,7 @@ include:
 
 {% else %}
 
-dummy:
+tiller-dummy:
   cmd.run:
     - name: echo "Tiller addon not enabled in config"
 

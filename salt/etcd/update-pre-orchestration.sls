@@ -17,7 +17,7 @@ add-etcd-role:
 {%- else %}
 
 {# See https://github.com/saltstack/salt/issues/14553 #}
-dummy_step:
+update-pre-orchestration-dummy:
   cmd.run:
     - name: "echo saltstack bug 14553"
 
