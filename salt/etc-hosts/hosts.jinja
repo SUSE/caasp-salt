@@ -1,27 +1,58 @@
+{%- set this_id       = salt['grains.get']('id') %}
+{%- set this_hostname = salt['grains.get']('localhost', '') %}
+{%- set this_roles    = salt['grains.get']('roles', []) %}
+
+{%- set internal_fqdn = "api api." + pillar['internal_infra_domain'] -%}
+{%- set external_fqdn = "" -%}
+{%- if not salt['caasp_filters.is_ip'](pillar['api']['server']['external_fqdn']) -%}
+{%- set external_fqdn = pillar['api']['server']['external_fqdn'] -%}
+{%- endif -%}
+
+{%- macro nodes_entries(expr) -%}
+  {%- set nodes = salt['mine.get'](expr, 'network.interfaces', 'compound') %}
+  {%- for id, ifaces in nodes.items() %}
+    {%- set ip = salt.caasp_net.get_primary_ip(host=id, ifaces=ifaces) %}
+    {%- if ip|length > 0 %}
+      {%- set nodename = salt.caasp_net.get_nodename(host=id) %}
+      {%- if nodename|length > 0 %}
+        {%- set ns = nodename + ' ' +
+                   nodename + '.' + pillar['internal_infra_domain'] + ' ' +
+                   id + ' ' +
+                   id + '.' + pillar['internal_infra_domain'] %}
+
+{{ ip }} {{ ns }}
+
+        {%- if id == this_id %}
+# try to make Salt happy by adding an ipv6 entry
+# for the local host (not really used for anything else)
+::1 {{ ns }} {{ this_hostname }}
+        {%- endif %}
+      {%- endif %}
+    {%- endif %}
+  {%- endfor %}
+{%- endmacro %}
+
+{##################################################################}
 
 ### service names ###
 # set the apiserver for 127.0.0.1 on all hosts as haproxy is listening on all nodes
 # and forwarding connections to the real master
-{% if "kube-master" in salt['grains.get']('roles', []) %}
-127.0.0.1 api api.{{ pillar['internal_infra_domain'] }} {{ pillar['api']['server']['external_fqdn'] }}
-{% else %}
-127.0.0.1 api api.{{ pillar['internal_infra_domain'] }}
-{% endif %}
+{%- if "kube-master" in this_roles %}
+127.0.0.1 {{ internal_fqdn }} {{ external_fqdn }}
+{%- elif "admin" in this_roles %}
+127.0.0.1 {{ internal_fqdn }} {{ external_fqdn }} ldap.{{ pillar['internal_infra_domain'] }}
+{%- else %}
+127.0.0.1 {{ internal_fqdn }}
+{%- endif %}
 
 ### admin nodes ###
-{%- set admins = salt['mine.get']('roles:admin', 'network.interfaces', 'grain') %}
-{%- for admin_id, ifaces in admins.items() %}
-{{ salt.caasp_net.get_primary_ip(host=admin_id, ifaces=ifaces) }} {{ admin_id }} {{ admin_id }}.{{ pillar['internal_infra_domain'] }}
-{%- endfor %}
+{{ nodes_entries('G@roles:admin') }}
 
 ### kubernetes masters ###
-{%- set masters = salt['mine.get']('roles:kube-master', 'network.interfaces', 'grain') %}
-{%- for master_id, ifaces in masters.items() %}
-{{ salt.caasp_net.get_primary_ip(host=master_id, ifaces=ifaces) }} {{ master_id }} {{ master_id }}.{{ pillar['internal_infra_domain'] }}
-{%- endfor %}
+{{ nodes_entries('G@roles:kube-master') }}
 
 ### kubernetes workers ###
-{%- set minions = salt['mine.get']('roles:kube-minion', 'network.interfaces', 'grain') %}
-{%- for minion_id, ifaces in minions.items() %}
-{{ salt.caasp_net.get_primary_ip(host=minion_id, ifaces=ifaces) }} {{ minion_id }} {{ minion_id }}.{{ pillar['internal_infra_domain'] }}
-{%- endfor %}
+{{ nodes_entries('G@roles:kube-minion') }}
+
+### other machines in the cluster (ie, etcd nodes, unassigned machines...) ###
+{{ nodes_entries('not ( P@roles:(admin|ca) or P@roles:kube-(master|minion) )') }}
