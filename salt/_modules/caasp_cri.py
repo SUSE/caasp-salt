@@ -197,14 +197,18 @@ def __wait_CRI_socket():
     at bootstrap time, where the CRI is not yet running
     but some state interacting with it is applied.
     '''
-
-    socket = cri_runtime_endpoint()
     timeout = int(__salt__['pillar.get']('cri:socket_timeout', '20'))
     expire = time.time() + timeout
 
     while time.time() < expire:
-        if os.path.exists(socket):
+        cmd = "crictl --runtime-endpoint {socket} info".format(
+                socket=cri_runtime_endpoint())
+        result = __salt__['cmd.run_all'](cmd,
+                                         output_loglevel='trace',
+                                         python_shell=False)
+        if result['retcode'] == 0:
             return
+
         time.sleep(0.3)
 
     raise CommandExecutionError(
