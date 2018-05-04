@@ -1,7 +1,13 @@
-{% if not salt.caasp_cri.needs_docker() %}
+{% if not salt.caasp_nodes.is_admin_node() %}
+# This state is executed also on the admin node. On the admin
+# node we cannot require the kubelet state otherwise the node will
+# join the kubernetes cluster and some system workloads might be
+# scheduled there. All these services would then fail due to the network
+# not being configured properly, and that would lead to slow and always
+# failing orchestrations.
 include:
-  - {{ salt['pillar.get']('cri:chosen', 'docker') }}
   - kubelet
+  - {{ salt['pillar.get']('cri:chosen', 'docker') }}
   - container-feeder
 {% endif %}
 
@@ -62,8 +68,9 @@ haproxy-restart:
     - timeout: 60
     - onchanges:
       - file: /etc/caasp/haproxy/haproxy.cfg
-{% if not salt.caasp_cri.needs_docker() %}
+{% if not salt.caasp_nodes.is_admin_node() %}
     - require:
+      - service: kubelet
       - service: container-feeder
 {% endif %}
 
