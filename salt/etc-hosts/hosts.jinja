@@ -11,14 +11,19 @@
 {%- macro nodes_entries(expr) -%}
   {%- set nodes = salt['mine.get'](expr, 'network.interfaces', 'compound') %}
   {%- for id, ifaces in nodes.items() %}
-    {%- set ip = salt.caasp_net.get_primary_ip(host=id, ifaces=ifaces)%}
-    {%- set nodename = salt.caasp_net.get_nodename(host=id) %}
-    {%- set ns = nodename + ' ' +
-                 nodename + '.' + pillar['internal_infra_domain'] + ' ' +
-                 id + ' ' +
-                 id + '.' + pillar['internal_infra_domain'] %}
+    {%- set ip = salt.caasp_net.get_primary_ip(host=id, ifaces=ifaces) %}
+    {%- if ip|length > 0 %}
+      {%- set nodename = salt.caasp_net.get_nodename(host=id) %}
+      {%- if nodename|length > 0 %}
+        {%- set ns = nodename + ' ' +
+                   nodename + '.' + pillar['internal_infra_domain'] + ' ' +
+                   id + ' ' +
+                   id + '.' + pillar['internal_infra_domain'] %}
 
 {{ ip }} {{ ns }}
+
+      {%- endif %}
+    {%- endif %}
 
     {%- if id == this_id %}
 # try to make Salt happy by adding an ipv6 entry
