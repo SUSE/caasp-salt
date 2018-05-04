@@ -15,7 +15,7 @@ include:
 
 {% else %}
 {# See https://github.com/saltstack/salt/issues/14553 #}
-dummy_step:
+cni-cilium-dummy:
   cmd.run:
     - name: "echo saltstack bug 14553"
 {% endif %}

@@ -32,7 +32,7 @@ transactional-update.timer:
       - file: /etc/systemd/system/transactional-update.timer.d/10-increase-update-speed.conf
 {% else %}
 {# See https://github.com/saltstack/salt/issues/14553 #}
-transactional_update_dummy_step:
+transactional-update-dummy:
   cmd.run:
     - name: "echo saltstack bug 14553"
 {% endif %}

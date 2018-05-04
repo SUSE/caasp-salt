@@ -10,7 +10,7 @@
     - append_if_not_found: True
 {% else %}
 {# See https://github.com/saltstack/salt/issues/14553 #}
-dummy_step:
+etc-hosts-dummy:
   cmd.run:
     - name: "echo saltstack bug 14553"
 {% endif %}
