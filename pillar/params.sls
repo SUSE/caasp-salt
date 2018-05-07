@@ -112,6 +112,22 @@ etcd:
 
 kubelet:
   port:           '10250'
+  compute-resources:
+    kube:
+      cpu: ''
+      memory: ''
+      ephemeral-storage: ''
+      # example:
+      # cpu: 100m
+      # memory: 100M
+      # ephemeral-storage: 1G
+    system:
+      cpu: ''
+      memory: ''
+      ephemeral-storage: ''
+    eviction-hard: ''
+    # example:
+    # eviction-hard: memory.available<500M
 
 proxy:
   http:           ''
