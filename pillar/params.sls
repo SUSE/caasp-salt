@@ -67,7 +67,7 @@ kube_log_level:   '2'
 
 # install the addons (ie, DNS)
 addons:
-  psp:    'true'
+  psp:    'false'
   dns:    'true'
   tiller: 'false'
 
