@@ -5,6 +5,7 @@
 #
 
 {% set cloud_provider = salt.caasp_pillar.get('cloud:provider') %}
+{% set kube_admission_control = ['Initializers', 'NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'NodeRestriction', 'PersistentVolumeLabel', 'DefaultStorageClass', 'ResourceQuota', 'DefaultTolerationSeconds'] %}
 
 # The address on the local server to listen to.
 KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
@@ -23,7 +24,11 @@ KUBE_ETCD_SERVERS="--etcd-cafile={{ pillar['ssl']['ca_file'] }} \
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}"
 
 # default admission control policies
-KUBE_ADMISSION_CONTROL="--admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,NodeRestriction,PodSecurityPolicy,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds"
+{% if salt.caasp_pillar.get('addons:psp', True) %}
+KUBE_ADMISSION_CONTROL="--admission-control={{ (kube_admission_control + ['PodSecurityPolicy'])|join(',') }}"
+{% else %}
+KUBE_ADMISSION_CONTROL="--admission-control={{ kube_admission_control|join(',') }}"
+{% endif %}
 
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
