@@ -28,6 +28,10 @@ services_cidr:    '172.24.0.0/16'
 internal_infra_domain: 'infra.caasp.local'
 ldap_internal_infra_domain: 'dc=infra,dc=caasp,dc=local'
 
+hw:
+  # fallback value when we cannot detect the default interface
+  netiface: 'eth0'
+
 api:
   # the API service IP (must be inside the 'services_cidr')
   cluster_ip:     '172.24.0.1'
