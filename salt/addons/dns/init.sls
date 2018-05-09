@@ -17,7 +17,7 @@ include:
 
 {% else %}
 
-dummy:
+dns-dummy:
   cmd.run:
     - name: echo "DNS addon not enabled in config"
 

@@ -11,7 +11,7 @@ include:
 
 {% else %}
 
-dummy:
+psp-dummy:
   cmd.run:
     - name: echo "PSP addon not enabled in config"
 
