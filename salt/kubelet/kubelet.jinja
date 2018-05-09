@@ -17,6 +17,21 @@ KUBELET_HOSTNAME="--hostname-override={{ grains['nodename'] }}"
 
 # Add your own!
 KUBELET_ARGS="\
+    --cgroups-per-qos \
+    --cgroup-driver=cgroupfs \
+    --cgroup-root=/ \
+    --kube-reserved-cgroup=podruntime.slice \
+{% if salt.caasp_pillar.get_kubelet_reserved_resources('kube') -%}
+    --kube-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('kube') }} \
+{% endif -%}
+    --system-reserved-cgroup=system \
+{% if salt.caasp_pillar.get_kubelet_reserved_resources('system') -%}
+    --kube-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('system') }} \
+{% endif -%}
+    --enforce-node-allocatable=pods \
+{% if pillar['kubelet']['compute-resources']['eviction-hard'] -%}
+    --eviction-hard={{ pillar['kubelet']['compute-resources']['eviction-hard'] }} \
+{% endif -%}
     --cluster-dns={{ pillar['dns']['cluster_ip'] }} \
     --cluster-domain={{ pillar['dns']['domain'] }} \
     --node-ip={{ salt.caasp_net.get_primary_ip() }} \
