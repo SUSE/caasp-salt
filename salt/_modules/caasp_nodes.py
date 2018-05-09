@@ -500,3 +500,15 @@ def get_super_master(**kwargs):
             return master
 
     return ''
+
+
+def is_admin_node():
+    '''
+    Returns true if the node has the 'admin' and/or the 'ca'
+    roles.
+
+    Returns false otherwise
+    '''
+
+    node_roles = __salt__['grains.get']('roles', [])
+    return any(role in ('admin', 'ca') for role in node_roles)
