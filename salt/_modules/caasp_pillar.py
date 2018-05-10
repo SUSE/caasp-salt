@@ -33,3 +33,31 @@ def get(name, default=''):
             return False
 
     return res
+
+
+def get_kubelet_reserved_resources(component):
+    '''
+    Returns the kubelet cli argument specifying the
+    reserved computational resources of the specified component.
+
+    Returns an empty string if no reservations are in place for the specified
+    component.
+
+    Example values for `component`: `kube`, `system`
+
+    See https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/
+
+    '''
+    reservations = []
+
+    for resource in ('cpu', 'memory', 'ephemeral-storage'):
+        quantity = get(
+                'kubelet:compute-resources:{component}:{resource}'.format(
+                    component=component,
+                    resource=resource))
+        if quantity:
+            reservations.append('{resource}={quantity}'.format(
+                resource=resource,
+                quantity=quantity))
+
+    return ','.join(reservations)
