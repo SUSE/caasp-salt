@@ -1,0 +1,31 @@
+def label = "salt-flake8-${UUID.randomUUID().toString()}"
+
+podTemplate(label: label, containers: [
+        containerTemplate(
+            name: 'opensuse',
+            image: 'opensuse:42.3',
+            ttyEnabled: true,
+            command: 'cat',
+            envVars: [
+                envVar(key: 'http_proxy', value: env.http_proxy),
+                envVar(key: 'https_proxy', value: env.http_proxy),
+            ],
+        ),
+]) {
+    node(label) {
+        stage('Style Checks') {
+            checkout scm
+
+            try {
+                container('opensuse') {
+                    // TODO: Build a opensuse based python-tox image..
+                    sh 'zypper in --no-confirm python-tox python-pip python-pyOpenSSL libopenssl1_0_0 openssl'
+                    sh 'tox -e flake8'
+                }
+            } catch (Exception e) {
+                containerLog 'opensuse'
+                throw e
+            }
+        }
+    }
+}
