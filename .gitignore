@@ -1,5 +1,6 @@
 .idea/
 .tox/
+junit.xml
 Makefile
 *.tgz
 *.pyc

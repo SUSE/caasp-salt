@@ -33,7 +33,11 @@ podTemplate(label: label, containers: [
         stage('Style Checks') {
             try {
                 container('opensuse') {
-                    sh 'tox -e flake8'
+                    try {
+                        sh 'tox -e flake8 -- --format=junit-xml --output-file junit.xml'
+                    } finally {
+                        junit "junit.xml"
+                    }
                 }
             } catch (Exception e) {
                 containerLog 'opensuse'
