@@ -32,12 +32,6 @@ def stop_container_and_wait(name, namespace, timeout=60, **kwargs):
         timeout: 120
     '''
 
-    ret = {'name': name,
-           'namespace': namespace,
-           'changes': {},
-           'result': False,
-           'comment': ''}
-
     stopped = __salt__['caasp_cri.stop_container'](name, namespace, **kwargs)
 
     if not stopped:
@@ -80,7 +74,6 @@ def wait_for_container(name, namespace, timeout=60, **kwargs):
            'result': False,
            'comment': ''}
 
-
     running = __salt__['caasp_cri.wait_for_container'](name,
                                                        namespace,
                                                        timeout,
@@ -89,8 +82,9 @@ def wait_for_container(name, namespace, timeout=60, **kwargs):
     if running:
         ret['result'] = True
         ret['comment'] = '{namespace}.{container} successfully restarted'.format(
-                namespace=namespace,
-                container=name)
+            namespace=namespace,
+            container=name
+        )
     else:
         ret['comment'] = '{namespace}.{container} was not restarted by kubelet within the given time'.format(
             namespace=namespace,

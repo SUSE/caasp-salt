@@ -1,11 +1,9 @@
 from __future__ import absolute_import
 import time
 
-import salt.exceptions
-import salt.utils
 
 def running_stable(name, enable=None, sig=None, init_delay=None, successful_retries_in_a_row=50,
-                      max_retries=300, delay_between_retries=0.1, **kwargs):
+                   max_retries=300, delay_between_retries=0.1, **kwargs):
     '''
     Ensure that the service is running in a stable manner
 

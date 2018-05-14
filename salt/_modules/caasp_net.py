@@ -68,7 +68,6 @@ def get_primary_ips_for(compound, **kwargs):
     nodes that match that expression
     '''
     try:
-        res = []
         all_ifaces = __salt__['caasp_grains.get'](compound, 'network.interfaces')
         return [get_primary_ip(host=host, **kwargs) for host in all_ifaces.keys()]
     except Exception as e:

@@ -1,10 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-import os
-
-import salt.exceptions
-import salt.utils
 
 log = logging.getLogger(__name__)
 
