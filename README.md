@@ -3,6 +3,15 @@
 A collection of Salt states used to provision a kubernetes cluster
 in the context of CaaSP/MicroOS.
 
+# Running Tests
+
+## Style Checks:
+
+Install tox, and run the style checks:
+
+    zypper in python-tox
+    tox -e flake8
+
 # Salt states and CaaSP architecture
 
 The Salt state creates an architecture that depends on some (already existing) elements. This is the expected setup before running the orchestration:
