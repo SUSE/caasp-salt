@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import subprocess
 
 # note: do not import caasp modules other than caasp_log
-from caasp_log import abort, debug, error, info, warn
+from caasp_log import debug, error, warn
 
 # minimum number of etcd masters we recommend
 MIN_RECOMMENDED_MEMBER_COUNT = 3
@@ -114,7 +114,7 @@ def get_additional_etcd_members(num_wanted=None, **kwargs):
 
     # the number of etcd masters that should be in the cluster
     num_wanted_etcd_members = num_wanted or get_cluster_size(**kwargs)
-    #... and the number we are missing
+    # ... and the number we are missing
     num_additional_etcd_members = num_wanted_etcd_members - num_current_etcd_members
 
     if num_additional_etcd_members <= 0:

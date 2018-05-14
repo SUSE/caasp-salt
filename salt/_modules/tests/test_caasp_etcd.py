@@ -4,7 +4,6 @@ import unittest
 
 import caasp_etcd
 from caasp_etcd import ETCD_CLIENT_PORT, get_endpoints
-from caasp_log import ExecutionAborted
 
 try:
     from mock import patch, MagicMock
