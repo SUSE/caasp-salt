@@ -13,13 +13,26 @@ podTemplate(label: label, containers: [
         ),
 ]) {
     node(label) {
-        stage('Style Checks') {
+        stage('Retrieve Code') {
             checkout scm
+        }
 
+        stage('Install Dependencies') {
             try {
                 container('opensuse') {
                     // TODO: Build a opensuse based python-tox image..
                     sh 'zypper in --no-confirm python-tox python-pip python-pyOpenSSL libopenssl1_0_0 openssl'
+                    sh 'tox --notest -e flake8'
+                }
+            } catch (Exception e) {
+                containerLog 'opensuse'
+                throw e
+            }
+        }
+
+        stage('Style Checks') {
+            try {
+                container('opensuse') {
                     sh 'tox -e flake8'
                 }
             } catch (Exception e) {
