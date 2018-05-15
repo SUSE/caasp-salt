@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 # note: do not import caasp modules other than caasp_log
-from caasp_log import abort, debug, error, info, warn
+from caasp_log import abort, debug, info, warn
 
 # minimum number of nodes (per role) we can have after a removal
 _MIN_ETCD_MEMBERS_AFTER_REMOVAL = 1
@@ -281,7 +281,7 @@ def get_replacement_for(target, replacement='', **kwargs):
             replacement = etcd_replacement
             replacement_roles.append('etcd')
 
-        if not 'etcd' in replacement_roles:
+        if 'etcd' not in replacement_roles:
             if len(etcd_members) <= _MIN_ETCD_MEMBERS_AFTER_REMOVAL:
                 # we need at least one etcd server
                 abort('cannot remove etcd member %s: too few etcd members, and no replacement found or provided',
@@ -339,7 +339,7 @@ def get_replacement_for(target, replacement='', **kwargs):
                      '(it will run %s) so we cannot use it for running the k8s master too',
                      master_replacement, replacement, ','.join(replacement_roles))
 
-        if not 'kube-master' in replacement_roles:
+        if 'kube-master' not in replacement_roles:
             # stability check: check if it is ok not to run the k8s master in the replacement
             if len(masters) <= _MIN_MASTERS_AFTER_REMOVAL:
                 # we need at least one master (for runing the k8s API at all times)
@@ -394,7 +394,7 @@ def get_replacement_for(target, replacement='', **kwargs):
                      '(it will run %s) so we cannot use it for running the k8s minion too',
                      minion_replacement, replacement, ','.join(replacement_roles))
 
-        if not 'kube-minion' in replacement_roles:
+        if 'kube-minion' not in replacement_roles:
             # stability check: check if it is ok not to run the k8s minion in the replacement
             if len(minions) <= _MIN_MINIONS_AFTER_REMOVAL:
                 # we need at least one minion (for running dex, kube-dns, etc..)

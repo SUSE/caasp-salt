@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import json
-import os.path
 import time
 from salt.exceptions import CommandExecutionError
 
@@ -22,6 +21,7 @@ class CRIRuntimeException(Exception):
 
 _ROLES_REQUIRING_DOCKER = ('admin', 'ca')
 _SUPPORTED_CRIS = ('docker', 'crio')
+
 
 def __virtual__():
     return "caasp_cri"
@@ -65,16 +65,18 @@ def get_container_id(name, namespace):
 
     __wait_CRI_socket()
     cmd = "crictl --runtime-endpoint {socket} ps -o json".format(
-            socket=cri_runtime_endpoint())
+        socket=cri_runtime_endpoint()
+    )
+
     result = __salt__['cmd.run_all'](cmd,
                                      output_loglevel='trace',
                                      python_shell=False)
 
     if result['retcode'] != 0:
         raise CommandExecutionError(
-                'Could not invoke crictl',
-                info={'errors': [result['stderr']]}
-            )
+            'Could not invoke crictl',
+            info={'errors': [result['stderr']]}
+        )
 
     try:
         ps_data = json.loads(result['stdout'])
@@ -130,17 +132,18 @@ def stop_container(name, namespace, ignore_errors=True):
         return False
 
     cmd = "crictl --runtime-endpoint {socket} stop {container_id}".format(
-            socket=cri_runtime_endpoint(),
-            container_id=container_id)
+        socket=cri_runtime_endpoint(),
+        container_id=container_id
+    )
     result = __salt__['cmd.run_all'](cmd,
                                      output_loglevel='trace',
                                      python_shell=False)
 
     if result['retcode'] != 0 and not ignore_errors:
         raise CommandExecutionError(
-                'Something went wrong while stopping the container',
-                info={'errors': [result['stderr']]}
-            )
+            'Something went wrong while stopping the container',
+            info={'errors': [result['stderr']]}
+        )
 
     return True
 
@@ -202,7 +205,9 @@ def __wait_CRI_socket():
 
     while time.time() < expire:
         cmd = "crictl --runtime-endpoint {socket} info".format(
-                socket=cri_runtime_endpoint())
+            socket=cri_runtime_endpoint()
+        )
+
         result = __salt__['cmd.run_all'](cmd,
                                          output_loglevel='trace',
                                          python_shell=False)

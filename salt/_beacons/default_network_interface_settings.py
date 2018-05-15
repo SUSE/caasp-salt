@@ -10,13 +10,16 @@ log = logging.getLogger(__name__)
 
 __virtual_name__ = 'default_network_interface_settings'
 
+
 def __virtual__():
     if network_settings.__virtual__():
         return __virtual_name__
     return False
 
+
 def __validate__(config):
     return network_settings.__validate__(config)
+
 
 def beacon(config):
     '''
