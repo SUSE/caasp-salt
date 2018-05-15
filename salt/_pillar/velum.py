@@ -33,6 +33,7 @@ import os
 # Globals
 log = logging.getLogger(__name__)
 
+
 def __virtual__():
     log.info("Loaded velum pillar module")
     return "velum"

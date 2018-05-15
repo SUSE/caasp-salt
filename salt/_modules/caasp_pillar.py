@@ -52,9 +52,11 @@ def get_kubelet_reserved_resources(component):
 
     for resource in ('cpu', 'memory', 'ephemeral-storage'):
         quantity = get(
-                'kubelet:compute-resources:{component}:{resource}'.format(
-                    component=component,
-                    resource=resource))
+            'kubelet:compute-resources:{component}:{resource}'.format(
+                component=component,
+                resource=resource
+            )
+        )
         if quantity:
             reservations.append('{resource}={quantity}'.format(
                 resource=resource,

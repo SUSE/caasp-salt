@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from urlparse import urlparse
 
-from caasp_log import abort, debug, error, warn
+from caasp_log import debug, error
 
 
 def __virtual__():

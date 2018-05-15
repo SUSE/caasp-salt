@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import unittest
 
 import caasp_pillar
-from caasp_log import ExecutionAborted
 from caasp_pillar import get as get_pillar
 
 try:
