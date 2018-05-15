@@ -125,9 +125,9 @@ kubelet:
       cpu: ''
       memory: ''
       ephemeral-storage: ''
-    eviction-hard: ''
-    # example:
-    # eviction-hard: memory.available<500M
+  eviction-hard: ''
+  # example:
+  # eviction-hard: memory.available<500M
 
 proxy:
   http:           ''
