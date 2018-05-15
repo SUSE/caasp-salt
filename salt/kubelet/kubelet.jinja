@@ -29,8 +29,8 @@ KUBELET_ARGS="\
     --kube-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('system') }} \
 {% endif -%}
     --enforce-node-allocatable=pods \
-{% if pillar['kubelet']['compute-resources']['eviction-hard'] -%}
-    --eviction-hard={{ pillar['kubelet']['compute-resources']['eviction-hard'] }} \
+{% if pillar['kubelet']['eviction-hard'] -%}
+    --eviction-hard={{ pillar['kubelet']['eviction-hard'] }} \
 {% endif -%}
     --cluster-dns={{ pillar['dns']['cluster_ip'] }} \
     --cluster-domain={{ pillar['dns']['domain'] }} \
