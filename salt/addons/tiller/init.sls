@@ -12,12 +12,12 @@ include:
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-tiller-clusterrolebinding",
            "delete clusterrolebinding system:tiller",
-           onlyif="kubectl get clusterrolebinding system:tiller") }}
+           onlyif="kubectl --request-timeout=1m get clusterrolebinding system:tiller") }}
 
 # TODO: Transitional code, remove for CaaSP v4
 {{ kubectl("remove-old-tiller-deployment",
            "delete deploy tiller -n kube-system",
-           onlyif="kubectl get deploy tiller -n kube-system") }}
+           onlyif="kubectl --request-timeout=1m get deploy tiller -n kube-system") }}
 
 {% else %}
 

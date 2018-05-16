@@ -25,7 +25,7 @@ exit_changes() {
 
 get_node_data() {
 	local template="$1"
-	kubectl get node "$OLD_NODE_NAME" --template="{{$template}}"
+	kubectl --request-timeout=1m get node "$OLD_NODE_NAME" --template="{{$template}}"
 }
 
 exit_handler() {
@@ -43,8 +43,8 @@ trap "exit_handler" INT TERM EXIT
 
 log "migrating $OLD_NODE_NAME to $NEW_NODE_NAME"
 
-kubectl get node $NEW_NODE_NAME && exit_changes "no" "$NEW_NODE_NAME already exists, nothing to migrate"
-kubectl get node $OLD_NODE_NAME || exit_changes "no" "$OLD_NODE_NAME does not exist, nothing to migrate"
+kubectl --request-timeout=1m get node $NEW_NODE_NAME && exit_changes "no" "$NEW_NODE_NAME already exists, nothing to migrate"
+kubectl --request-timeout=1m get node $OLD_NODE_NAME || exit_changes "no" "$OLD_NODE_NAME does not exist, nothing to migrate"
 
 cat << EOF > /tmp/k8s-node-migration.yaml
 apiVersion: v1
@@ -67,7 +67,7 @@ spec:
   podCIDR: $(get_node_data .spec.podCIDR)
 EOF
 
-kubectl create -f /tmp/k8s-node-migration.yaml 2>/dev/null
+kubectl --request-timeout=1m create -f /tmp/k8s-node-migration.yaml 2>/dev/null
 
 rm /tmp/k8s-node-migration.yaml
 

@@ -105,12 +105,12 @@ kubelet:
 uncordon-node:
   caasp_cmd.run:
     - name: |
-        kubectl uncordon {{ grains['nodename'] }}
+        kubectl --request-timeout=1m uncordon {{ grains['nodename'] }}
     - retry:
         attempts: 10
         interval: 3
         until: |
-          test "$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['nodename'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" != "true"
+          test "$(kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} get nodes {{ grains['nodename'] }} -o=jsonpath='{.spec.unschedulable}' 2>/dev/null)" != "true"
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
   grains.absent:

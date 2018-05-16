@@ -117,6 +117,8 @@ spec:
             path: /healthz
             port: healthz
         livenessProbe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 10
           httpGet:
             path: /healthz
             port: healthz
