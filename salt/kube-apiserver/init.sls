@@ -67,7 +67,7 @@ kube-apiserver:
 
 kube-apiserver-wait-port-{{ port }}:
   caasp_retriable.retry:
-    - target:     http.wait_for_successful_query
+    - target:     caasp_http.wait_for_successful_query
     - name:       {{ 'https://' + api_server + ':' + pillar['api'][port] }}/healthz
     - wait_for:   300
     # retry just in case the API server returns a transient error
@@ -75,6 +75,8 @@ kube-apiserver-wait-port-{{ port }}:
         attempts: 3
     - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
     - status:     200
+    - opts:
+        http_request_timeout: 30
     - watch:
       - service: kube-apiserver
 
