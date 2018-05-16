@@ -71,6 +71,7 @@ spec:
         livenessProbe:
           # Give Dex a little time to startup
           initialDelaySeconds: 30
+          timeoutSeconds: 10
           httpGet:
             path: /healthz
             port: https

@@ -26,6 +26,7 @@ ssl:
 
   velum_key: '/etc/pki/private/velum.key'
   velum_crt: '/etc/pki/velum.crt'
+  velum_bundle: '/etc/pki/private/velum-bundle.pem'
 
   ldap_key: '/etc/pki/private/ldap.key'
   ldap_crt: '/etc/pki/ldap.crt'
@@ -38,6 +39,10 @@ ssl:
 
   kube_apiserver_key: '/etc/pki/kube-apiserver.key'
   kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
+
+  kube_apiserver_proxy_key: '/etc/pki/private/kube-apiserver-proxy.key'
+  kube_apiserver_proxy_crt: '/etc/pki/kube-apiserver-proxy.crt'
+  kube_apiserver_proxy_bundle: '/etc/pki/private/kube-apiserver-proxy-bundle.pem'
 
   kube_scheduler_key: '/etc/pki/kube-scheduler.key'
   kube_scheduler_crt: '/etc/pki/kube-scheduler.crt'

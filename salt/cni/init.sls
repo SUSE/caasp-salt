@@ -20,7 +20,7 @@ include:
       - file:      /etc/kubernetes/addons
   cmd.run:
     - name: |
-        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/kube-flannel-rbac.yaml
+        kubectl --request-timeout=1m apply --namespace kube-system -f /etc/kubernetes/addons/kube-flannel-rbac.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -38,7 +38,7 @@ include:
       - file:      /etc/kubernetes/addons
   cmd.run:
     - name: |
-        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/kube-flannel.yaml
+        kubectl --request-timeout=1m apply --namespace kube-system -f /etc/kubernetes/addons/kube-flannel.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -65,7 +65,7 @@ include:
 
   cmd.run:
     - name: |
-        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/cilium-config.yaml
+        kubectl --request-timeout=1m apply --namespace kube-system -f /etc/kubernetes/addons/cilium-config.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -83,7 +83,7 @@ include:
       - file:      /etc/kubernetes/addons
   cmd.run:
     - name: |
-        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/cilium-rbac.yaml
+        kubectl --request-timeout=1m apply --namespace kube-system -f /etc/kubernetes/addons/cilium-rbac.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
@@ -101,7 +101,7 @@ include:
       - file:      /etc/kubernetes/addons
   cmd.run:
     - name: |
-        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/cilium-ds.yaml
+        kubectl --request-timeout=1m apply --namespace kube-system -f /etc/kubernetes/addons/cilium-ds.yaml
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:

@@ -18,11 +18,11 @@ exit_changes() {
 }
 
 get_node_cidr() {
-	kubectl get node "$NODE_ID" --template="{{.spec.podCIDR}}"
+	kubectl --request-timeout=1m get node "$NODE_ID" --template="{{.spec.podCIDR}}"
 }
 
 patch_node() {
-	kubectl patch node $NODE_ID -p "$@" 2>/dev/null
+	kubectl --request-timeout=1m patch node $NODE_ID -p "$@" 2>/dev/null
 }
 
 ##########################################################

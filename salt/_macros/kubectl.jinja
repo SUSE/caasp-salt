@@ -11,7 +11,7 @@
 
 {% macro _kubectl_run(args) -%}
   caasp_cmd.run:
-    - name: kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} {{ args }}
+    - name: kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} {{ args }}
     - retry:
         attempts: 10
         interval: 1
@@ -91,10 +91,10 @@
 wait-for-{{ deployment }}-deployment:
   caasp_cmd.run:
     - name: |-
-        desiredReplicas=$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.spec.replicas}}' }})
-        readyReplicas=$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.readyReplicas}}' }})
-        availableReplicas=$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.availableReplicas}}' }})
-        updatedReplicas=$(kubectl --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.updatedReplicas}}' }})
+        desiredReplicas=$(kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.spec.replicas}}' }})
+        readyReplicas=$(kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.readyReplicas}}' }})
+        availableReplicas=$(kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.availableReplicas}}' }})
+        updatedReplicas=$(kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.updatedReplicas}}' }})
         [ "$readyReplicas" == "$desiredReplicas" ] && [ "$availableReplicas" == "$desiredReplicas" ] && [ "$updatedReplicas" == "$desiredReplicas" ]
     - retry:
         attempts: {{ timeout }}
