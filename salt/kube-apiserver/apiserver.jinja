@@ -6,7 +6,6 @@
 
 {% set cloud_provider = salt.caasp_pillar.get('cloud:provider') %}
 {% set kube_admission_control = ['Initializers', 'NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'NodeRestriction', 'PersistentVolumeLabel', 'DefaultStorageClass', 'ResourceQuota', 'DefaultTolerationSeconds'] %}
-
 # The address on the local server to listen to.
 KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 
@@ -39,6 +38,14 @@ KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --cloud-config=/etc/kubernetes/openstack-config \
   {%- endif -%}
 {% endif %}
+{#- An empty audit policy file would cause kubernetes apiserver to not start at all -#}
+{%- if salt.caasp_pillar.get('api:audit:log:enabled', False) and salt.caasp_pillar.get('api:audit:log:policy') %}
+               --audit-policy-file=/etc/kubernetes/audit-policy.yaml \
+               --audit-log-path=/var/log/kube-apiserver/audit.log \
+               --audit-log-maxage={{ salt.caasp_pillar.get('api:audit:log:maxage') }} \
+               --audit-log-maxsize={{ salt.caasp_pillar.get('api:audit:log:maxsize') }} \
+               --audit-log-maxbackup={{ salt.caasp_pillar.get('api:audit:log:maxbackup') }} \
+{%- endif -%}
                --tls-cert-file={{ pillar['ssl']['kube_apiserver_crt'] }} \
                --tls-private-key-file={{ pillar['ssl']['kube_apiserver_key'] }} \
                --tls-ca-file={{ pillar['ssl']['ca_file'] }} \
