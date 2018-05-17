@@ -112,3 +112,44 @@ include:
       - file:       /etc/kubernetes/addons/cilium-config.yaml
 
 {% endif %}
+
+{% if plugin == "canal" %}
+
+/etc/kubernetes/addons/canal-rbac.yaml:
+  file.managed:
+    - source:      salt://cni/canal-rbac.yaml.jinja
+    - template:    jinja
+    - makedirs:    true
+    - require:
+      - file:      /etc/kubernetes/addons
+  cmd.run:
+    - name: |
+        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/canal-rbac.yaml
+    - env:
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - require:
+      - kube-apiserver
+      - file:      {{ pillar['paths']['kubeconfig'] }}
+    - watch:
+      - file:       /etc/kubernetes/addons/canal-rbac.yaml
+
+/etc/kubernetes/addons/canal.yaml:
+  file.managed:
+    - source:      salt://cni/canal.yaml.jinja
+    - template:    jinja
+    - makedirs:    true
+    - require:
+      - file:      /etc/kubernetes/addons
+  cmd.run:
+    - name: |
+        kubectl apply --namespace kube-system -f /etc/kubernetes/addons/canal.yaml
+    - env:
+      - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
+    - require:
+      - kube-apiserver
+      - file:      {{ pillar['paths']['kubeconfig'] }}
+    - watch:
+      - /etc/kubernetes/addons/canal-rbac.yaml
+      - file:      /etc/kubernetes/addons/canal-rbac.yaml
+
+{% endif %}

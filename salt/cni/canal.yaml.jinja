@@ -1,0 +1,334 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: canal-config
+  namespace: kube-system
+  labels:
+    tier: node
+    app: canal
+data:
+  # The interface used by canal for host <-> host communication.
+  # If left blank, then the interface is chosen using the node's
+  # default route.
+  canal_iface: ""
+
+  # Whether or not to masquerade traffic to destinations not within
+  # the pod network.
+  masquerade: "true"
+
+  # The CNI network configuration to install on each node.
+  cni_network_config: |-
+    {
+      "name": "cbr0",
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "calico",
+          "log_level": "info",
+          "datastore_type": "kubernetes",
+          "nodename": "__KUBERNETES_NODE_NAME__",
+          "ipam": {
+            "type": "host-local",
+            "subnet": "usePodCidr"
+          },
+          "policy": {
+            "type": "k8s",
+            "k8s_auth_token": "__SERVICEACCOUNT_TOKEN__"
+          },
+            "kubernetes": {
+            "k8s_api_root": "https://__KUBERNETES_SERVICE_HOST__:__KUBERNETES_SERVICE_PORT__",
+            "kubeconfig": "__KUBECONFIG_FILEPATH__"
+          }
+        },
+        {
+          "type": "portmap",
+          "capabilities": {"portMappings": true},
+          "snat": true
+        }
+      ]
+    }
+
+  net-conf.json: |
+    {
+      "Network":   "{{ salt.caasp_pillar.get('cluster_cidr') }}",
+      "SubnetLen": {{ salt.caasp_pillar.get('cluster_cidr_len') }},
+      {%- if salt.caasp_pillar.get('cluster_cidr_min') %}
+      "SubnetMin": "{{ salt.caasp_pillar.get('cluster_cidr_min') }}",
+      {%- endif %}
+      {%- if salt.caasp_pillar.get('cluster_cidr_max') %}
+      "SubnetMax": "{{ salt.caasp_pillar.get('cluster_cidr_max') }}",
+      {%- endif %}
+      "Backend":
+      {
+        {%- if salt.caasp_pillar.get('flannel:backend') in ["vxlan", "udp"] and salt.caasp_pillar.get('flannel:port') %}
+        "Port": {{ salt.caasp_pillar.get('flannel:port') }},
+        {%- endif %}
+        "Type": "{{ salt.caasp_pillar.get('flannel:backend') }}"
+      }
+    }
+
+---
+kind: DaemonSet
+apiVersion: extensions/v1beta1
+metadata:
+  name: canal
+  namespace: kube-system
+  labels:
+    tier: node
+    k8s-app: canal
+spec:
+  selector:
+    matchLabels:
+      tier: node
+      k8s-app: canal
+  template:
+    metadata:
+      labels:
+        tier: node
+        k8s-app: canal
+    spec:
+      serviceAccountName: canal
+      initContainers:
+      - name: install-cni-flannel
+        image: {{ pillar['flannel']['image'] }}
+        command:
+        - /bin/sh
+        - "-c"
+        - "cp -f /usr/lib/cni/* /host/opt/cni/bin/"
+        volumeMounts:
+        - name: host-cni-bin
+          mountPath: /host/opt/cni/bin/
+      containers:
+      # Runs calico/node container on each Kubernetes node.  This
+      # container programs network policy and routes on each
+      # host.
+      - name: calico-node
+        image: {{ pillar['calico']['node'] }}
+        env:
+        # Use Kubernetes API as the backing datastore.
+        - name: DATASTORE_TYPE
+          value: "kubernetes"
+        # Enable felix logging.
+        - name: FELIX_LOGSEVERITYSYS
+          value: "info"
+        # Don't enable BGP.
+        - name: CALICO_NETWORKING_BACKEND
+          value: "none"
+        # Cluster type to identify the deployment type
+        - name: CLUSTER_TYPE
+          value: "k8s,canal"
+        # Disable file logging so `kubectl logs` works.
+        - name: CALICO_DISABLE_FILE_LOGGING
+          value: "true"
+        # Period, in seconds, at which felix re-applies all iptables state
+        - name: FELIX_IPTABLESREFRESHINTERVAL
+          value: "60"
+        # Disable IPV6 support in Felix.
+        - name: FELIX_IPV6SUPPORT
+          value: "false"
+        # Wait for the datastore.
+        - name: WAIT_FOR_DATASTORE
+          value: "true"
+        # No IP address needed.
+        - name: IP
+          value: ""
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        # Set Felix endpoint to host default action to ACCEPT.
+        - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
+          value: "ACCEPT"
+        - name: FELIX_HEALTHENABLED
+          value: "true"
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            cpu: 250m
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 9099
+          periodSeconds: 10
+          initialDelaySeconds: 10
+          failureThreshold: 6
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 9099
+          periodSeconds: 10
+        volumeMounts:
+        - mountPath: /lib/modules
+          name: lib-modules
+          readOnly: true
+        - mountPath: /var/run/calico
+          name: var-run-calico
+          readOnly: false
+      # This container installs the Calico CNI binaries
+      # and CNI network config file on each node.
+      - name: install-cni-calico
+        image: {{ pillar['calico']['cni'] }}
+        command:
+        - "/install-cni.sh"
+        env:
+        - name: CNI_CONF_NAME
+          value: "10-canal.conflist"
+        # The CNI network config to install on each node.
+        - name: CNI_NETWORK_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              name: canal-config
+              key: cni_network_config
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        volumeMounts:
+        - name: host-cni-bin
+          mountPath: /host/opt/cni/bin/
+        - name: host-cni-conf
+          mountPath: /host/etc/cni/net.d
+      # This container runs flannel using the kube-subnet-mgr backend
+      # for allocating subnets.
+      - name: kube-flannel
+        image: {{ pillar['flannel']['image'] }}
+        command:
+        - "/usr/sbin/flanneld"
+        - "--ip-masq"
+        - "--kube-subnet-mgr"
+        - "--v={{ pillar['flannel']['log_level'] }}"
+        securityContext:
+          privileged: true
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: FLANNELD_IFACE
+          valueFrom:
+            configMapKeyRef:
+              name: canal-config
+              key: canal_iface
+        - name: FLANNELD_IP_MASQ
+          valueFrom:
+            configMapKeyRef:
+              name: canal-config
+              key: masquerade
+        volumeMounts:
+        - name: run
+          mountPath: /run
+        - name: host-cni-conf
+          mountPath: /etc/cni/net.d
+        - name: canal-plugin-config
+          mountPath: /etc/kube-flannel/
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+      tolerations:
+      # Allow the pod to run on the master.  This is required for
+      # the master to communicate with pods.
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      # Mark the pod as a critical add-on for rescheduling.
+      - key: CriticalAddonsOnly
+        operator: Exists
+      terminationGracePeriodSeconds: 0
+      volumes:
+      # Used by calico/node.
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+      - name: var-run-calico
+        hostPath:
+          path: /var/run/calico
+      # Used to install CNI.
+      - name: host-cni-bin
+        hostPath:
+          path: {{ pillar['cni']['dirs']['bin'] }}
+      - name: host-cni-conf
+        hostPath:
+          path: {{ pillar['cni']['dirs']['conf'] }}
+      # Used by flannel.
+      - name: run
+        hostPath:
+          path: /run
+      - name: canal-plugin-config
+        configMap:
+          name: canal-config
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+
+# Create all the CustomResourceDefinitions needed for
+# Calico policy-only mode.
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+description: Calico Global Felix Configuration
+kind: CustomResourceDefinition
+metadata:
+  name: globalfelixconfigs.crd.projectcalico.org
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: GlobalFelixConfig
+    plural: globalfelixconfigs
+    singular: globalfelixconfig
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+description: Calico Global BGP Configuration
+kind: CustomResourceDefinition
+metadata:
+  name: globalbgpconfigs.crd.projectcalico.org
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: GlobalBGPConfig
+    plural: globalbgpconfigs
+    singular: globalbgpconfig
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+description: Calico IP Pools
+kind: CustomResourceDefinition
+metadata:
+  name: ippools.crd.projectcalico.org
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: IPPool
+    plural: ippools
+    singular: ippool
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+description: Calico Global Network Policies
+kind: CustomResourceDefinition
+metadata:
+  name: globalnetworkpolicies.crd.projectcalico.org
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: GlobalNetworkPolicy
+    plural: globalnetworkpolicies
+    singular: globalnetworkpolicy

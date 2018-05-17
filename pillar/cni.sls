@@ -17,6 +17,11 @@ flannel:
 # 8 - Display HTTP request contents.
   log_level:      '2'
 
+# the calico backend
+calico:
+  node: 'quay.io/calico/node:v2.6.9'
+  cni:  'quay.io/calico/cni:v1.11.5'
+
 # CNI network configuration
 cni:
   plugin:         'flannel'
