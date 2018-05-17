@@ -11,7 +11,7 @@ include:
 drain-kubelet:
   cmd.run:
     - name: |
-        kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} drain {{ grains['nodename'] }} --force --delete-local-data=true --ignore-daemonsets --grace-period=300 --timeout=340s
+        kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} drain {{ grains['nodename'] }} --force --delete-local-data=true --ignore-daemonsets
     - check_cmd:
       - /bin/true
     - require:
