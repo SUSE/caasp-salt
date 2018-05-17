@@ -28,12 +28,14 @@
 {%- set is_worker_tgt            = is_responsive_node_tgt + ' and G@roles:kube-minion' %}
 {%- set is_updateable_master_tgt = is_updateable_tgt + ' and ' + is_master_tgt %}
 {%- set is_updateable_worker_tgt = is_updateable_tgt + ' and ' + is_worker_tgt %}
+{%- set all_masters = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set super_master = all_masters|first %}
 
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
 set-update-grain:
   salt.function:
-    - tgt: '{{ is_regular_node_tgt }} and {{ is_updateable_tgt }}'
+    - tgt: '( {{ is_regular_node_tgt }} and {{ is_updateable_tgt }} ) or {{ super_master }}'
     - tgt_type: compound
     - name: grains.setval
     - arg:
@@ -379,9 +381,6 @@ kubelet-setup:
       - {{ worker_id }}-remove-update-grain
 {%- endfor %}
 
-{%- set all_masters = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set super_master = all_masters|first %}
-
 # (re-)apply all the manifests
 # this will perform a rolling-update for existing daemonsets
 services-setup:
@@ -434,10 +433,10 @@ remove-caasp-fqdn-grain:
     - require:
       - admin-wait-for-services
 
-masters-remove-update-grain:
+remove-update-grain:
   salt.function:
-    - tgt: '{{ is_master_tgt }} and G@update_in_progress:true'
-    - tgt_type: compound
+    - tgt: 'update_in_progress:true'
+    - tgt_type: grain
     - name: grains.delval
     - arg:
       - update_in_progress
