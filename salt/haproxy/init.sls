@@ -89,11 +89,13 @@ haproxy-restart:
 # The admin node is serving the internal API with the pillars. Wait for it to come back
 # before going on with the orchestration/highstates.
 wait-for-haproxy:
-  http.wait_for_successful_query:
-    - name:       https://localhost:444/internal-api/v1/pillar.json
+  caasp_http.wait_for_successful_query:
+    - name:       https://localhost:444/_health
     - wait_for:   300
-    - status:     401
+    - status:     200
     - verify_ssl: False
+    - opts:
+        http_request_timeout: 30
     - onchanges:
       - haproxy-restart
 {% endif %}
