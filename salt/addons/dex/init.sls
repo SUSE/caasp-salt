@@ -1,6 +1,5 @@
 include:
   - crypto
-  - repositories
   - kubectl-config
   - kube-apiserver
 
