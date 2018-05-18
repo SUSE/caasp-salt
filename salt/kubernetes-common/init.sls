@@ -1,6 +1,3 @@
-include:
-  - repositories
-
 kubernetes-common:
   pkg.installed:
     - pkgs:

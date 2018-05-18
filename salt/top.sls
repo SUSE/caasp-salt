@@ -37,7 +37,6 @@ base:
     - kube-scheduler
   'roles:(kube-master|kube-minion|etcd)':
     - match: grain_pcre
-    - repositories
     - motd
     - users
     - cert

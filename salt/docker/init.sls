@@ -1,6 +1,3 @@
-include:
-  - repositories
-
 ######################
 # additional ca.crt(s)
 #######################
@@ -64,8 +61,6 @@ docker:
   pkg.installed:
     - name: {{ salt.caasp_pillar.get('docker:pkg', 'docker') }}
     - install_recommends: False
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
   file.replace:
     # remove any DOCKER_OPTS in the sysconfig file, as we will be
     # using the "daemon.json". In fact, we don't want any DOCKER_OPS
