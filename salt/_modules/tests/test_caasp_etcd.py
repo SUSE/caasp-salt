@@ -49,6 +49,6 @@ class TestGetEndpoints(unittest.TestCase):
             mock.reset_mock()
 
             res = get_endpoints(skip_removed=True)
-            mock.assert_called_once_with('G@roles:etcd and not G@removal_in_progress:true')
+            mock.assert_called_once_with('G@roles:etcd and not G@node_removal_in_progress:true')
 
             mock.reset_mock()
