@@ -44,12 +44,28 @@ kube-apiserver:
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}
+      - file:            /etc/kubernetes/audit-policy.yaml
+      - file:            /var/log/kube-apiserver
     - watch:
       - sls:             kubernetes-common
       - file:            kube-apiserver
+      - file:            /etc/kubernetes/audit-policy.yaml
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}
+
+/var/log/kube-apiserver:
+  file.directory:
+    - user: kube
+    - group: kube
+    - dirmode: 755
+    - filemode: 644
+    - require:
+      - pkg: kube-apiserver
+
+/etc/kubernetes/audit-policy.yaml:
+  file.managed:
+    - contents_pillar: api:audit:log:policy
 
 #
 # Wait for (in order)
