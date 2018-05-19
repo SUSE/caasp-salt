@@ -1,5 +1,4 @@
 include:
-  - repositories
   - ca-cert
   - cert
 
@@ -11,8 +10,6 @@ include:
 add-etcd-to-cluster:
   pkg.installed:
     - name: etcdctl
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
   caasp_etcd.member_add:
     - retry:
         interval: 4
@@ -42,8 +39,6 @@ etcd:
       - iptables
       - etcdctl
       - etcd
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
   caasp_retriable.retry:
     - name: iptables-etcd
     - target: iptables.append

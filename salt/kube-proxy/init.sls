@@ -1,5 +1,4 @@
 include:
-  - repositories
   - kubernetes-common
 
 {% from '_macros/certs.jinja' import certs with context %}
@@ -26,8 +25,6 @@ kube-proxy:
       - iptables
       - conntrack-tools
       - kubernetes-node
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
   file.managed:
     - name: /etc/kubernetes/proxy
     - source: salt://kube-proxy/proxy.jinja

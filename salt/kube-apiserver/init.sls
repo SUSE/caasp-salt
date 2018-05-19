@@ -1,5 +1,4 @@
 include:
-  - repositories
   - ca-cert
   - cert
   - haproxy
@@ -18,8 +17,6 @@ kube-apiserver:
     - pkgs:
       - iptables
       - kubernetes-master
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
   caasp_retriable.retry:
     - name: iptables-kube-apiserver
     - target: iptables.append

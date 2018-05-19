@@ -1,5 +1,4 @@
 include:
-  - repositories
   - ca-cert
   - cert
   - kubernetes-common
@@ -60,8 +59,6 @@ kubelet:
       - iptables
       - kubernetes-client
       - kubernetes-node
-    - require:
-      - file: /etc/zypp/repos.d/containers.repo
   file.managed:
     - name:     /etc/kubernetes/kubelet
     - source:   salt://kubelet/kubelet.jinja
