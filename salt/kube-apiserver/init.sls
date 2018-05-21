@@ -12,6 +12,12 @@ include:
          cn = grains['nodename'],
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
+{{ certs("kube-apiserver-proxy-client",
+         pillar['ssl']['kube_apiserver_proxy_client_crt'],
+         pillar['ssl']['kube_apiserver_proxy_client_key'],
+         cn = grains['nodename'],
+         o = pillar['certificate_information']['subject_properties']['O']) }}
+
 kube-apiserver:
   pkg.installed:
     - pkgs:
@@ -43,6 +49,7 @@ kube-apiserver:
       - caasp_retriable: iptables-kube-apiserver
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
+      - caasp_retriable: {{ pillar['ssl']['kube_apiserver_proxy_client_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}
       - file:            /etc/kubernetes/audit-policy.yaml
       - file:            /var/log/kube-apiserver
@@ -52,6 +59,7 @@ kube-apiserver:
       - file:            /etc/kubernetes/audit-policy.yaml
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
+      - caasp_retriable: {{ pillar['ssl']['kube_apiserver_proxy_client_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}
 
 /var/log/kube-apiserver:
