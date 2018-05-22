@@ -2,8 +2,18 @@ def label = "salt-tests-${UUID.randomUUID().toString()}"
 
 podTemplate(label: label, containers: [
         containerTemplate(
-            name: 'opensuse',
-            image: 'opensuse:42.3',
+            name: 'tox',
+            image: 'registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox-container:latest',
+            ttyEnabled: true,
+            command: 'cat',
+            envVars: [
+                envVar(key: 'http_proxy', value: env.http_proxy),
+                envVar(key: 'https_proxy', value: env.http_proxy),
+            ],
+        ),
+        containerTemplate(
+            name: 'tox3',
+            image: 'registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox3-container:latest',
             ttyEnabled: true,
             command: 'cat',
             envVars: [
@@ -17,64 +27,42 @@ podTemplate(label: label, containers: [
             checkout scm
         }
 
-        stage('Install Dependencies') {
-            try {
-                container('opensuse') {
-                    // TODO: Build a opensuse based python-tox image..
-                    sh 'zypper in --no-confirm python-tox python-pip python-pyOpenSSL libopenssl1_0_0 openssl git python3 python-devel python3-devel gcc libzmq5 zeromq-devel python-xml'
-                }
-            } catch (Exception e) {
-                containerLog 'opensuse'
-                throw e
-            }
-        }
-
         stage('Create Test Virtualenv') {
-            try {
-                parallel(
-                    'Python 2.7': {
-                        container('opensuse') {
-                            sh 'tox --notest -e tests-salt-2016.11.4-py27'
-                        }
-                    },
-                    'Python 3.4': {
-                        container('opensuse') {
-                            sh 'tox --notest -e tests-salt-2016.11.4-py34'
-                        }
+            parallel(
+                'Python 2.7': {
+                    container('tox') {
+                        sh 'tox --notest -e tests-salt-2016.11.4-py27'
                     }
-                )
-            } catch (Exception e) {
-                containerLog 'opensuse'
-                throw e
-            }
+                },
+                'Python 3.4': {
+                    container('tox3') {
+                        sh 'tox --notest -e tests-salt-2016.11.4-py34'
+                    }
+                }
+            )
         }
 
         stage('Run Tests') {
-            try {
-                parallel(
-                    'Python 2.7': {
-                        container('opensuse') {
-                            try {
-                                sh 'tox -e tests-salt-2016.11.4-py27 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py27 --xunit-file=tests-salt-2016.11.4-py27.xml'
-                            } finally {
-                                junit "tests-salt-2016.11.4-py27.xml"
-                            }
-                        }
-                    },
-                    'Python 3.4': {
-                        container('opensuse') {
-                            try {
-                                sh 'tox -e tests-salt-2016.11.4-py34 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py34 --xunit-file=tests-salt-2016.11.4-py34.xml'
-                            } finally {
-                                junit "tests-salt-2016.11.4-py34.xml"
-                            }
+            parallel(
+                'Python 2.7': {
+                    container('tox') {
+                        try {
+                            sh 'tox -e tests-salt-2016.11.4-py27 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py27 --xunit-file=tests-salt-2016.11.4-py27.xml'
+                        } finally {
+                            junit "tests-salt-2016.11.4-py27.xml"
                         }
                     }
-                )
-            } catch (Exception e) {
-                containerLog 'opensuse'
-                throw e
-            }
+                },
+                'Python 3.4': {
+                    container('tox3') {
+                        try {
+                            sh 'tox -e tests-salt-2016.11.4-py34 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py34 --xunit-file=tests-salt-2016.11.4-py34.xml'
+                        } finally {
+                            junit "tests-salt-2016.11.4-py34.xml"
+                        }
+                    }
+                }
+            )
         }
     }
 }

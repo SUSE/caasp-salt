@@ -14,8 +14,8 @@ def label = "salt-flake8-${UUID.randomUUID().toString()}"
 
 podTemplate(label: label, containers: [
         containerTemplate(
-            name: 'opensuse',
-            image: 'opensuse:42.3',
+            name: 'tox',
+            image: 'registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox-container:latest',
             ttyEnabled: true,
             command: 'cat',
             envVars: [
@@ -29,31 +29,13 @@ podTemplate(label: label, containers: [
             checkout scm
         }
 
-        stage('Install Dependencies') {
-            try {
-                container('opensuse') {
-                    // TODO: Build a opensuse based python-tox image..
-                    sh 'zypper in --no-confirm python-tox python-pip python-pyOpenSSL libopenssl1_0_0 openssl'
-                    sh 'tox --notest -e flake8'
-                }
-            } catch (Exception e) {
-                containerLog 'opensuse'
-                throw e
-            }
-        }
-
         stage('Style Checks') {
-            try {
-                container('opensuse') {
-                    try {
-                        sh 'tox -e flake8 -- --format=junit-xml --output-file junit.xml'
-                    } finally {
-                        junit "junit.xml"
-                    }
+            container('tox') {
+                try {
+                    sh 'tox -e flake8 -- --format=junit-xml --output-file junit.xml'
+                } finally {
+                    junit "junit.xml"
                 }
-            } catch (Exception e) {
-                containerLog 'opensuse'
-                throw e
             }
         }
     }
