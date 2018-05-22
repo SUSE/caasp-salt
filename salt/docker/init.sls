@@ -93,3 +93,7 @@ docker-reload-config:
     - reload: True
     - onchanges:
       - file: /etc/docker/daemon.json
+  {% for cert_tuple in certs.items() %}
+    {% set name, _cert = cert_tuple %}
+      - file: /etc/docker/certs.d/{{ name }}/ca.crt
+  {% endfor %}
