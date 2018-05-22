@@ -4,6 +4,6 @@ junit.xml
 Makefile
 *.tgz
 *.pyc
-
+tests-*.xml
 # local config files
 config/master.d/99-local-*.conf
