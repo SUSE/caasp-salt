@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from salt.ext import six
 
 
 def __virtual__():
@@ -21,7 +22,7 @@ def get(name, default=''):
     if res is None:
         res = default
 
-    if isinstance(res, basestring):
+    if isinstance(res, six.string_types):
         try:
             return int(res)
         except ValueError:
