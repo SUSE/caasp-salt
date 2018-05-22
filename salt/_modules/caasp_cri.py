@@ -202,6 +202,7 @@ def __wait_CRI_socket():
     '''
     timeout = int(__salt__['pillar.get']('cri:socket_timeout', '20'))
     expire = time.time() + timeout
+    errors = {'attempts': []}
 
     while time.time() < expire:
         cmd = "crictl --runtime-endpoint {socket} info".format(
@@ -214,11 +215,13 @@ def __wait_CRI_socket():
         if result['retcode'] == 0:
             return
 
+        errors['attempts'].append(result)
+
         time.sleep(0.3)
 
     raise CommandExecutionError(
         'CRI socket did not become ready',
-        info={'errors': ['CRI socket did not become ready']}
+        info=errors
     )
 
 
