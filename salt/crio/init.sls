@@ -18,13 +18,6 @@ crio:
       - pkg: crio
       - file: /etc/crio/crio.conf
 
-crio-reload-config:
-  service.running:
-    - name: crio
-    - reload: True
-    - onchanges:
-      - file: /etc/crio/crio.conf
-
 /etc/systemd/system/kubelet.service.d/kubelet.conf:
   file.managed:
     - source: salt://crio/kubelet.conf
