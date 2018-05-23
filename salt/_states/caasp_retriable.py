@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import time
+from salt.ext.six.moves import range
 
 
 def retry(name, target, retry={}, **kwargs):
@@ -27,7 +28,7 @@ def retry(name, target, retry={}, **kwargs):
 
     ret = None
 
-    for attempt in xrange(retry_['attempts']):
+    for attempt in range(retry_['attempts']):
         try:
             ret = __states__[target](name=name, **kwargs)
         except BaseException as e:
