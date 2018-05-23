@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import time
+from salt.ext.six.moves import range
 
 
 def run(name,
@@ -168,7 +169,7 @@ def run(name,
 
     ret = None
 
-    for attempt in xrange(retry_['attempts']):
+    for attempt in range(retry_['attempts']):
         ret = __states__['cmd.run'](name=name,
                                     onlyif=onlyif,
                                     unless=unless,
