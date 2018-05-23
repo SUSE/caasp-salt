@@ -21,6 +21,8 @@
         {{ cert | indent(8) }}
     - require_in:
       - docker
+    - onchanges_in:
+      - docker-reload-config
 
 {% endfor %}
 
@@ -88,12 +90,7 @@ docker-proxy-config:
       - /etc/sysconfig/docker
 
 docker-reload-config:
-  service.running:
-    - name: docker
-    - reload: True
+  cmd.run:
+    - name: systemctl reload docker
     - onchanges:
       - file: /etc/docker/daemon.json
-  {% for cert_tuple in certs.items() %}
-    {% set name, _cert = cert_tuple %}
-      - file: /etc/docker/certs.d/{{ name }}/ca.crt
-  {% endfor %}
