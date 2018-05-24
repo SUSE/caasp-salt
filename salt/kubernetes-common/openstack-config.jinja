@@ -2,6 +2,7 @@
 auth-url="{{ pillar['cloud']['openstack']['auth_url'] }}"
 username="{{ pillar['cloud']['openstack']['username'] }}"
 password="{{ pillar['cloud']['openstack']['password'] }}"
+trust-id="{{ pillar['cloud']['openstack']['trust_id'] }}"
 {% if pillar['cloud']['openstack']['project_id'] %}
 tenant-id="{{ pillar['cloud']['openstack']['project_id'] }}"
 {% else %}

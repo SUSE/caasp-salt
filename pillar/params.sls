@@ -150,6 +150,8 @@ cloud:
     region:         ''
     username:       ''
     password:       ''
+    # OpenStack Keystone Trust ID to avoid storing user credentials
+    trust_id:       ''
     # OpenStack subnet UUID for the CaasP private network
     subnet:         ''
     # OpenStack floating network UUID
