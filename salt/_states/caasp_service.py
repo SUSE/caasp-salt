@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import time
+from salt.ext.six.moves import range
 
 
 def running_stable(name, enable=None, sig=None, init_delay=None, successful_retries_in_a_row=50,
@@ -55,7 +56,7 @@ def running_stable(name, enable=None, sig=None, init_delay=None, successful_retr
     latest_pid = None
     current_successful_retries_in_a_row = 0
     max_current_successful_retries_in_a_row = 0
-    for retry in xrange(max_retries):
+    for retry in range(max_retries):
         pid = __salt__['service.status'](name=name,
                                          sig=sig)
 

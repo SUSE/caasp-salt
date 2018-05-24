@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from urlparse import urlparse
+from salt.ext.six.moves.urllib.parse import urlparse
 
 from caasp_log import debug, error
 
