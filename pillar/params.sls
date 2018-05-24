@@ -144,7 +144,9 @@ cloud:
   openstack:
     auth_url:       ''
     domain:         ''
+    domain_id:      ''
     project:        ''
+    project_id:     ''
     region:         ''
     username:       ''
     password:       ''
