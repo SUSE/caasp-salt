@@ -17,6 +17,10 @@ crio:
     - watch:
       - pkg: crio
       - file: /etc/crio/crio.conf
+  module.run:
+    - name: service.systemctl_reload
+    - onchanges:
+      - file: /etc/crio/crio.conf
 
 /etc/systemd/system/kubelet.service.d/kubelet.conf:
   file.managed:
