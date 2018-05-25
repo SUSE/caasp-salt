@@ -13,7 +13,6 @@ crio:
       - kubelet
   service.running:
     - name: crio
-    - reload: True
     - watch:
       - pkg: crio
       - file: /etc/crio/crio.conf
