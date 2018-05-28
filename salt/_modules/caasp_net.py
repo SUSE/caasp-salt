@@ -12,6 +12,8 @@ from caasp_log import error
 
 DEFAULT_INTERFACE = 'eth0'
 
+NODENAME_GRAIN = 'nodename'
+
 
 def __virtual__():
     return "caasp_net"
@@ -83,9 +85,9 @@ def get_nodename(host=None, **kwargs):
     try:
         if not host:
             assert __opts__['__role'] != 'master'
-            return __salt__['grains.get']('nodename')
+            return __salt__['grains.get'](NODENAME_GRAIN)
         else:
-            all_nodenames = __salt__['caasp_grains.get'](host, 'nodename', type='glob')
+            all_nodenames = __salt__['caasp_grains.get'](host, grain=NODENAME_GRAIN, type='glob')
             return all_nodenames[host]
     except Exception as e:
         error('could not get nodename: %s', e)
