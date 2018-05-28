@@ -325,8 +325,8 @@ highstate-affected:
 # remove the we-are-removing-some-node grain in the cluster
 remove-cluster-wide-removal-grain:
   salt.function:
-    - tgt: '{{ all_responsive_nodes_tgt }}'
-    - tgt_type: compound
+    - tgt: 'removal_in_progress:true'
+    - tgt_type: grain
     - name: grains.delval
     - arg:
       - removal_in_progress

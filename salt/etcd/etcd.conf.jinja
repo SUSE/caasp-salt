@@ -24,6 +24,7 @@ ETCD_PEER_TRUSTED_CA_FILE={{ pillar['ssl']['ca_file'] }}
 ETCD_PEER_CLIENT_CERT_AUTH="true"
 # ETCD_PEER_AUTO_TLS=on
 
+{# note on node removal: we cannot skip nodes with node_removal_in_progress #}
 ETCD_INITIAL_CLUSTER="{{ salt.caasp_etcd.get_endpoints(with_id=True, port=2380) }}"
 ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
 ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ this_addr }}:2380"
