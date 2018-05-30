@@ -1,8 +1,15 @@
-{%- if "kube-master" in salt['grains.get']('roles', []) -%}
-{%- set bind_ip = "0.0.0.0" -%}
-{%- else -%}
-{%- set bind_ip = "127.0.0.1" -%}
-{%- endif -%}
+{%- set this_roles = salt['grains.get']('roles', [])%}
+
+{%- set bind_ip = "0.0.0.0" if "kube-master" in this_roles else "127.0.0.1" -%}
+
+{%- set masters = salt.caasp_nodes.get_with_expr('G@roles:kube-master',
+                                                 excluded_grains=['node_removal_in_progress'],
+                                                 grain='nodename') %}
+{% if not masters %}
+  {# fail early instead of generating a config file that is useless... #}
+  {% do salt.caasp_log.abort('No masters found when calculating backends for haproxy') %}
+{% endif %}
+
 global
         log /dev/log    local0
         log /dev/log    local1 notice
@@ -42,7 +49,7 @@ frontend kubernetes-master
 backend default-backend
         option forwardfor
         option httpchk GET /healthz
-{% for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
+{% for id, nodename in masters.items() %}
         server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }} ca-file /etc/pki/ca.crt check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify required
 {%- endfor %}
 
@@ -53,12 +60,12 @@ backend no-timeout-backend
         option httpchk GET /healthz
         timeout server 0
         timeout tunnel 0
-{% for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
+{% for id, nodename in masters.items() %}
         server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }} ca-file /etc/pki/ca.crt check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify required
 {%- endfor %}
 
 
-{% if "admin" in salt['grains.get']('roles', []) %}
+{% if "admin" in this_roles %}
 # Velum should be able to access Kube API and Dex service as well to get kubeconfig
 listen kubernetes-dex
         bind {{ bind_ip }}:{{ pillar['dex']['node_port'] }}
@@ -67,7 +74,7 @@ listen kubernetes-dex
         balance roundrobin
         option redispatch
         option httpchk GET /healthz
-{% for minion_id, nodename in salt['mine.get']('roles:kube-master', 'nodename', 'grain').items() %}
+{% for id, nodename in masters.items() %}
         server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['dex']['node_port'] }} check check-ssl port {{ pillar['dex']['node_port'] }} verify none
 {%- endfor %}
 
