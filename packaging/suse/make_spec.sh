@@ -42,8 +42,8 @@ cat <<EOF > ${NAME}.spec
   %define _base_image sles12
 %endif
 
-%if 0%{?suse_version} == 1500 && !0%{?is_opensuse}
-  %define _base_image sles15
+%if 0%{?suse_version} >= 1500 && !0%{?is_opensuse}
+  %define _base_image caasp
 %endif
 
 %if 0%{?is_opensuse} && 0%{?suse_version} > 1500
@@ -89,6 +89,11 @@ rm -rf %{buildroot}%{_datadir}
 mkdir -p %{buildroot}%{_datadir}/salt/kubernetes
 cp -R %{_builddir}/%{gitrepo}-${SAFE_BRANCH}/*  %{buildroot}%{_datadir}/salt/kubernetes/
 
+# license macro installs LICENSE file, if not removed it is duplicated
+%if 0%{?suse_version} >= 1500
+rm %{buildroot}%{_datadir}/salt/kubernetes/LICENSE
+%endif
+
 # fix image name
 dir_name=%{buildroot}/%{_datadir}/salt/kubernetes
 files=\$(grep "image:[ ]*sles12" \$dir_name -r | cut -d: -f1 | uniq)
@@ -106,6 +111,9 @@ done
 
 %files
 %defattr(-,root,root)
+%if 0%{?suse_version} >= 1500
+%license LICENSE
+%endif
 %dir %{_datadir}/salt
 %dir %{_datadir}/salt/kubernetes
 %{_datadir}/salt/kubernetes/*
