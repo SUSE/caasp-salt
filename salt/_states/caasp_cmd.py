@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import time
-from salt.ext.six.moves import range
 
 
 def run(name,

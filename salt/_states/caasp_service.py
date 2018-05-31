@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import time
-from salt.ext.six.moves import range
 
 
 def running_stable(name, enable=None, sig=None, init_delay=None, successful_retries_in_a_row=50,
