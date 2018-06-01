@@ -8,6 +8,19 @@ _MIN_ETCD_MEMBERS_AFTER_REMOVAL = 1
 _MIN_MASTERS_AFTER_REMOVAL = 1
 _MIN_MINIONS_AFTER_REMOVAL = 1
 
+# an exported (to the mine) grain used for getting ids
+DEFAULT_GRAIN = 'nodename'
+
+# all the "*_in_progress" grains
+IN_PROGRESS_GRAINS = ['bootstrap_in_progress',
+                      'update_in_progress',
+                      'node_removal_in_progress',
+                      'node_addition_in_progress']
+
+
+# use unassigned nodes when looking for a replacement
+USE_UNASSIGNED = False
+
 
 def _get_prio_etcd(unassigned=False):
     '''
@@ -20,22 +33,23 @@ def _get_prio_etcd(unassigned=False):
     '''
     res = []
 
-    # etcd nodes that not been bootstrapped yet
-    # (ie, the role has been assigned in Velum)
+    # only-etcd or etcd+master nodes that not been bootstrapped yet
+    # these are the machines where the role has been assigned in Velum
+    res.append('G@roles:etcd and not P@roles:(kube-master|kube-minion) and not G@bootstrap_complete:true')
     res.append('G@roles:etcd and not G@bootstrap_complete:true')
 
     if unassigned:
-        # has no role (prefering non-bootstrapped nodes)
+        # nodes with no role assigned (preferring non-bootstrapped ones)
         res.append('not P@roles:(kube-master|kube-minion|etcd) and not G@bootstrap_complete:true')
         res.append('not P@roles:(kube-master|kube-minion|etcd)')
 
-    # kubernetes masters (prefering non-bootstrapped nodes)
-    res.append('G@roles:kube-master and not G@bootstrap_complete:true')
-    res.append('G@roles:kube-master')
+    # only-master nodes (preferring non-bootstrapped ones)
+    res.append('G@roles:kube-master and not G@roles:etcd and not G@bootstrap_complete:true')
+    res.append('G@roles:kube-master and not G@roles:etcd')
 
-    # kuberetes minions (prefering non-bootstrapped nodes)
-    res.append('G@roles:kube-minion and not G@bootstrap_complete:true')
-    res.append('G@roles:kube-minion')
+    # kubernetes minions (preferring non-bootstrapped ones)
+    res.append('G@roles:kube-minion and not G@roles:etcd and not G@bootstrap_complete:true')
+    res.append('G@roles:kube-minion and not G@roles:etcd')
 
     return res
 
@@ -51,18 +65,19 @@ def _get_prio_master(unassigned=False):
     '''
     res = []
 
-    # kubernetes masters that not been bootstrapped yet
-    # (ie, the role has been assigned in Velum)
+    # only-master or master+etcd nodes that not been bootstrapped yet
+    # these are the machines where the role has been assigned in Velum
+    res.append('G@roles:kube-master and not G@roles:etcd and not G@bootstrap_complete:true')
     res.append('G@roles:kube-master and not G@bootstrap_complete:true')
 
     if unassigned:
-        # nodes with no role (preferring non-bootstrapped nodes)
+        # nodes with no role assigned (preferring non-bootstrapped ones)
         res.append('not P@roles:(kube-master|kube-minion|etcd) and not G@bootstrap_complete:true')
         res.append('not P@roles:(kube-master|kube-minion|etcd)')
 
-    # etcd-only nodes (preferring non-bootstrapped nodes)
-    res.append('G@roles:etcd and not G@roles:kube-master and not G@bootstrap_complete:true')
-    res.append('G@roles:etcd and not G@roles:kube-master')
+    # only-etcd nodes (preferring non-bootstrapped ones)
+    res.append('G@roles:etcd and not P@roles:(kube-master|kube-minion) and not G@bootstrap_complete:true')
+    res.append('G@roles:etcd and not P@roles:(kube-master|kube-minion)')
     return res
 
 
@@ -77,18 +92,19 @@ def _get_prio_minion(unassigned=False):
     '''
     res = []
 
-    # kubernetes minions that not been bootstrapped yet
-    # (ie, the role has been assigned in Velum)
+    # only-minions or minion+etcd that not been bootstrapped yet
+    # these are the machines where the role has been assigned in Velum
+    res.append('G@roles:kube-minion and not G@roles:etcd and not G@bootstrap_complete:true')
     res.append('G@roles:kube-minion and not G@bootstrap_complete:true')
 
     if unassigned:
-        # nodes with no role (preferring non-bootstrapped nodes)
+        # nodes with no role assigned (preferring non-bootstrapped ones)
         res.append('not P@roles:(kube-master|kube-minion|etcd) and not G@bootstrap_complete:true')
         res.append('not P@roles:(kube-master|kube-minion|etcd)')
 
-    # etcd-only nodes (preferring non-bootstrapped nodes)
-    res.append('G@roles:etcd and not G@roles:kube-master and not G@bootstrap_complete:true')
-    res.append('G@roles:etcd and not G@roles:kube-master')
+    # only-etcd nodes (preferring non-bootstrapped ones)
+    res.append('G@roles:etcd and not P@roles:(kube-master|kube-minion) and not G@bootstrap_complete:true')
+    res.append('G@roles:etcd and not P@roles:(kube-master|kube-minion)')
 
     return res
 
@@ -119,30 +135,41 @@ def get_with_expr(expr, **kwargs):
       * `exclude_in_progress`: exclude any node with *_in_progress grains
       * `excluded`: list of nodes to exclude
       * `excluded_roles`: list of roles to exclude
+      * `excluded_grains`: list of grains to exclude
+      * `grain`: return a map of <id>:<grain> items instead of a list of <id>s
     '''
     expr_items = [expr]
+
+    grain = kwargs.get('grain', DEFAULT_GRAIN)
+
+    excluded = _sanitize_list(kwargs.get('excluded', []))
+    excluded_grains = _sanitize_list(kwargs.get('excluded_grains', []))
+    excluded_roles = _sanitize_list(kwargs.get('excluded_roles', []))
 
     if kwargs.get('booted', False):
         expr_items.append('G@bootstrap_complete:true')
 
     if kwargs.get('exclude_admin', False):
-        expr_items.append('not P@roles:(admin|ca)')
+        excluded_roles += ['admin', 'ca']
 
     if kwargs.get('exclude_in_progress', False):
-        expr_items.append('not G@bootstrap_in_progress:true')
-        expr_items.append('not G@update_in_progress:true')
-        expr_items.append('not G@node_removal_in_progress:true')
-        expr_items.append('not G@node_addition_in_progress:true')
+        excluded_grains += IN_PROGRESS_GRAINS
 
-    excluded = _sanitize_list(kwargs.get('excluded', []))
     if excluded:
         expr_items.append('not L@' + '|'.join(excluded))
 
-    excluded_roles = _sanitize_list(kwargs.get('excluded_roles', []))
+    excluded_roles = _sanitize_list(excluded_roles)
     if excluded_roles:
         expr_items.append('not P@roles:(' + '|'.join(excluded_roles) + ')')
 
-    return __salt__['caasp_grains.get'](' and '.join(expr_items)).keys()
+    excluded_grains = _sanitize_list(excluded_grains)
+    if excluded_grains:
+        expr_items += ['not G@{}:true'.format(g) for g in excluded_grains]
+
+    res = __salt__['caasp_grains.get'](' and '.join(expr_items), grain=grain)
+    res = res if ('grain' in kwargs) else res.keys()
+    debug('%s: %s', expr, res)
+    return res
 
 
 def get_from_args_or_with_expr(arg_name, args_dict, *args, **kwargs):
@@ -151,6 +178,7 @@ def get_from_args_or_with_expr(arg_name, args_dict, *args, **kwargs):
     or from an expression.
     '''
     if arg_name in args_dict:
+        debug('using argument "%s": %s', arg_name, args_dict[arg_name])
         return _sanitize_list(args_dict[arg_name])
     else:
         return get_with_expr(*args, **kwargs)
@@ -170,22 +198,24 @@ def get_with_prio(num, description, prio_rules, **kwargs):
     new_nodes = []
     remaining = num
     for expr in prio_rules:
-        debug('trying to find candidates for %s with %s',
+        debug('trying to find candidates for "%s" with "%s"',
               description, expr)
         # get all the nodes matching the priority expression,
         # but filtering out all the nodes we already have
         candidates = get_with_expr(expr,
                                    exclude_admin=True, exclude_in_progress=True,
                                    **kwargs)
+        debug('... %d candidates', len(candidates))
         ids = [x for x in candidates if x not in new_nodes]
         if len(ids) > 0:
+            debug('... new candidates: %s (we need %d)', candidates, remaining)
             new_ids = ids[:remaining]
             new_nodes = new_nodes + new_ids
             remaining -= len(new_ids)
             debug('... %d new candidates (%s) for %s: %d remaining',
                   len(ids), str(ids), description, remaining, )
         else:
-            debug('... no candidates found with %s', expr)
+            debug('... no new candidates found with "%s"', expr)
 
         if remaining <= 0:
             break
@@ -195,14 +225,13 @@ def get_with_prio(num, description, prio_rules, **kwargs):
     return new_nodes[:num]
 
 
-def get_with_prio_for_role(num, role, **kwargs):
-    unassigned = kwargs.get('unassigned', False)
+def get_with_prio_for_role(num, role, unassigned=USE_UNASSIGNED, **kwargs):
     prio_rules = _PRIO_FUN[role](unassigned)
     return get_with_prio(num, role, prio_rules, **kwargs)
 
 
 def _get_one_for_role(role, **kwargs):
-    res = get_with_prio_for_role(1, role, unassigned=True, **kwargs)
+    res = get_with_prio_for_role(1, role, unassigned=USE_UNASSIGNED, **kwargs)
     return res[0] if len(res) > 0 else ''
 
 

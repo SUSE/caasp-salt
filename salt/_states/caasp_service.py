@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import time
 
 
@@ -65,17 +66,20 @@ def running_stable(name, enable=None, sig=None, init_delay=None, successful_retr
             current_successful_retries_in_a_row = 0
 
         latest_pid = pid
-        max_current_successful_retries_in_a_row = max(max_current_successful_retries_in_a_row, current_successful_retries_in_a_row)
+        max_current_successful_retries_in_a_row = max(
+            max_current_successful_retries_in_a_row, current_successful_retries_in_a_row)
 
         if current_successful_retries_in_a_row == successful_retries_in_a_row:
             ret['result'] = True
-            ret['comment'] = 'Service {0} is up after {1} total retries. Including {2} retries in a row'.format(name, retry + 1, successful_retries_in_a_row)
+            ret['comment'] = 'Service {0} is up after {1} total retries. Including {2} retries in a row'.format(
+                name, retry + 1, successful_retries_in_a_row)
             break
 
         if delay_between_retries:
             time.sleep(delay_between_retries)
 
     if not ret['result']:
-        ret['comment'] = 'Service {0} is dead after {1} total retries. Expected {2} success in a row, got {3} as maximum'.format(name, max_retries, successful_retries_in_a_row, max_current_successful_retries_in_a_row)
+        ret['comment'] = 'Service {0} is dead after {1} total retries. Expected {2} success in a row, got {3} as maximum'.format(
+            name, max_retries, successful_retries_in_a_row, max_current_successful_retries_in_a_row)
 
     return ret

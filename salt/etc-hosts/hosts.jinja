@@ -9,7 +9,16 @@
 {%- endif -%}
 
 {%- macro nodes_entries(expr) -%}
-  {%- set nodes = salt['mine.get'](expr, 'network.interfaces', 'compound') %}
+  {# note regarding node removals:
+   # we need the "node_(addition|removal)_in_progress" nodes here, otherwise
+   #   - nodes being removed will be immediately banned from the cluster (with a message like:
+   #    'rejected connection from <NODE> (error tls: <NODE-IP> does not match any of DNSNames [...]')
+   #    and the cluster will become unhealthy
+   #   - nodes being added will not be able to join (with some similar TLS verification error)
+   # doing another /etc/hosts update just for one stale entry seem like an overkill,
+   # so the /etc/hosts cleanup will have to be delayed for some other moment...
+   #}
+  {%- set nodes = salt.caasp_nodes.get_with_expr(expr, grain='network.interfaces') %}
   {%- for id, ifaces in nodes.items() %}
     {%- set ip = salt.caasp_net.get_primary_ip(host=id, ifaces=ifaces) %}
     {%- if ip|length > 0 %}
