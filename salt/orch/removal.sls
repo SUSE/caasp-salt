@@ -40,7 +40,7 @@
                                                                               etcd_members=etcd_members,
                                                                               excluded=nodes_down) %}
 
-# Ensure we mark all nodes with the "as node is being removed" grain.
+# Ensure we mark all nodes with the "a node is being removed" grain.
 # This will ensure the update-etc-hosts orchestration is not run.
 set-cluster-wide-removal-grain:
   salt.function:
@@ -51,8 +51,14 @@ set-cluster-wide-removal-grain:
       - removal_in_progress
       - true
 
-# make sure we have a solid ground before starting the removal
+# Make sure we have a solid ground before starting the removal
 # (ie, expired certs produce really funny errors)
+# We could highstate everything, but that would
+# 1) take a significant amount of time
+# 2) restart many services
+# instead of that, we will
+# * update some things, and
+# * do some checks before removing anything
 update-config:
   salt.state:
     - tgt: 'P@roles:(kube-master|kube-minion|etcd) and {{ all_responsive_nodes_tgt }}'
@@ -63,6 +69,17 @@ update-config:
       - cert
     - require:
       - set-cluster-wide-removal-grain
+
+pre-removal-checks:
+  salt.state:
+    - tgt: '{{ super_master_tgt }}'
+    - sls:
+      - etcd.remove-pre-orchestration
+      - kube-apiserver.remove-pre-orchestration
+    - pillar:
+        target: {{ target }}
+    - require:
+      - update-config
 
 {##############################
  # set grains
@@ -76,7 +93,7 @@ assign-removal-grain:
       - node_removal_in_progress
       - true
     - require:
-      - update-config
+      - pre-removal-checks
 
 {%- if replacement %}
 
@@ -88,7 +105,7 @@ assign-addition-grain:
       - node_addition_in_progress
       - true
     - require:
-      - update-config
+      - pre-removal-checks
 
   {#- and then we can assign these (new) roles to the replacement #}
   {% for role in replacement_roles %}
@@ -100,7 +117,7 @@ assign-{{ role }}-role-to-replacement:
       - roles
       - {{ role }}
     - require:
-      - update-config
+      - pre-removal-checks
       - assign-addition-grain
   {% endfor %}
 
@@ -115,7 +132,7 @@ sync-all:
       - saltutil.refresh_grains
       - mine.update
     - require:
-      - update-config
+      - pre-removal-checks
       - assign-removal-grain
   {%- for role in replacement_roles %}
       - assign-{{ role }}-role-to-replacement
