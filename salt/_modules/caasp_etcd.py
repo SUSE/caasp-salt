@@ -137,6 +137,7 @@ def get_additional_etcd_members(num_wanted=None, **kwargs):
     #
     new_etcd_members = __salt__['caasp_nodes.get_with_prio_for_role'](
         num_additional_etcd_members, 'etcd',
+        unassigned=False,
         excluded=current_etcd_members + excluded)
 
     if len(new_etcd_members) < num_additional_etcd_members:
@@ -214,6 +215,7 @@ def get_member_id(nodename=None):
     target_nodename = nodename or __salt__['caasp_net.get_nodename']()
 
     debug("getting etcd member ID with: %s", command)
+    members_output = ''
     try:
         target_url = 'https://{}:{}'.format(target_nodename, ETCD_CLIENT_PORT)
         members_output = subprocess.check_output(command)

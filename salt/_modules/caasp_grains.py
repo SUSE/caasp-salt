@@ -5,11 +5,11 @@ def __virtual__():
     return "caasp_grains"
 
 
-# default grain name, used for getting node IDs
-_GRAIN_NAME = 'nodename'
+# an exported (to the mine) grain used for getting ids
+DEFAULT_GRAIN = 'nodename'
 
 
-def get(expr, grain=_GRAIN_NAME, type='compound'):
+def get(expr, grain=DEFAULT_GRAIN, type='compound'):
     if __opts__['__role'] == 'master':
         # 'mine.get' is not available in the master: it returns nothing
         # in that case, we should use "saltutil.runner"... uh?

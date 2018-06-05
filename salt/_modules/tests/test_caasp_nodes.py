@@ -163,17 +163,18 @@ class TestGetReplacementFor(unittest.TestCase):
         Check the user-provided etcd & minion replacement is valid,
         at least for some roles
         '''
+        kwargs = self.get_replacement_for_kwargs
+
         # add one of the minions to the etcd cluster
         etcd_members = [self.master_1, self.master_2, self.minion_1]
-
-        self.get_replacement_for_kwargs.update({
+        kwargs.update({
             'etcd_members': etcd_members,
             'booted_etcd_members': etcd_members,
         })
 
         replacement, roles = get_replacement_for(self.minion_1,
                                                  replacement=self.other_node,
-                                                 **self.get_replacement_for_kwargs)
+                                                 **kwargs)
 
         # when removing minion_1 (with roles minion and etcd), we can migrate
         # both roles to a free node
@@ -191,7 +192,7 @@ class TestGetReplacementFor(unittest.TestCase):
         with self.assertRaises(ExecutionAborted):
             replacement, roles = get_replacement_for(self.minion_1,
                                                      replacement=self.minion_3,
-                                                     **self.get_replacement_for_kwargs)
+                                                     **kwargs)
 
     def test_user_provided_for_minion(self):
         '''
@@ -285,6 +286,15 @@ class TestGetReplacementFor(unittest.TestCase):
                           'etcd role not found in replacement')
             self.assertNotIn('kube-master', roles,
                              'kube-master role not found in replacement')
+
+        with patch('caasp_nodes._get_one_for_role', MagicMock(return_value=self.master_3)):
+
+            replacement, roles = get_replacement_for(self.master_2,
+                                                     **self.get_replacement_for_kwargs)
+
+            # we can not migrate master_2 to master_3: it is already a master and a etcd server
+            self.assertEqual(replacement, '',
+                             'unexpected replacement ' + replacement)
 
 
 class TestGetExprAffectedBy(unittest.TestCase):
