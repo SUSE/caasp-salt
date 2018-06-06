@@ -67,20 +67,25 @@ def ext_pillar(minion_id,
         with open(os.environ['VELUM_INTERNAL_API_PASSWORD_FILE'], 'r') as f:
             password = f.read().strip()
 
-    data = __salt__['http.query'](url=url,
-                                  ca_bundle=ca_bundle,
-                                  username=username,
-                                  password=password,
-                                  decode=True,
-                                  decode_type='json')
+    try:
+        data = __salt__['http.query'](url=url,
+                                      ca_bundle=ca_bundle,
+                                      username=username,
+                                      password=password,
+                                      decode=True,
+                                      decode_type='json')
+    except Exception as e:
+        log.error('Error when getting pillar from Velum: {0}. Will try to use the cache...'.format(e))
+        data = {}
 
-    if 'dict' in data:
+    if data and 'dict' in data:
         try:
             cache.store('caasp/pillar', minion_id, data['dict'])
         except Exception as e:
             log.warning('Error when populating the cache: {0}. Moving on, not critical'.format(e))
         return data['dict']
-    elif cache.contains('caasp/pillar', minion_id):
+
+    if cache.contains('caasp/pillar', minion_id):
         log.warning('Serving pillar from cache for minion {0}, since {1} was not available'.format(minion_id, url))
         return cache.fetch('caasp/pillar', minion_id)
 
