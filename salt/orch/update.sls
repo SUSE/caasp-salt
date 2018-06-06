@@ -100,7 +100,7 @@ admin-setup:
     - require:
       - admin-apply-haproxy
 
-# Perform any migrations necessary before starting the update orchestration. All services and
+# Perform any necessary migrations before starting the update orchestration. All services and
 # machines should be running and we can migrate some data on the whole cluster and then proceed
 # with the real update.
 pre-orchestration-migration:
@@ -159,7 +159,7 @@ etcd-setup:
     - require:
         - etcd-setup
 
-# Perform any migratrions necessary before services are shutdown
+# Perform any necessary migrations before services are shutdown
 {{ master_id }}-pre-reboot:
   salt.state:
     - tgt: '{{ master_id }}'
@@ -192,7 +192,7 @@ etcd-setup:
     - require:
       - {{ master_id }}-reboot
 
-# Perform any migratrions necessary before salt starts doing
+# Perform any necessary migrations before salt starts doing
 # "real work" again
 {{ master_id }}-post-reboot:
   salt.state:
@@ -219,16 +219,6 @@ etcd-setup:
     - require:
       - {{ master_id }}-apply-haproxy
 
-# Perform any migratrions after services are started
-{{ master_id }}-post-start-services:
-  salt.state:
-    - tgt: '{{ master_id }}'
-    - sls:
-      - cni.update-post-start-services
-      - kubelet.update-post-start-services
-    - require:
-      - {{ master_id }}-start-services
-
 {{ master_id }}-reboot-needed-grain:
   salt.function:
     - tgt: '{{ master_id }}'
@@ -238,9 +228,24 @@ etcd-setup:
     - kwarg:
         destructive: True
     - require:
-      - {{ master_id }}-post-start-services
+      - {{ master_id }}-start-services
 
 {% endfor %}
+
+# Perform migrations after all masters have been updated
+all-masters-post-start-services:
+  salt.state:
+    - tgt: '{{ is_master_tgt }}'
+    - tgt_type: compound
+    - batch: 3
+    - sls:
+      - cni.update-post-start-services
+      - kubelet.update-post-start-services
+    - require:
+      - etcd-setup
+{%- for master_id in masters.keys() %}
+      - {{ master_id }}-reboot-needed-grain
+{%- endfor %}
 
 {%- set workers = salt.saltutil.runner('mine.get', tgt=is_updateable_worker_tgt, fun='network.interfaces', tgt_type='compound') %}
 {%- for worker_id, ip in workers.items() %}
@@ -256,13 +261,13 @@ etcd-setup:
       - cri.stop
       - etcd.stop
     - require:
-      - pre-orchestration-migration
+      - all-masters-post-start-services
       # wait until all the masters have been updated
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
 
-# Perform any migrations necessary before rebooting
+# Perform any necessary migrations before rebooting
 {{ worker_id }}-pre-reboot:
   salt.state:
     - tgt: '{{ worker_id }}'
@@ -294,7 +299,7 @@ etcd-setup:
     - require:
       - {{ worker_id }}-reboot
 
-# Perform any migratrions necessary before salt starts doing
+# Perform any necessary migrations before salt starts doing
 # "real work" again
 {{ worker_id }}-post-reboot:
   salt.state:
@@ -321,7 +326,7 @@ etcd-setup:
     - require:
       - salt: {{ worker_id }}-apply-haproxy
 
-# Perform any migratrions after services are started
+# Perform any migrations after services are started
 {{ worker_id }}-update-post-start-services:
   salt.state:
     - tgt: '{{ worker_id }}'
@@ -370,7 +375,7 @@ kubelet-setup:
       - kubelet.configure-taints
       - kubelet.configure-labels
     - require:
-      - pre-orchestration-migration
+      - all-masters-post-start-services
 # wait until all the machines in the cluster have been upgraded
 {%- for master_id in masters.keys() %}
       # We use the last state within the masters loop, which is different
