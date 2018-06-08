@@ -131,11 +131,16 @@ pre-orchestration-migration:
 #
 # Let's force etcd to refresh certificates on all machines, restarting the etcd service so we can
 # continue with the upgrade, as certificates will be valid for the old and the new SAN.
+#
+# We run the etc-hosts sls to make the machines refresh their references first (including old CaaSP
+# 2.0 and 3.0 naming). This way, etcd will be able to work with both namings during the upgrade
+# process.
 etcd-setup:
   salt.state:
     - tgt: '{{ is_etcd_tgt }}'
     - tgt_type: compound
     - sls:
+      - etc-hosts
       - etcd
     - batch: 1
     - require:
