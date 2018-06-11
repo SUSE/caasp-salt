@@ -151,6 +151,7 @@ etcd-setup:
     - tgt: '{{ master_id }}'
     - sls:
       - container-feeder.stop
+      - kubelet.stop
       - kube-apiserver.stop
       - kube-controller-manager.stop
       - kube-scheduler.stop
