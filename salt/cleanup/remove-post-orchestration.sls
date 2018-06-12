@@ -13,10 +13,11 @@
 include:
   - kubectl-config
 
-{%- from '_macros/kubectl.jinja' import kubectl with context %}
-
-{{ kubectl("remove-node",
-           "delete node " + nodename) }}
+remove-node:
+  caasp_kubectl.run:
+    - name:      delete node {{ nodename }}
+    - require:
+      - file:    {{ pillar['paths']['kubeconfig'] }}
 
 {% endif %}
 

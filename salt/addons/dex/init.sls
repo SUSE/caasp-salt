@@ -1,10 +1,8 @@
 include:
   - crypto
   - kubectl-config
-  - kube-apiserver
 
 {% from '_macros/certs.jinja' import alt_master_names, certs with context %}
-{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_dir_template with context %}
 
 {% set dex_alt_names = ["dex",
                         "dex.kube-system",
@@ -16,26 +14,43 @@ include:
          cn = 'Dex',
          extra_alt_names = alt_master_names(dex_alt_names)) }}
 
-{{ kubectl_apply_dir_template("salt://addons/dex/manifests/",
-                              "/etc/kubernetes/addons/dex/",
-                              watch=[pillar['ssl']['dex_crt'], pillar['ssl']['dex_key']]) }}
+/etc/kubernetes/addons/dex:
+  caasp_kubectl.apply:
+    - directory: salt://addons/dex/manifests
+    - watch:
+      - {{ pillar['ssl']['dex_crt'] }}
+      - {{ pillar['ssl']['dex_key'] }}
+    - require:
+      - file: {{ pillar['paths']['kubeconfig'] }}
 
 # TODO: Transitional code, remove for CaaSP v4
-{{ kubectl("remove-old-find-dex-role",
-           "delete role find-dex -n kube-system",
-           onlyif="kubectl --request-timeout=1m get role find-dex -n kube-system") }}
+remove-old-find-dex-role:
+  caasp_kubectl.run:
+    - name:    delete role find-dex -n kube-system
+    - onlyif:  kubectl --request-timeout=1m get role find-dex -n kube-system
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}
 
 # TODO: Transitional code, remove for CaaSP v4
-{{ kubectl("remove-old-find-dex-rolebinding",
-           "delete rolebinding find-dex -n kube-system",
-           onlyif="kubectl --request-timeout=1m get rolebinding find-dex -n kube-system") }}
+remove-old-find-dex-rolebinding:
+  caasp_kubectl.run:
+    - name:    delete rolebinding find-dex -n kube-system
+    - onlyif:  kubectl --request-timeout=1m get rolebinding find-dex -n kube-system
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}
 
 # TODO: Transitional code, remove for CaaSP v4
-{{ kubectl("remove-old-administrators-in-ldap-clusterrolebinding",
-           "delete clusterrolebinding administrators-in-ldap",
-           onlyif="kubectl --request-timeout=1m get clusterrolebinding administrators-in-ldap") }}
+remove-old-administrators-in-ldap-clusterrolebinding:
+  caasp_kubectl.run:
+    - name:    delete clusterrolebinding administrators-in-ldap
+    - onlyif:  kubectl --request-timeout=1m get clusterrolebinding administrators-in-ldap
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}
 
 # TODO: Transitional code, remove for CaaSP v4
-{{ kubectl("remove-old-dex-clusterrolebinding",
-           "delete clusterrolebinding system:dex",
-           onlyif="kubectl --request-timeout=1m get clusterrolebinding system:dex") }}
+remove-old-dex-clusterrolebinding:
+  caasp_kubectl.run:
+    - name:    delete clusterrolebinding system:dex
+    - onlyif:  kubectl --request-timeout=1m get clusterrolebinding system:dex
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}

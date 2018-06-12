@@ -1,18 +1,29 @@
 include:
   - kubectl-config
 
-{% from '_macros/kubectl.jinja' import kubectl with context %}
-
 # TODO: onlyif's need doing
 # TODO: check_cmd's need removing
 
 {% if "kube-master" in salt['grains.get']('roles', []) %}
-{{ kubectl("set-master-taint",
-           "taint node --overwrite " + grains['nodename'] + " node-role.kubernetes.io/master=:NoSchedule",
-           onlyif="/bin/true") }}
+
+set-master-taint:
+  caasp_kubectl.taint:
+    - name:      node-role.kubernetes.io/master=:NoSchedule
+    - overwrite: True
+    - onlyif:    /bin/true
+    - require:
+      - file:    {{ pillar['paths']['kubeconfig'] }}
+
 {% else %}
-{{ kubectl("clear-master-taint",
-           "taint node --overwrite " + grains['nodename'] + " node-role.kubernetes.io/master-",
-           onlyif="/bin/true",
-           check_cmd="/bin/true") }}
+
+clear-master-taint:
+  caasp_kubectl.taint:
+    - name:      node-role.kubernetes.io/master-
+    - onlyif:    /bin/true
+    - overwrite: True
+    - check_cmd:
+      - /bin/true
+    - require:
+      - file:    {{ pillar['paths']['kubeconfig'] }}
+
 {% endif %}

@@ -1,18 +1,29 @@
 include:
   - kubectl-config
 
-{% from '_macros/kubectl.jinja' import kubectl with context %}
-
 # TODO: onlyif's need doing
 # TODO: check_cmd's need removing
 
 {% if "kube-master" in salt['grains.get']('roles', []) %}
-{{ kubectl("set-master-label",
-           "label node --overwrite " + grains['nodename'] + " node-role.kubernetes.io/master=",
-           onlyif="/bin/true") }}
+
+set-master-label:
+  caasp_kubectl.label:
+    - name:      node-role.kubernetes.io/master=
+    - onlyif:    /bin/true
+    - overwrite: True
+    - require:
+      - file:    {{ pillar['paths']['kubeconfig'] }}
+
 {% else %}
-{{ kubectl("clear-master-label",
-           "label node --overwrite " + grains['nodename'] + " node-role.kubernetes.io/master-",
-           onlyif="/bin/true",
-           check_cmd="/bin/true") }}
+
+clear-master-label:
+  caasp_kubectl.label:
+    - name:      node-role.kubernetes.io/master-
+    - onlyif:    /bin/true
+    - overwrite: True
+    - check_cmd:
+      - /bin/true
+    - require:
+      - file:    {{ pillar['paths']['kubeconfig'] }}
+
 {% endif %}

@@ -1,8 +1,8 @@
 {% if salt.caasp_pillar.get('addons:tiller', False) %}
 
-{% from '_macros/kubectl.jinja' import kubectl_wait_for_deployment with context %}
-
-{{ kubectl_wait_for_deployment('tiller-deploy') }}
+wait-for-tiller-deployment:
+  caasp_kubectl.wait_for_deployment:
+    - name: tiller-deploy
 
 {% else %}
 

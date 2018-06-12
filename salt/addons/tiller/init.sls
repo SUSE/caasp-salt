@@ -1,23 +1,30 @@
 {% if salt.caasp_pillar.get('addons:tiller', False) %}
 
 include:
-  - kube-apiserver
   - kubectl-config
 
-{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_dir_template with context %}
+/etc/kubernetes/addons/tiller:
+  caasp_kubectl.apply:
+    - directory: salt://addons/tiller/manifests
+    - require:
+      - file:    {{ pillar['paths']['kubeconfig'] }}
 
-{{ kubectl_apply_dir_template("salt://addons/tiller/manifests/",
-                              "/etc/kubernetes/addons/tiller/") }}
-
-# TODO: Transitional code, remove for CaaSP v4
-{{ kubectl("remove-old-tiller-clusterrolebinding",
-           "delete clusterrolebinding system:tiller",
-           onlyif="kubectl --request-timeout=1m get clusterrolebinding system:tiller") }}
 
 # TODO: Transitional code, remove for CaaSP v4
-{{ kubectl("remove-old-tiller-deployment",
-           "delete deploy tiller -n kube-system",
-           onlyif="kubectl --request-timeout=1m get deploy tiller -n kube-system") }}
+remove-old-tiller-clusterrolebinding:
+  caasp_kubectl.run:
+    - name:    delete clusterrolebinding system:tiller
+    - onlyif:  kubectl --request-timeout=1m get clusterrolebinding system:tiller
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}
+
+# TODO: Transitional code, remove for CaaSP v4
+remove-old-tiller-deployment:
+  caasp_kubectl.run:
+    - name:    delete deploy tiller -n kube-system
+    - onlyif:  kubectl --request-timeout=1m get deploy tiller -n kube-system
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}
 
 {% else %}
 

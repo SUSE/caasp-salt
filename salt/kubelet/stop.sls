@@ -9,9 +9,9 @@ include:
 
 # If this fails we should ignore it and proceed anyway as Kubernetes will recover
 drain-kubelet:
-  cmd.run:
+  caasp_kubectl.run:
     - name: |
-        kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} drain {{ grains['nodename'] }} --force --delete-local-data=true --ignore-daemonsets
+        drain {{ grains['nodename'] }} --force --delete-local-data=true --ignore-daemonsets
     - check_cmd:
       - /bin/true
     - require:

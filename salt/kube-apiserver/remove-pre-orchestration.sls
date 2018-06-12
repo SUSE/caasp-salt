@@ -26,15 +26,20 @@ check-kube-apiserver-wait-port-{{ port }}:
 
 {% endfor %}
 
-{%- from '_macros/kubectl.jinja' import kubectl with context %}
-
 # A simple check: we can do a simple query (a `get nodes`)
 # to the API server
-{{ kubectl("check-kubectl-get-nodes", "get nodes") }}
+check-kubectl-get-nodes:
+  caasp_kubectl.run:
+    - name:    get nodes
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}
 
 # Try to describe the target.
 # If kubectl cannot describe the node, we should abort before trying
 # to go further and maybe fail and leave the cluster in a unstable state.
 # Users should force-remove the node then...
-{{ kubectl("check-kubectl-describe-target",
-           "describe nodes " + target_nodename) }}
+check-kubectl-describe-target:
+  caasp_kubectl.run:
+    - name:    describe nodes {{ target_nodename }}
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}

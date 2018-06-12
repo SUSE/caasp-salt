@@ -1,19 +1,21 @@
 {% if salt.caasp_pillar.get('addons:dns', True) %}
 
 include:
-  - kube-apiserver
   - kubectl-config
 
-{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_dir_template with context %}
-
-
-{{ kubectl_apply_dir_template("salt://addons/dns/manifests/",
-                              "/etc/kubernetes/addons/dns/") }}
+/etc/kubernetes/addons/dns:
+  caasp_kubectl.apply:
+    - directory: salt://addons/dns/manifests/
+    - require:
+      - file:    {{ pillar['paths']['kubeconfig'] }}
 
 # TODO: Transitional code, remove for CaaSP v4
-{{ kubectl("remove-old-kube-dns-clusterrolebinding",
-           "delete clusterrolebinding system:kube-dns",
-           onlyif="kubectl --request-timeout=1m get clusterrolebinding system:kube-dns") }}
+remove-old-kube-dns-clusterrolebinding:
+  caasp_kubectl.run:
+    - name:    delete clusterrolebinding system:kube-dns
+    - onlyif:  kubectl --request-timeout=1m get clusterrolebinding system:kube-dns
+    - require:
+      - file:  {{ pillar['paths']['kubeconfig'] }}
 
 {% else %}
 

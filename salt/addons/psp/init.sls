@@ -3,10 +3,11 @@
 include:
   - kubectl-config
 
-{% from '_macros/kubectl.jinja' import kubectl_apply_dir_template with context %}
-
-{{ kubectl_apply_dir_template("salt://addons/psp/manifests/",
-                              "/etc/kubernetes/addons/psp/") }}
+/etc/kubernetes/addons/psp:
+  caasp_kubectl.apply:
+    - directory: salt://addons/psp/manifests/
+    - require:
+      - file:    {{ pillar['paths']['kubeconfig'] }}
 
 {% else %}
 
