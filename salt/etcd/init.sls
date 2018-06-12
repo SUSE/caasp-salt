@@ -21,6 +21,15 @@ add-etcd-to-cluster:
 
 {%- endif %}
 
+/etc/systemd/system/etcd.service.d/etcd.conf:
+  file.managed:
+    - source: salt://etcd/etcd.unit
+    - makedirs: True
+  module.run:
+    - name: service.systemctl_reload
+    - onchanges:
+      - file: /etc/systemd/system/etcd.service.d/etcd.conf
+
 etcd:
   group.present:
     - name: etcd
@@ -62,6 +71,7 @@ etcd:
       - {{ pillar['ssl']['key_file'] }}
       - {{ pillar['ssl']['ca_file'] }}
       - file: /etc/sysconfig/etcd
+      - /etc/systemd/system/etcd.service.d/etcd.conf
     {%- if node_addition_in_progress %}
       - add-etcd-to-cluster
     {%- endif %}

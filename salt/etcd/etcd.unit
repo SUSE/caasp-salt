@@ -1,0 +1,11 @@
+[Service]
+# increase cpu & i/o priorities for etcd
+# see https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Scheduling
+Nice=-20
+# CPUSchedulingPolicy=rr
+CPUSchedulingPriority=80
+
+# An etcd cluster is very sensitive to disk latencies.
+# https://coreos.com/etcd/docs/latest/tuning.html#disk
+IOSchedulingClass=realtime
+IOSchedulingPriority=0

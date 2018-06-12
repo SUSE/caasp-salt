@@ -91,7 +91,7 @@ def get_container_id(name, namespace):
 
     if 'containers' not in ps_data:
         # this happens when no containers are running
-        debug('no ps data obatined in get_container_id()')
+        debug('no ps data obtained in get_container_id()')
         return None
 
     for container in ps_data['containers']:
