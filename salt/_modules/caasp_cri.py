@@ -2,7 +2,10 @@ from __future__ import absolute_import
 
 import json
 import time
+
 from salt.exceptions import CommandExecutionError
+
+from caasp_log import debug
 
 try:
     from salt.exceptions import InvalidConfigError
@@ -21,6 +24,7 @@ class CRIRuntimeException(Exception):
 
 _ROLES_REQUIRING_DOCKER = ('admin', 'ca')
 _SUPPORTED_CRIS = ('docker', 'crio')
+_BUSY_LOOP_INTERVAL = 0.3
 
 
 def __virtual__():
@@ -73,6 +77,7 @@ def get_container_id(name, namespace):
                                      python_shell=False)
 
     if result['retcode'] != 0:
+        debug('"crictl ps" failed, with retcode %d', result['retcode'])
         raise CommandExecutionError(
             'Could not invoke crictl',
             info={'errors': [result['stderr']]}
@@ -86,6 +91,7 @@ def get_container_id(name, namespace):
 
     if 'containers' not in ps_data:
         # this happens when no containers are running
+        debug('no ps data obatined in get_container_id()')
         return None
 
     for container in ps_data['containers']:
@@ -177,7 +183,7 @@ def wait_for_container(name, namespace, timeout):
     while time.time() < expire:
         if get_container_id(name, namespace):
             return True
-        time.sleep(0.3)
+        time.sleep(_BUSY_LOOP_INTERVAL)
 
     return False
 
@@ -187,7 +193,6 @@ def cri_runtime_endpoint():
     Return the path to the socket required by crictl to communicate
     with the CRI
     '''
-
     return __pillar__['cri'][cri_name()]['socket']
 
 
@@ -204,6 +209,7 @@ def __wait_CRI_socket():
     expire = time.time() + timeout
     errors = {'attempts': []}
 
+    debug('ensuring the cri socket is ready...')
     while time.time() < expire:
         cmd = "crictl --runtime-endpoint {socket} info".format(
             socket=cri_runtime_endpoint()
@@ -213,11 +219,12 @@ def __wait_CRI_socket():
                                          output_loglevel='trace',
                                          python_shell=False)
         if result['retcode'] == 0:
+            debug('cri socket ready')
             return
 
         errors['attempts'].append(result)
 
-        time.sleep(0.3)
+        time.sleep(_BUSY_LOOP_INTERVAL)
 
     raise CommandExecutionError(
         'CRI socket did not become ready',
@@ -230,6 +237,5 @@ def needs_docker():
     Return true if the minion must use docker as CRI despite of what is
     configured inside of the pillars.
     '''
-
     node_roles = __salt__['grains.get']('roles', [])
     return any(role in _ROLES_REQUIRING_DOCKER for role in node_roles)
