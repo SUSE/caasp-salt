@@ -271,6 +271,14 @@ remove-from-cluster-in-super-master:
     - require:
       - shutdown-target
 
+# remove target information from the mine
+remove-target-mine:
+  salt.function:
+    - tgt: '{{ target }}'
+    - name: mine.flush
+    - require:
+        - remove-from-cluster-in-super-master
+
 # remove the Salt key and the mine for the target
 remove-target-salt-key:
   salt.wheel:
@@ -278,10 +286,10 @@ remove-target-salt-key:
     - include_accepted: True
     - match: {{ target }}
     - require:
-      - remove-from-cluster-in-super-master
+      - remove-target-mine
 
 # remove target's data in the Salt Master's cache
-remove-target-mine:
+remove-target-mine-cache:
   salt.runner:
     - name: cache.clear_all
     - tgt: '{{ target }}'
@@ -316,7 +324,7 @@ sync-after-removal:
       - saltutil.clear_cache
       - mine.update
     - require:
-      - remove-target-mine
+      - remove-target-mine-cache
 
 update-modules-after-removal:
   salt.function:

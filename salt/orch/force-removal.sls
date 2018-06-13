@@ -39,6 +39,12 @@ remove-cluster-wide-removal-grain:
     - kwarg:
         destructive: True
 
+remove-target-mine:
+  salt.function:
+    - tgt: {{ target }}
+    - name: mine.flush
+    - fail_minions: {{ target }}
+
 remove-target-salt-key:
   salt.wheel:
     - name: key.reject
