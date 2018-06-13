@@ -12,10 +12,11 @@
 {%- set additional_etcd_members = salt.caasp_etcd.get_additional_etcd_members(num_wanted=num_etcd_members,
                                                                               etcd_members=etcd_members) %}
 
-# Ensure the node is marked as bootstrapping
+# Ensure all the nodes are marked with a 'bootstrap_in_progress' flag
 set-bootstrap-in-progress-flag:
   salt.function:
-    - tgt: '*'
+    - tgt: 'roles:(ca|admin|kube-master|kube-minion|etcd)'
+    - tgt_type: grain_pcre
     - name: grains.setval
     - arg:
       - bootstrap_in_progress
@@ -77,7 +78,7 @@ update-modules:
 
 disable-rebootmgr:
   salt.state:
-    - tgt: 'roles:(admin|kube-master|minion|etcd)'
+    - tgt: 'roles:(admin|kube-master|kube-minion|etcd)'
     - tgt_type: grain_pcre
     - sls:
       - rebootmgr
@@ -232,11 +233,12 @@ admin-wait-for-services:
     - require:
       - super-master-wait-for-services
 
-# This flag indicates at least one bootstrap has completed at some
-# point in time on this node.
+# Set the bootstrap complete in all the nodes where we really succeeded
+# (if `admin-wait-for-services` fails, we will not set the flag)
 set-bootstrap-complete-flag:
   salt.function:
-    - tgt: '*'
+    - tgt: 'bootstrap_in_progress:true'
+    - tgt_type: grain
     - name: grains.setval
     - arg:
       - bootstrap_complete
@@ -244,14 +246,14 @@ set-bootstrap-complete-flag:
     - require:
       - admin-wait-for-services
 
-# Ensure the node is marked as finished bootstrapping
+# Ensure we remove the bootstrap_in_progress in all the nodes where it was set
+# NOTE: we must remove this flag even if the orchestration fails
 clear-bootstrap-in-progress-flag:
   salt.function:
-    - tgt: '*'
+    - tgt: 'bootstrap_in_progress:true'
+    - tgt_type: grain
     - name: grains.delval
     - arg:
       - bootstrap_in_progress
     - kwarg:
         destructive: True
-    - require:
-      - set-bootstrap-complete-flag
