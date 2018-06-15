@@ -148,19 +148,6 @@ etcd-setup:
       - pre-orchestration-migration
 # END NOTE
 
-# we must early load some things so they are available ASAP
-# NOTE: we are loading new stuff in an old cluster, so this could fail if
-#       these new manifests do not pass the old-cluster validation done when
-#       "kubectl apply" is run. So this should be verified by our QA processes...
-early-services-setup:
-  salt.state:
-    - tgt: '{{ super_master }}'
-    - sls:
-      - addons.psp
-      - cni
-    - require:
-      - etcd-setup
-
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt=is_updateable_master_tgt, fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
@@ -177,7 +164,7 @@ early-services-setup:
       - cri.stop
       - etcd.stop
     - require:
-        - early-services-setup
+        - etcd-setup
 
 # Perform any necessary migrations before services are shutdown
 {{ master_id }}-pre-reboot:
@@ -239,6 +226,17 @@ early-services-setup:
     - require:
       - {{ master_id }}-apply-haproxy
 
+  {%- if loop.first %}
+{{ master_id }}-early-services-setup:
+  salt.state:
+    - tgt: '{{ master_id }}'
+    - sls:
+      - addons.psp
+      - cni
+    - require:
+      - {{ master_id }}-start-services
+  {%- endif %}
+
 {{ master_id }}-reboot-needed-grain:
   salt.function:
     - tgt: '{{ master_id }}'
@@ -249,8 +247,22 @@ early-services-setup:
         destructive: True
     - require:
       - {{ master_id }}-start-services
+  {%- if loop.first %}
+      - {{ master_id }}-early-services-setup
+  {%- endif %}
 
 {% endfor %}
+
+{%- if not masters %}
+early-services-setup:
+  salt.state:
+    - tgt: '{{ super_master }}'
+    - sls:
+      - addons.psp
+      - cni
+    - require:
+      - etcd-setup
+{%- endif %}
 
 # Perform migrations after all masters have been updated
 all-masters-post-start-services:
@@ -263,6 +275,9 @@ all-masters-post-start-services:
       - kubelet.update-post-start-services
     - require:
       - etcd-setup
+{%- if not masters %}
+      - early-services-setup
+{%- endif %}
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
