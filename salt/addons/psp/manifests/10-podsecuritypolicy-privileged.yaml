@@ -38,7 +38,6 @@ spec:
     - azureDisk
     - azureFile
     - vsphereVolume
-  allowedFlexVolumes: []
   #allowedHostPaths: []
   readOnlyRootFilesystem: false
   # Users and groups

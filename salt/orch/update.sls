@@ -28,6 +28,7 @@
 {%- set is_worker_tgt            = is_responsive_node_tgt + ' and G@roles:kube-minion' %}
 {%- set is_updateable_master_tgt = is_updateable_tgt + ' and ' + is_master_tgt %}
 {%- set is_updateable_worker_tgt = is_updateable_tgt + ' and ' + is_worker_tgt %}
+
 {%- set all_masters = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set super_master = all_masters|first %}
 
@@ -147,6 +148,19 @@ etcd-setup:
       - pre-orchestration-migration
 # END NOTE
 
+# we must early load some things so they are available ASAP
+# NOTE: we are loading new stuff in an old cluster, so this could fail if
+#       these new manifests do not pass the old-cluster validation done when
+#       "kubectl apply" is run. So this should be verified by our QA processes...
+early-services-setup:
+  salt.state:
+    - tgt: '{{ super_master }}'
+    - sls:
+      - addons.psp
+      - cni
+    - require:
+      - etcd-setup
+
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt=is_updateable_master_tgt, fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
@@ -163,7 +177,7 @@ etcd-setup:
       - cri.stop
       - etcd.stop
     - require:
-        - etcd-setup
+        - early-services-setup
 
 # Perform any necessary migrations before services are shutdown
 {{ master_id }}-pre-reboot:
@@ -399,8 +413,6 @@ services-setup:
     - tgt: '{{ super_master }}'
     - sls:
       - addons
-      - addons.psp
-      - cni
       - addons.dns
       - addons.tiller
       - addons.dex
