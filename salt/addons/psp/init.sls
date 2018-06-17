@@ -1,10 +1,9 @@
 {% if salt.caasp_pillar.get('addons:psp', True) %}
 
 include:
-  - kube-apiserver
   - kubectl-config
 
-{% from '_macros/kubectl.jinja' import kubectl, kubectl_apply_template, kubectl_apply_dir_template with context %}
+{% from '_macros/kubectl.jinja' import kubectl_apply_dir_template with context %}
 
 {{ kubectl_apply_dir_template("salt://addons/psp/manifests/",
                               "/etc/kubernetes/addons/psp/") }}
