@@ -3,6 +3,10 @@ from __future__ import absolute_import
 from salt._compat import ipaddress
 
 
+def __virtual__():
+    return "caasp_filters"
+
+
 def is_ip(ip):
     '''
     Returns a bool telling if the passed IP is a valid IPv4 or IPv6 address.
