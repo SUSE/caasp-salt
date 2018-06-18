@@ -22,6 +22,10 @@ import time
 import salt.utils.http
 
 
+def __virtual__():
+    return "caasp_http"
+
+
 def query(url, **kwargs):
     '''
     Query a resource, and decode the return data
