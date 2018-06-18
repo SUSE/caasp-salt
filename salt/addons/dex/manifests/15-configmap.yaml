@@ -43,6 +43,39 @@ data:
           groupAttr: uniqueMember
 
           nameAttr: cn
+    {% for con in salt['pillar.get']('dex:connectors', []) %}
+    {% if con['type'] == 'ldap' %}
+    - type: ldap
+      id: {{ con['id'] | yaml_dquote }}
+      name: {{ con['name'] | yaml_dquote }}
+      config:
+        host: {{ con['server'] | yaml_dquote }}
+        startTLS: {{ 'true' if con.get('start_tls',false) else 'false' }}
+        {% if con['bind']['anonymous'] %}
+        # bindDN and bindPW not present; anonymous bind will be used
+        {% else %}
+        bindDN: {{ con['bind']['dn'] | yaml_dquote }}
+        bindPW: {{ con['bind']['pw'] | yaml_dquote }}
+        {% endif %}
+        usernamePrompt: {{ con['username_prompt'] | yaml_dquote }}
+        rootCAData: {{ con['root_ca_data'] | replace("\n","") | yaml_dquote }}
+        userSearch:
+          baseDN: {{ con['user']['base_dn'] | yaml_dquote }}
+          filter: {{ con['user']['filter'] | yaml_dquote }}
+          username: {{ con['user']['attr_map']['username'] | yaml_dquote }}
+          idAttr: {{ con['user']['attr_map']['id'] | yaml_dquote }}
+          emailAttr: {{ con['user']['attr_map']['email'] | yaml_dquote }}
+          nameAttr: {{ con['user']['attr_map']['name'] | yaml_dquote }}
+        groupSearch:
+          baseDN: {{ con['group']['base_dn'] | yaml_dquote }}
+          filter: {{ con['group']['filter'] | yaml_dquote }}
+
+          userAttr: {{ con['group']['attr_map']['user'] | yaml_dquote }}
+          groupAttr: {{ con['group']['attr_map']['group'] | yaml_dquote }}
+
+          nameAttr: {{ con['group']['attr_map']['name'] | yaml_dquote }}
+    {% endif %}
+    {% endfor %}
     oauth2:
       skipApprovalScreen: true
 
