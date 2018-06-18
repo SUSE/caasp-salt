@@ -1,5 +1,4 @@
 include:
-  - kube-apiserver
   - addons
   - kubectl-config
 
@@ -24,7 +23,6 @@ include:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
-      - kube-apiserver
       - file:      {{ pillar['paths']['kubeconfig'] }}
     - watch:
       - file:       /etc/kubernetes/addons/kube-flannel-rbac.yaml
@@ -42,7 +40,6 @@ include:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
-      - kube-apiserver
       - file:      {{ pillar['paths']['kubeconfig'] }}
     - watch:
       - /etc/kubernetes/addons/kube-flannel-rbac.yaml
@@ -69,7 +66,6 @@ include:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
-      - kube-apiserver
       - file:      {{ pillar['paths']['kubeconfig'] }}
     - watch:
       - file:       /etc/kubernetes/addons/cilium-config.yaml
@@ -87,7 +83,6 @@ include:
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
     - require:
-      - kube-apiserver
       - file:      {{ pillar['paths']['kubeconfig'] }}
     - watch:
       - file:       /etc/kubernetes/addons/cilium-rbac.yaml
