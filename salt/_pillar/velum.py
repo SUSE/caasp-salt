@@ -72,6 +72,7 @@ def ext_pillar(minion_id,
                                       ca_bundle=ca_bundle,
                                       username=username,
                                       password=password,
+                                      params={"minion_id": minion_id},
                                       decode=True,
                                       decode_type='json')
     except Exception as e:
