@@ -3,6 +3,10 @@ api:
     external_fqdn: null
     extra_names:   []
     extra_ips:     []
+  admission_webhook:
+    enabled: False
+    cert: ''
+    key: ''
   audit:
     log:
       enabled: false

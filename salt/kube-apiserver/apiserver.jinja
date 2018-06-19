@@ -61,8 +61,10 @@ KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --tls-cert-file={{ pillar['ssl']['kube_apiserver_crt'] }} \
                --tls-private-key-file={{ pillar['ssl']['kube_apiserver_key'] }} \
                --tls-ca-file={{ pillar['ssl']['ca_file'] }} \
-               --proxy-client-cert-file={{ pillar['ssl']['kube_apiserver_proxy_client_crt'] }} \
-               --proxy-client-key-file={{ pillar['ssl']['kube_apiserver_proxy_client_key'] }} \
+{%- if salt.caasp_pillar.get('api:admission_webhook:enabled', False) %}
+               --proxy-client-cert-file=/etc/pki/kube-apiserver-proxy-client.crt \
+               --proxy-client-key-file=/etc/pki/kube-apiserver-proxy-client.key \
+{%- endif -%}
                --cert-dir=/etc/pki \
                {{ salt.caasp_pillar.get('components:apiserver:args') }} \
                --requestheader-username-headers=X-Remote-User \

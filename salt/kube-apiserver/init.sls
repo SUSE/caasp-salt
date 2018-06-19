@@ -12,11 +12,23 @@ include:
          cn = grains['nodename'],
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
-{{ certs("kube-apiserver-proxy-client",
-         pillar['ssl']['kube_apiserver_proxy_client_crt'],
-         pillar['ssl']['kube_apiserver_proxy_client_key'],
-         cn = grains['nodename'],
-         o = pillar['certificate_information']['subject_properties']['O']) }}
+/etc/pki/kube-apiserver-proxy-client.crt:
+  file.managed:
+    - contents_pillar: api:admission_webhook:cert
+    - user: kube
+    - group: kube
+    - mode: 644
+    - require:
+      - pkg: kube-apiserver
+
+/etc/pki/kube-apiserver-proxy-client.key:
+  file.managed:
+    - contents_pillar: api:admission_webhook:key
+    - user: kube
+    - group: kube
+    - mode: 644
+    - require:
+      - pkg: kube-apiserver
 
 kube-apiserver:
   pkg.installed:
@@ -49,17 +61,19 @@ kube-apiserver:
       - caasp_retriable: iptables-kube-apiserver
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
-      - caasp_retriable: {{ pillar['ssl']['kube_apiserver_proxy_client_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}
       - file:            /etc/kubernetes/audit-policy.yaml
       - file:            /var/log/kube-apiserver
+      - file:            /etc/pki/kube-apiserver-proxy-client.crt
+      - file:            /etc/pki/kube-apiserver-proxy-client.key
     - watch:
       - sls:             kubernetes-common
       - file:            kube-apiserver
       - file:            /etc/kubernetes/audit-policy.yaml
+      - file:            /etc/pki/kube-apiserver-proxy-client.crt
+      - file:            /etc/pki/kube-apiserver-proxy-client.key
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
-      - caasp_retriable: {{ pillar['ssl']['kube_apiserver_proxy_client_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}
 
 /var/log/kube-apiserver:
