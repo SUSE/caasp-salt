@@ -2,8 +2,9 @@ include:
   - ca-cert
   - cert
 
-{%- set node_addition_in_progress = salt['grains.get']('node_addition_in_progress', False) %}
-{%- if node_addition_in_progress %}
+{% set should_register_etcd_member = salt.caasp_etcd.should_register_etcd_member(port=2380) %}
+
+{%- if should_register_etcd_member %}
 
 # add the member to the cluster _before_ `etcd` is started
 # then `etcd` will have to be started with the `existing` flag
@@ -70,7 +71,7 @@ etcd:
       - {{ pillar['ssl']['key_file'] }}
       - {{ pillar['ssl']['ca_file'] }}
       - file: /etc/sysconfig/etcd
-    {%- if node_addition_in_progress %}
+    {%- if should_register_etcd_member %}
       - add-etcd-to-cluster
     {%- endif %}
   # wait until etcd is actually up and running

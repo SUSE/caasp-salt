@@ -11,23 +11,39 @@ set-cluster-wide-removal-grain:
       - force_removal_in_progress
       - true
 
-sync-all:
+update-modules:
   salt.function:
     - tgt: '*'
     - names:
       - saltutil.refresh_pillar
       - saltutil.refresh_grains
       - mine.update
-      - saltutil.sync_all
+
+sync-all:
+  salt.function:
+    - tgt: '*'
+    - name: saltutil.sync_all
+    - kwarg:
+        refresh: True
 
 unregister-{{ target }}:
   salt.state:
     - tgt: {{ super_master }}
     - sls:
-        - cleanup.remove-post-orchestration
+        - etcd.remove
+        - kubelet.remove-post-orchestration
     - fail_minions: {{ super_master }}
     - pillar:
         target: {{ target }}
+        forced: True
+
+cleanup-{{ target }}:
+  salt.state:
+    - tgt: {{ target }}
+    - sls:
+        - cleanup.etcd
+    - fail_minions: {{ target }}
+    - pillar:
         forced: True
 
 remove-cluster-wide-removal-grain:

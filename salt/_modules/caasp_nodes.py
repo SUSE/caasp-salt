@@ -58,6 +58,18 @@ def _get_prio_etcd(unassigned=False):
     return res
 
 
+def _get_prio_removal_etcd(unassigned=None):
+    '''
+    Get the priorities for choosing nodes for removing current etcd members.
+    '''
+    res = []
+
+    res.append('G@roles:kube-minion and G@roles:etcd and G@bootstrap_complete:true')
+    res.append('G@roles:kube-master and G@roles:etcd and G@bootstrap_complete:true')
+
+    return res
+
+
 def _get_prio_master(unassigned=False):
     '''
     Get the priorities for choosing new nodes for running
@@ -115,6 +127,7 @@ def _get_prio_minion(unassigned=False):
 
 _PRIO_FUN = {
     'etcd': _get_prio_etcd,
+    'etcd-removal': _get_prio_removal_etcd,
     'kube-master': _get_prio_master,
     'kube-minion': _get_prio_minion,
 }
@@ -188,6 +201,13 @@ def get_from_args_or_with_expr(arg_name, args_dict, *args, **kwargs):
         return get_with_expr(*args, **kwargs)
 
 
+def is_first_bootstrap():
+    '''
+    Returns true if the system is bootstrapping for the first time.
+    '''
+    return len(get_with_expr('G@bootstrap_complete:true')) == 0
+
+
 def get_with_prio(num, description, prio_rules, **kwargs):
     '''
     Get a list of `num` nodes that could be used for
@@ -196,8 +216,8 @@ def get_with_prio(num, description, prio_rules, **kwargs):
     A valid node is a node that:
 
       1) is not the `admin` or `ca`
-      2) dopes not currently have that role
-      2) is not being removed/added/updated
+      2) does not currently have that role
+      3) is not being removed/added/updated
     '''
     new_nodes = []
     remaining = num
@@ -217,7 +237,7 @@ def get_with_prio(num, description, prio_rules, **kwargs):
             new_nodes = new_nodes + new_ids
             remaining -= len(new_ids)
             debug('... %d new candidates (%s) for %s: %d remaining',
-                  len(ids), str(ids), description, remaining, )
+                  len(ids), str(ids), description, remaining)
         else:
             debug('... no new candidates found with "%s"', expr)
 
