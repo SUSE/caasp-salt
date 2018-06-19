@@ -40,6 +40,25 @@
                                                                               etcd_members=etcd_members,
                                                                               excluded=nodes_down) %}
 
+# Detect if we need to shrink the etcd cluster in order to keep etcd's
+# golden ratio: this happens on corner cases (e.g. a 1+2 deployment
+# that gets removed a worker should have one etcd instance, not two). This
+# happens only if there are no replacements for the `etcd` role.
+{%- if target not in etcd_members or (replacement and 'etcd' in replacement_roles) %}
+{%- set surplus_etcd_members = [] %}
+{%- else %}
+# FIXME: use masters|difference([target]) filter -- included in 2017.7.0 version
+{%- set future_masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and not ' + target, fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set future_minions = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion and not ' + target, fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set num_etcd_members = salt.caasp_etcd.get_cluster_size(masters=future_masters,
+                                                            minions=future_minions) %}
+{%- set surplus_etcd_members = salt.caasp_etcd.get_surplus_etcd_members(num_wanted=num_etcd_members,
+                                                                        etcd_members=etcd_members,
+                                                                        targets=[target],
+                                                                        excluded=nodes_down) %}
+{%- endif %}
+{%- set is_etcd_cluster_shrinking = surplus_etcd_members|length > 0 %}
+
 # Ensure we mark all nodes with the "a node is being removed" grain.
 # This will ensure the update-etc-hosts orchestration is not run.
 set-cluster-wide-removal-grain:
@@ -81,6 +100,43 @@ pre-removal-checks:
     - require:
       - update-config
 
+{% if is_etcd_cluster_shrinking %}
+# Unregister etcd before stopping the service. Very important
+# to make sure `etcd` knows what's coming (specially in corner
+# cases)
+{% for member in surplus_etcd_members %}
+etcd-remove-member-{{ member }}:
+  salt.state:
+    - tgt: '{{ super_master_tgt }}'
+    - pillar:
+        target: {{ member }}
+    - sls:
+      - etcd.remove
+    - require:
+      - pre-removal-checks
+
+etcd-cleanup-member-{{ member }}:
+  salt.state:
+    - tgt: '{{ member }}'
+    - sls:
+        - cleanup.etcd
+    - require:
+      - etcd-remove-member-{{ member }}
+{% endfor %}
+
+enforce-etcd-consistency:
+  salt.state:
+    - tgt: 'P@roles:etcd and {{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - batch: 1
+    - sls:
+        - etcd
+    - require:
+{% for member in surplus_etcd_members %}
+      - etcd-cleanup-member-{{ member }}
+{% endfor %}
+{% endif %}
+
 {##############################
  # set grains
  #############################}
@@ -94,6 +150,9 @@ assign-removal-grain:
       - true
     - require:
       - pre-removal-checks
+{% if is_etcd_cluster_shrinking %}
+      - enforce-etcd-consistency
+{% endif %}
 
 {%- if replacement %}
 
@@ -199,6 +258,31 @@ remove-addition-grain:
  # removal & cleanups
  #############################}
 
+# Unregister etcd before stopping the service. Very important
+# to make sure `etcd` knows what's coming (specially in corner
+# cases)
+
+etcd-removal:
+  salt.state:
+    - tgt: '{{ super_master_tgt }}'
+    - pillar:
+        target: {{ target }}
+    - sls:
+      - etcd.remove
+    - require:
+      - update-modules
+  {%- if replacement %}
+      - remove-addition-grain
+  {%- endif %}
+
+etcd-cleanup:
+  salt.state:
+    - tgt: {{ target }}
+    - sls:
+        - cleanup.etcd
+    - require:
+        - etcd-removal
+
 # the replacement should be ready at this point:
 # we can remove the old node running in {{ target }}
 
@@ -208,7 +292,7 @@ early-stop-services-in-target:
     - sls:
       - kubelet.stop
     - require:
-      - update-modules
+      - etcd-cleanup
   {%- if replacement %}
       - remove-addition-grain
   {%- endif %}
@@ -276,7 +360,7 @@ remove-from-cluster-in-super-master:
     - pillar:
         target: {{ target }}
     - sls:
-      - cleanup.remove-post-orchestration
+      - kubelet.remove-post-orchestration
     - require:
       - shutdown-target
 

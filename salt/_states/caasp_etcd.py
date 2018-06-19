@@ -13,10 +13,8 @@ DEFAULT_ATTEMPTS_INTERVAL = 2
 # default etcd peer port
 ETCD_PEER_PORT = 2380
 
-
 def api_version():
     return __salt__['caasp_etcd.api_version']()
-
 
 def etcdctl(name, retry={}, **kwargs):
     '''
@@ -52,10 +50,18 @@ def etcdctl(name, retry={}, **kwargs):
 
 def healthy(name, **kwargs):
     log.debug('CaaS: checking etcd health')
-    if api_version() == 'etcd2':
-        return etcdctl(name='cluster-health', **kwargs)
-    else:
-        return etcdctl(name='endpoint health', **kwargs)
+    result = {'name': "healthy.{0}".format(name),
+              'result': True,
+              'comment': "Cluster is healthy",
+              'changes': {}}
+
+    if not __salt__['caasp_etcd.healthy'](**kwargs):
+        result.update({
+            'result': False,
+            'comment': "Cluster is not healthy"
+        })
+
+    return result
 
 
 def member_add(name, **kwargs):
@@ -64,21 +70,20 @@ def member_add(name, **kwargs):
     '''
     port = kwargs.pop('port', ETCD_PEER_PORT)
 
-    this_id = __salt__['grains.get']('id')
-    this_nodename = __salt__['caasp_net.get_nodename']()
-    this_peer_url = 'https://{}:{}'.format(this_nodename, port)
+    result = {'name': "member_add.{0}".format(name), 'changes': {}}
 
-    if api_version() == 'etcd2':
-        name = 'member add {} {}'.format(this_id, this_peer_url)
+    if __salt__['caasp_etcd.member_add'](port=port):
+        result.update({
+            'result': True,
+            'comment': "Member {0} added.".format(name)
+        })
     else:
-        name = 'member add {} --peer-urls={}'.format(this_id, this_peer_url)
-    log.debug('CaaS: adding etcd member')
-    return etcdctl(name=name, skip_this=True, **kwargs)
+        result.update({
+            'result': False,
+            'comment': "Member {0} not added.".format(name)
+        })
 
-    # once the member has been added to the cluster, we
-    # must make sure etcd joins an "existing" cluster.
-    # so we must set ETCD_INITIAL_CLUSTER_STATE=existing
-    # or, otherwise, etcd will refuse to join... (facepalm)
+    return result
 
 
 def member_remove(name, nodename=None, **kwargs):
@@ -91,15 +96,17 @@ def member_remove(name, nodename=None, **kwargs):
                   want the ID for. if no name is provided (or empty),
                   the local node will be used.
     '''
-    target_member_id = __salt__['caasp_etcd.get_member_id'](nodename=nodename)
-    if not target_member_id:
-        return {
-            'name': "member_remove.{0}".format(name),
-            'result': False,
-            'comment': "Could not obtain member id.",
-            'changes': {}
-        }
+    result = {'name': "member_remove.{0}".format(name), 'changes': {}}
 
-    name = 'member remove {}'.format(target_member_id)
-    log.debug('CaaS: removing etcd member %s', target_member_id)
-    return etcdctl(name=name, **kwargs)
+    if __salt__['caasp_etcd.member_remove'](nodename):
+        result.update({
+            'result': True,
+            'comment': "Member {0} removed.".format(name)
+        })
+    else:
+        result.update({
+            'result': False,
+            'comment': "Member {0} not removed.".format(name)
+        })
+
+    return result

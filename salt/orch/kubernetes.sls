@@ -11,6 +11,7 @@
                                                             minions=minions) %}
 {%- set additional_etcd_members = salt.caasp_etcd.get_additional_etcd_members(num_wanted=num_etcd_members,
                                                                               etcd_members=etcd_members) %}
+{%- set is_etcd_cluster_growing = additional_etcd_members|length > 0 %}
 
 # Ensure all the nodes are marked with a 'bootstrap_in_progress' flag
 set-bootstrap-in-progress-flag:
@@ -22,7 +23,7 @@ set-bootstrap-in-progress-flag:
       - bootstrap_in_progress
       - true
 
-{% if additional_etcd_members|length > 0 %}
+{% if is_etcd_cluster_growing %}
 # Mark some machines as new etcd members
 set-etcd-roles:
   salt.function:
@@ -41,7 +42,7 @@ sync-pillar:
     - name: saltutil.sync_pillar
     - require:
       - set-bootstrap-in-progress-flag
-{%- if additional_etcd_members|length > 0 %}
+{%- if is_etcd_cluster_growing %}
       - set-etcd-roles
 {%- endif %}
 
@@ -118,6 +119,17 @@ update-mine-again:
     - require:
       - generate-sa-key
 
+# Needed by etcd to decide in rendering time, `etcdctl` will require to perform some checks
+cert-setup:
+  salt.state:
+    - tgt: 'roles:etcd'
+    - tgt_type: grain
+    - sls:
+      - ca-cert
+      - cert
+    - require:
+      - update-mine-again
+
 # setup {{ num_etcd_members }} etcd masters
 etcd-setup:
   salt.state:
@@ -125,9 +137,13 @@ etcd-setup:
     - tgt_type: grain
     - sls:
       - etcd
+{% if salt.caasp_nodes.is_first_bootstrap() %}
     - batch: {{ num_etcd_members }}
+{% else %}
+    - batch: 1
+{% endif %}
     - require:
-      - update-mine-again
+      - cert-setup
 
 admin-setup:
   salt.state:
