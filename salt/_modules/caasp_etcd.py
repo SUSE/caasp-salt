@@ -228,3 +228,12 @@ def get_member_id(nodename=None):
         error('output: %s', members_output)
 
     return ''
+
+
+def is_existing_cluster():
+    '''
+    Return True if a etcd cluster already exists (and it is running)
+    '''
+    current_etcd_members = __salt__['caasp_nodes.get_with_expr']('G@roles:etcd', booted=True)
+    debug("current list of bootstrapped etcd servers: %s", current_etcd_members)
+    return len(current_etcd_members) > 0
