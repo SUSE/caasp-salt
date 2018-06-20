@@ -11,7 +11,11 @@ include:
     - source: salt://kubelet/update-pre-orchestration.sh
     - mode: 0755
   cmd.run:
-    - name: /tmp/kubelet-update-pre-orchestration.sh {{ grains['machine_id'] + "." + pillar['internal_infra_domain'] }} {{ grains['nodename'] }}
+{% if "kube-master" in salt['grains.get']('roles', []) %}
+    - name: /tmp/kubelet-update-pre-orchestration.sh {{ grains['machine_id'] + "." + pillar['internal_infra_domain'] }} {{ grains['nodename'] }} master
+{% else %}
+    - name: /tmp/kubelet-update-pre-orchestration.sh {{ grains['machine_id'] + "." + pillar['internal_infra_domain'] }} {{ grains['nodename'] }} worker
+{% endif %}
     - stateful: True
     - env:
       - KUBECONFIG: {{ pillar['paths']['kubeconfig'] }}
