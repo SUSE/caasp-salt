@@ -7,6 +7,7 @@ set -euo pipefail
 
 OLD_NODE_NAME="$1"
 NEW_NODE_NAME="$2"
+ROLE="$3"
 
 ##########################################################
 
@@ -66,6 +67,14 @@ spec:
   externalID: ${NEW_NODE_NAME}
   podCIDR: $(get_node_data .spec.podCIDR)
 EOF
+
+if [[ "$ROLE" == "master" ]]; then
+  cat << EOF >> /tmp/k8s-node-migration.yaml
+  taints:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+EOF
+fi
 
 kubectl --request-timeout=1m create -f /tmp/k8s-node-migration.yaml 2>/dev/null
 
