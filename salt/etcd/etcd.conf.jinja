@@ -30,7 +30,7 @@ ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
 ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ this_addr }}:2380"
 
 {#- we will not use "existing" unless we are adding a new node to the cluster  #}
-{%- if salt['grains.get']('node_addition_in_progress', False) %}
+{%- if salt['caasp_etcd.is_existing_cluster']() or salt['grains.get']('node_addition_in_progress', False) %}
 ETCD_INITIAL_CLUSTER_STATE="existing"
 {%- endif %}
 
