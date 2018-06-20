@@ -2,6 +2,7 @@ kubernetes-common:
   pkg.installed:
     - pkgs:
       - kubernetes-common
+    - install_recommends: False
 
 /etc/kubernetes/config:
   file.managed:

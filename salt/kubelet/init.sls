@@ -59,6 +59,7 @@ kubelet:
       - iptables
       - kubernetes-client
       - kubernetes-node
+    - install_recommends: False
   file.managed:
     - name:     /etc/kubernetes/kubelet
     - source:   salt://kubelet/kubelet.jinja

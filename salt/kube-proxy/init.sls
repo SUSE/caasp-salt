@@ -25,6 +25,7 @@ kube-proxy:
       - iptables
       - conntrack-tools
       - kubernetes-node
+    - install_recommends: False
   file.managed:
     - name: /etc/kubernetes/proxy
     - source: salt://kube-proxy/proxy.jinja

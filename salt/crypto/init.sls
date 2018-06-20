@@ -1,5 +1,6 @@
 python-M2Crypto:
-  pkg.installed
+  pkg.installed:
+    - install_recommends: False
 
 /etc/pki:
   file.directory:

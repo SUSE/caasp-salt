@@ -6,6 +6,7 @@ kube-controller-manager:
   pkg.installed:
     - pkgs:
       - kubernetes-master
+    - install_recommends: False
   file.managed:
     - name:       /etc/kubernetes/controller-manager
     - source:     salt://kube-controller-manager/controller-manager.jinja
