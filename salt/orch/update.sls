@@ -57,9 +57,19 @@ update-data:
     - names:
       - saltutil.refresh_pillar
       - saltutil.refresh_grains
-      - mine.update
     - require:
       - sync-pillar
+
+# This needs to be a separate step from `update-data`, so `saltutil.refresh_pillar` has been
+# called before this, discovering new mine functions defined in the pillar, before publishing
+# them on the mine.
+update-mine:
+  salt.function:
+    - tgt: '{{ is_responsive_node_tgt }}'
+    - tgt_type: compound
+    - name: mine.update
+    - require:
+      - update-data
 
 update-modules:
   salt.function:
@@ -69,7 +79,7 @@ update-modules:
     - kwarg:
         refresh: True
     - require:
-      - update-data
+      - update-mine
 
 # Generate sa key (we should refactor this as part of the ca highstate along with its counterpart
 # in orch/kubernetes.sls)
