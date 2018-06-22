@@ -6,6 +6,7 @@ kube-scheduler:
   pkg.installed:
     - pkgs:
       - kubernetes-master
+    - install_recommends: False
   file.managed:
     - name: /etc/kubernetes/scheduler
     - source: salt://kube-scheduler/scheduler.jinja

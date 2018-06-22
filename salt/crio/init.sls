@@ -5,6 +5,7 @@ include:
 crio:
   pkg.installed:
     - name: cri-o
+    - install_recommends: False
   file.managed:
     - name: /etc/crio/crio.conf
     - source: salt://crio/crio.conf.jinja

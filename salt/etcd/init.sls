@@ -10,6 +10,7 @@ include:
 add-etcd-to-cluster:
   pkg.installed:
     - name: etcdctl
+    - install_recommends: False
   caasp_etcd.member_add:
     - retry:
         interval: 4
@@ -39,6 +40,7 @@ etcd:
       - iptables
       - etcdctl
       - etcd
+    - install_recommends: False
   caasp_retriable.retry:
     - name: iptables-etcd
     - target: iptables.append

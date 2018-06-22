@@ -17,6 +17,7 @@ kube-apiserver:
     - pkgs:
       - iptables
       - kubernetes-master
+    - install_recommends: False
   caasp_retriable.retry:
     - name: iptables-kube-apiserver
     - target: iptables.append
