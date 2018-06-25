@@ -13,8 +13,10 @@ DEFAULT_ATTEMPTS_INTERVAL = 2
 # default etcd peer port
 ETCD_PEER_PORT = 2380
 
+
 def api_version():
     return __salt__['caasp_etcd.api_version']()
+
 
 def etcdctl(name, retry={}, **kwargs):
     '''

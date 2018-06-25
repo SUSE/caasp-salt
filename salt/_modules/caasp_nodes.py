@@ -317,7 +317,7 @@ def get_replacement_for(target, replacement='', **kwargs):
         # check if the replacement provided is valid
         if etcd_replacement:
             bootstrapped_etcd_members = get_from_args_or_with_expr(
-                'booted_etcd_members', kwargs, 'G@roles:kube-master', booted=True)
+                'booted_etcd_members', kwargs, 'G@roles:etcd', booted=True)
 
             if etcd_replacement in bootstrapped_etcd_members:
                 warn_or_abort_on_replacement_provided('the replacement for the etcd server %s cannot be %s: another etcd server is already running there',

@@ -3,7 +3,10 @@ from __future__ import absolute_import
 import re
 import subprocess
 
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 # note: do not import caasp modules other than caasp_log
 from caasp_log import debug, error, warn
@@ -16,6 +19,7 @@ ETCD_CLIENT_PORT = 2379
 
 # default etcd peer port
 ETCD_PEER_PORT = 2380
+
 
 def __virtual__():
     return "caasp_etcd"
@@ -381,7 +385,7 @@ def get_etcdctl_args_str(**kwargs):
     return " ".join(get_etcdctl_args(**kwargs))
 
 
-def get_member_id(nodename=None):
+def get_member_id(nodename):
     '''
     Return the member ID (different from the node ID) for an etcd member of the cluster.
 
@@ -397,7 +401,7 @@ def get_member_id(nodename=None):
 
     members_output = ''
     try:
-        target_url = 'https://{}:{}'.format(target_nodename, ETCD_CLIENT_PORT)
+        target_url = 'https://{}:{}'.format(nodename, ETCD_CLIENT_PORT)
         members_output = etcdctl(["member", "list"])
         for member_line in members_output.splitlines():
             if target_url in member_line:
@@ -413,7 +417,7 @@ def get_member_id(nodename=None):
     return ''
 
 
-def is_member_registered(nodename=None, port=ETCD_CLIENT_PORT):
+def is_member_registered(nodename=None, port=ETCD_PEER_PORT):
     '''
     Returns whether the provided `nodename` using `port` is already registered as an etcd member.
 
@@ -454,7 +458,7 @@ def healthy():
         if api_version() == 'etcd2':
             etcdctl(['cluster-health'])
         else:
-            etcdctl(['endpoint', 'health'])
+            etcdctl(['endpoint', 'health', '--cluster'])
         return True
     except subprocess.CalledProcessError:
         return False
@@ -473,13 +477,17 @@ def member_list():
     '''
     result = {'active': [], 'unstarted': []}
     etcdctl_output = etcdctl(["member", "list"])
-    etcdctl_output_active_matcher = re.compile('([^:]+):\s+name=([^\s]+)\s+peerURLs=([^\s]+)\s+clientURLs=([^\s]+)\s+isLeader=(true|false)')
-    etcdctl_output_unstarted_matcher = re.compile('([^\[]+)\[unstarted\]:\s+peerURLs=([^\s]+)')
+    if api_version() == 'etcd2':
+        etcdctl_output_active_matcher = re.compile('([^:]+):\s+name=([^\s]+)\s+peerURLs=([^\s]+)\s+clientURLs=([^\s]+)')
+        etcdctl_output_unstarted_matcher = re.compile('([^\[]+)\[unstarted\]:\s+peerURLs=([^\s]+)')
+    else:
+        etcdctl_output_active_matcher = re.compile('([^,]+), started,\s+([^,]+),\s+([^,]+),\s+([^,]+)')
+        etcdctl_output_unstarted_matcher = re.compile('([^,]+), unstarted,[^,]+,([^,]+)')
     for member_line in etcdctl_output.splitlines():
         matches = etcdctl_output_active_matcher.match(member_line)
         if matches:
             matches = matches.groups()
-            result['active'].append({'member_id': matches[0], 'name': matches[1], 'peer_urls': matches[2], 'client_urls': matches[3], 'is_leader': (matches[4] == 'true')})
+            result['active'].append({'member_id': matches[0], 'name': matches[1], 'peer_urls': matches[2], 'client_urls': matches[3]})
         matches = etcdctl_output_unstarted_matcher.match(member_line)
         if matches:
             matches = matches.groups()
@@ -508,10 +516,10 @@ def member_add(name=None, nodename=None, port=ETCD_PEER_PORT):
     if api_version() == 'etcd2':
         return etcdctl(['member', 'add', this_id, this_peer_url], skip_this=True)
     else:
-        return etcdctl(['member', 'add', this_id, '--peer-urls="{}"'.format(this_peer_url)], skip_this=True)
+        return etcdctl(['member', 'add', this_id, '--peer-urls={}'.format(this_peer_url)], skip_this=True)
 
 
-def member_remove(nodename=None):
+def member_remove(nodename):
     '''
     Remove `nodename` as an etcd member.
 
@@ -520,8 +528,7 @@ def member_remove(nodename=None):
 
     This requires etcd to be responding.
     '''
-    nodename_ = nodename or __salt__['caasp_net.get_nodename']()
-    target_member_id = get_member_id(nodename=nodename_)
+    target_member_id = get_member_id(nodename=nodename)
     if not target_member_id:
         return False
 

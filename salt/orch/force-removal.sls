@@ -43,6 +43,7 @@ cleanup-{{ target }}:
     - sls:
         - cleanup.etcd
     - fail_minions: {{ target }}
+    - expect_minions: False
     - pillar:
         forced: True
 
@@ -60,6 +61,7 @@ remove-target-mine:
     - tgt: {{ target }}
     - name: mine.flush
     - fail_minions: {{ target }}
+    - expect_minions: False
 
 remove-target-salt-key:
   salt.wheel:

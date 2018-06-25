@@ -14,4 +14,10 @@ etcd-remove-member:
   caasp_etcd.member_remove:
     - nodename: {{ nodename }}
 
+{%- else %}
+
+etcd-remove-member-dummy:
+  cmd.run:
+    - name: echo "No etcd member, skipping"
+
 {%- endif %}
