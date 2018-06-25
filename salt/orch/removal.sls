@@ -70,6 +70,27 @@ set-cluster-wide-removal-grain:
       - removal_in_progress
       - true
 
+update-modules:
+  salt.function:
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - names:
+      - saltutil.refresh_pillar
+      - saltutil.refresh_grains
+      - mine.update
+    - require:
+      - set-cluster-wide-removal-grain
+
+sync-all:
+  salt.function:
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - name: saltutil.sync_all
+    - kwarg:
+        refresh: True
+    - require:
+      - update-modules
+
 # Make sure we have a solid ground before starting the removal
 # (ie, expired certs produce really funny errors)
 # We could highstate everything, but that would
@@ -87,7 +108,7 @@ update-config:
       - ca-cert
       - cert
     - require:
-      - set-cluster-wide-removal-grain
+      - sync-all
 
 pre-removal-checks:
   salt.state:
@@ -180,45 +201,19 @@ assign-{{ role }}-role-to-replacement:
       - assign-addition-grain
   {% endfor %}
 
-{%- endif %} {# replacement #}
-
-sync-all:
-  salt.function:
-    - tgt: '{{ all_responsive_nodes_tgt }}'
-    - tgt_type: compound
-    - names:
-      - saltutil.refresh_pillar
-      - saltutil.refresh_grains
-      - mine.update
-    - require:
-      - pre-removal-checks
-      - assign-removal-grain
-  {%- for role in replacement_roles %}
-      - assign-{{ role }}-role-to-replacement
-  {%- endfor %}
-
-update-modules:
-  salt.function:
-    - tgt: '{{ all_responsive_nodes_tgt }}'
-    - tgt_type: compound
-    - name: saltutil.sync_all
-    - kwarg:
-        refresh: True
-    - require:
-      - sync-all
-
 {##############################
  # replacement setup
  #############################}
-
-{%- if replacement %}
 
 highstate-replacement:
   salt.state:
     - tgt: '{{ replacement }}'
     - highstate: True
     - require:
-      - update-modules
+      - assign-addition-grain
+  {%- for role in replacement_roles %}
+      - assign-{{ role }}-role-to-replacement
+  {%- endfor %}
 
 kubelet-setup:
   salt.state:
@@ -258,6 +253,8 @@ remove-addition-grain:
  # removal & cleanups
  #############################}
 
+{%- if target in etcd_members %}
+
 # Unregister etcd before stopping the service. Very important
 # to make sure `etcd` knows what's coming (specially in corner
 # cases)
@@ -283,6 +280,8 @@ etcd-cleanup:
     - require:
         - etcd-removal
 
+{%- endif %}
+
 # the replacement should be ready at this point:
 # we can remove the old node running in {{ target }}
 
@@ -292,7 +291,10 @@ early-stop-services-in-target:
     - sls:
       - kubelet.stop
     - require:
+      - assign-removal-grain
+  {%- if target in etcd_members %}
       - etcd-cleanup
+  {%- endif %}
   {%- if replacement %}
       - remove-addition-grain
   {%- endif %}
