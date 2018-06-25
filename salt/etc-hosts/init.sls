@@ -1,19 +1,18 @@
 {# In Kubernetes, /etc/hosts is mounted in from the host. file.blockreplace fails on this #}
 {% if 'ca' not in salt['grains.get']('roles', []) %}
 /etc/hosts:
-  file.blockreplace:
-    # If markers are changed, also update etc-hosts/update-pre-reboot.sls
+  caasp_hosts.managed:
     - marker_start: "#-- start Salt-CaaSP managed hosts - DO NOT MODIFY --"
     - marker_end:   "#-- end Salt-CaaSP managed hosts --"
-    - source:       salt://etc-hosts/hosts.jinja
-    - template:     jinja
-    - append_if_not_found: True
 {% else %}
 {# See https://github.com/saltstack/salt/issues/14553 #}
 etc-hosts-dummy:
   cmd.run:
     - name: "echo saltstack bug 14553"
 {% endif %}
+
+# TODO: all these `docker cp` could be removed:
+#       we could just mount the /etc/hosts file
 
 {# Velum container will not see any updates of the /etc/hosts. It can't be fixed with bind-mount #}
 {# of /etc/hosts in the container, because of fileblock.replace copies the new file over the old /etc/hosts. #}
@@ -31,7 +30,8 @@ update-velum-hosts:
             docker cp /etc/hosts $velum_id:/etc/hosts-caasp
         fi
     - onchanges:
-      - file: /etc/hosts
+      - caasp_hosts: /etc/hosts
+
 update-velum-hosts2:
   cmd.run:
     - name: |-
@@ -41,6 +41,7 @@ update-velum-hosts2:
         fi
     - onchanges:
       - cmd: update-velum-hosts
+
 update-haproxy-hosts:
   cmd.run:
     - name: |-
@@ -49,7 +50,8 @@ update-haproxy-hosts:
             docker cp /etc/hosts $haproxy_id:/etc/hosts-caasp
         fi
     - onchanges:
-      - file: /etc/hosts
+      - caasp_hosts: /etc/hosts
+
 update-haproxy-hosts2:
   cmd.run:
     - name: |-
@@ -59,4 +61,5 @@ update-haproxy-hosts2:
         fi
     - onchanges:
       - cmd: update-haproxy-hosts
+
 {% endif %}
