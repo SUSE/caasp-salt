@@ -6,9 +6,6 @@ import os
 from salt.ext import six
 from salt.utils.odict import OrderedDict
 
-# note: do not import caasp modules other than caasp_log
-from caasp_log import debug, info, warn
-
 try:
     from salt.exceptions import InvalidConfigError
 except ImportError:
@@ -79,7 +76,7 @@ def _concat(lst1, lst2):
 
 
 def _load_lines(filename):
-    debug('hosts: loading %s', filename)
+    __utils__['caasp_log.debug']('hosts: loading %s', filename)
     with open(filename, 'r') as f:
         lines = [x.strip().replace('\n', '') for x in f.readlines()]
 
@@ -87,7 +84,7 @@ def _load_lines(filename):
     while not lines[-1]:
         del lines[-1]
 
-    debug('hosts: %d lines loaded from %s', len(lines), filename)
+    __utils__['caasp_log.debug']('hosts: %d lines loaded from %s', len(lines), filename)
     return lines
 
 
@@ -110,12 +107,12 @@ def _load_hosts(hosts, lines, marker_start=None, marker_end=None):
             continue
 
         if marker_start and line.startswith(marker_start):
-            debug('hosts: start of skipped block')
+            __utils__['caasp_log.debug']('hosts: start of skipped block')
             blocked = True
             continue
 
         if marker_end and line.startswith(marker_end):
-            debug('hosts: end of skipped block')
+            __utils__['caasp_log.debug']('hosts: end of skipped block')
             blocked = False
             continue
 
@@ -151,7 +148,7 @@ def _add_names(hosts, ips, names):
         ips = [ips]
 
     for ip in ips:
-        debug('hosts: adding %s -> %s', ip, names)
+        __utils__['caasp_log.debug']('hosts: adding %s -> %s', ip, names)
         if ip not in hosts:
             hosts[ip] = _concat([], names)
         else:
@@ -241,7 +238,7 @@ def managed(name=HOSTS_FILE,
     # copy the /etc/hosts to caasp_hosts_file the first time we run this
     if caasp_hosts_file:
         if not os.path.exists(caasp_hosts_file):
-            info('hosts: saving %s in %s', orig_etc_hosts, caasp_hosts_file)
+            __utils__['caasp_log.info']('hosts: saving %s in %s', orig_etc_hosts, caasp_hosts_file)
             _write_lines(caasp_hosts_file, orig_etc_hosts_contents)
             # TODO remove this file if something goes wrong...
 
@@ -253,11 +250,11 @@ def managed(name=HOSTS_FILE,
                                               content='',
                                               backup=False)
             except Exception as e:
-                warn('could not remove old blocks in {}: {}'.format(caasp_hosts_file, e))
+                __utils__['caasp_log.warn']('could not remove old blocks in {}: {}'.format(caasp_hosts_file, e))
 
         assert os.path.exists(caasp_hosts_file)
 
-        info('hosts: loading entries in "%s" file', caasp_hosts_file)
+        __utils__['caasp_log.info']('hosts: loading entries in "%s" file', caasp_hosts_file)
         if not os.path.isfile(caasp_hosts_file):
             raise EtcHostsRuntimeException(
                 '{} cannot be loaded: it is not a file'.format(caasp_hosts_file))
@@ -266,9 +263,9 @@ def managed(name=HOSTS_FILE,
                          caasp_hosts_file,
                          marker_start=marker_start,
                          marker_end=marker_end)
-        debug('hosts: custom /etc/hosts entries:')
+        __utils__['caasp_log.debug']('hosts: custom /etc/hosts entries:')
         for k, v in hosts.items():
-            debug('hosts:    %s %s', k, v)
+            __utils__['caasp_log.debug']('hosts:    %s %s', k, v)
 
     # get the admin, masters and workers
     def get_with_expr(expr):
@@ -304,7 +301,7 @@ def managed(name=HOSTS_FILE,
         _add_names(hosts, ['127.0.0.1', '::1'],
                    [this_hostname, fqdn(this_hostname)])
 
-        debug('hosts: adding entry for the API server at 127.0.0.1')
+        __utils__['caasp_log.debug']('hosts: adding entry for the API server at 127.0.0.1')
         _add_names(hosts, '127.0.0.1', ['api', fqdn('api')])
 
     except Exception as e:
@@ -323,7 +320,7 @@ def managed(name=HOSTS_FILE,
         new_etc_hosts_contents.sort()
         new_etc_hosts_contents = preface + new_etc_hosts_contents
 
-        info('hosts: writting new content to %s', orig_etc_hosts)
+        __utils__['caasp_log.info']('hosts: writting new content to %s', orig_etc_hosts)
         _write_lines(orig_etc_hosts, new_etc_hosts_contents)
 
     except Exception as e:
