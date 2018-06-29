@@ -1,0 +1,59 @@
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+staticPodPath: "/etc/kubernetes/manifests"
+syncFrequency: 1m0s
+fileCheckFrequency: 20s
+httpCheckFrequency: 20s
+address: 0.0.0.0
+port: {{ pillar['kubelet']['port'] }}
+tlsCertFile: "{{ pillar['ssl']['kubelet_crt'] }}"
+tlsPrivateKeyFile: "{{ pillar['ssl']['kubelet_key'] }}"
+authentication:
+  x509:
+    clientCAFile: "{{ pillar['ssl']['ca_file'] }}"
+  webhook:
+    enabled: false
+    cacheTTL: 2m0s
+  anonymous:
+    enabled: true
+authorization:
+  mode: AlwaysAllow
+  webhook:
+    cacheAuthorizedTTL: 5m0s
+    cacheUnauthorizedTTL: 30s
+healthzPort: 10248
+healthzBindAddress: 127.0.0.1
+clusterDomain: {{ pillar['dns']['domain'] }}
+clusterDNS:
+  - {{ pillar['dns']['cluster_ip'] }}
+nodeStatusUpdateFrequency: 10s
+cgroupRoot: "/"
+cgroupsPerQOS: true
+cgroupDriver: cgroupfs
+cpuManagerPolicy: none
+cpuManagerReconcilePeriod: 10s
+runtimeRequestTimeout: 2m0s
+maxPods: 110
+podPidsLimit: -1
+resolvConf: "/etc/resolv.conf"
+cpuCFSQuota: true
+maxOpenFiles: 1000000
+contentType: application/vnd.kubernetes.protobuf
+serializeImagePulls: true
+evictionHard:
+  imagefs.available: 15%
+  memory.available: 100Mi
+  nodefs.available: 10%
+  nodefs.inodesFree: 5%
+evictionPressureTransitionPeriod: 5m0s
+enableControllerAttachDetach: true
+makeIPTablesUtilChains: true
+iptablesMasqueradeBit: 14
+iptablesDropBit: 15
+failSwapOn: true
+containerLogMaxSize: 10Mi
+containerLogMaxFiles: 5
+systemReservedCgroup: system
+kubeReservedCgroup: podruntime.slice
+enforceNodeAllocatable:
+  - pods
