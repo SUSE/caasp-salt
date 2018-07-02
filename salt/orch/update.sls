@@ -172,19 +172,28 @@ early-services-setup:
 {%- set masters = salt.saltutil.runner('mine.get', tgt=is_updateable_master_tgt, fun='network.interfaces', tgt_type='compound') %}
 {%- for master_id in masters.keys() %}
 
+# Kubelet needs other services, e.g. the cri, up + running. This provide a way
+# to ensure kubelet is stopped before any other services.
+{{ master_id }}-early-clean-shutdown:
+  salt.state:
+    - tgt: '{{ master_id }}'
+    - sls:
+      - kubelet.stop
+    - require:
+        - early-services-setup
+
 {{ master_id }}-clean-shutdown:
   salt.state:
     - tgt: '{{ master_id }}'
     - sls:
       - container-feeder.stop
-      - kubelet.stop
       - kube-apiserver.stop
       - kube-controller-manager.stop
       - kube-scheduler.stop
       - cri.stop
       - etcd.stop
     - require:
-        - early-services-setup
+        - {{ master_id }}-early-clean-shutdown
 
 # Perform any necessary migrations before services are shutdown
 {{ master_id }}-pre-reboot:
@@ -279,21 +288,30 @@ all-masters-post-start-services:
 {%- for worker_id, ip in workers.items() %}
 
 # Call the node clean shutdown script
-{{ worker_id }}-clean-shutdown:
+# Kubelet needs other services, e.g. the cri, up + running. This provide a way
+# to ensure kubelet is stopped before any other services.
+{{ worker_id }}-early-clean-shutdown:
   salt.state:
     - tgt: '{{ worker_id }}'
     - sls:
-      - container-feeder.stop
       - kubelet.stop
-      - kube-proxy.stop
-      - cri.stop
-      - etcd.stop
     - require:
       - all-masters-post-start-services
       # wait until all the masters have been updated
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
+
+{{ worker_id }}-clean-shutdown:
+  salt.state:
+    - tgt: '{{ worker_id }}'
+    - sls:
+      - container-feeder.stop
+      - kube-proxy.stop
+      - cri.stop
+      - etcd.stop
+    - require:
+      - {{ worker_id }}-early-clean-shutdown
 
 # Perform any necessary migrations before rebooting
 {{ worker_id }}-pre-reboot:
