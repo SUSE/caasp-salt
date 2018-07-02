@@ -185,6 +185,17 @@ remove-addition-grain:
 # the replacement should be ready at this point:
 # we can remove the old node running in {{ target }}
 
+early-stop-services-in-target:
+  salt.state:
+    - tgt: '{{ target }}'
+    - sls:
+      - kubelet.stop
+    - require:
+      - update-modules
+  {%- if replacement %}
+      - remove-addition-grain
+  {%- endif %}
+
 stop-services-in-target:
   salt.state:
     - tgt: '{{ target }}'
@@ -195,17 +206,13 @@ stop-services-in-target:
       - kube-controller-manager.stop
       - kube-scheduler.stop
   {%- endif %}
-      - kubelet.stop
       - kube-proxy.stop
       - cri.stop
   {%- if target in etcd_members %}
       - etcd.stop
   {%- endif %}
     - require:
-      - update-modules
-  {%- if replacement %}
-      - remove-addition-grain
-  {%- endif %}
+      - early-stop-services-in-target
 
 # remove any other configuration in the machines
 cleanups-in-target-before-rebooting:
