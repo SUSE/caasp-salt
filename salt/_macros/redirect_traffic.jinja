@@ -1,0 +1,41 @@
+{% macro redirect_local_traffic(src_port, dst_ip, dst_port=None, requires=[]) %}
+{% set dst_port = dst_port or src_port %}
+
+enable-localnet-routing-{{ src_port }}-to-{{ dst_ip }}-{{ dst_port }}:
+  cmd.run:
+    - name: sysctl -w net.ipv4.conf.all.route_localnet=1
+  {% if requires|length > 0 %}
+    - require:
+      {% for require in requires %}
+        - {{ require }}
+      {% endfor %}
+  {% endif %}
+
+redirect-traffic-{{ src_port }}-to-{{ dst_ip }}-{{ dst_port }}-dnat:
+  caasp_retriable.retry:
+    - name: redirect-{{ src_port }}-to-{{ dst_ip }}
+    - target: iptables.append
+    - retry:
+        attempts: 2
+    - table:          nat
+    - chain:          OUTPUT
+    - proto:          tcp
+    - dport:          {{ src_port }}
+    - jump:           DNAT
+    - to-destination: {{ dst_ip }}:{{ dst_port }}
+    - require:
+      - enable-localnet-routing-{{ src_port }}-to-{{ dst_ip }}-{{ dst_port }}
+
+redirect-traffic-{{ src_port }}-to-{{ dst_ip }}-{{ dst_port }}-masquerade:
+  caasp_retriable.retry:
+    - name: redirect-{{ src_port }}-to-{{ dst_ip }}-masquerade
+    - target: iptables.append
+    - retry:
+        attempts: 2
+    - table:          nat
+    - chain:          POSTROUTING
+    - jump:           MASQUERADE
+    - require:
+      - redirect-traffic-{{ src_port }}-to-{{ dst_ip }}-{{ dst_port }}-dnat
+
+{% endmacro %}

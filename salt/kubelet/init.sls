@@ -98,6 +98,19 @@ kubelet:
     - require:
       - service: kubelet
 
+kubelet-health-check:
+  caasp_retriable.retry:
+    - target:     caasp_http.wait_for_successful_query
+    - name:       http://localhost:10248/healthz
+    - wait_for:   300
+    - retry:
+        attempts: 3
+    - status:     200
+    - opts:
+        http_request_timeout: 30
+    - watch:
+      - service: kubelet
+
 #######################
 # config files
 #######################
