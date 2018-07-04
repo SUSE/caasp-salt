@@ -28,6 +28,7 @@
 {%- set is_worker_tgt            = is_responsive_node_tgt + ' and G@roles:kube-minion' %}
 {%- set is_updateable_master_tgt = is_updateable_tgt + ' and ' + is_master_tgt %}
 {%- set is_updateable_worker_tgt = is_updateable_tgt + ' and ' + is_worker_tgt %}
+{%- set is_updateable_node_tgt   = '( ' + is_updateable_master_tgt + ' ) or ( ' + is_updateable_worker_tgt + ' )' %}
 
 {%- set all_masters = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set super_master = all_masters|first %}
@@ -116,7 +117,7 @@ admin-setup:
 # with the real update.
 pre-orchestration-migration:
   salt.state:
-    - tgt: '{{ is_regular_node_tgt }}'
+    - tgt: '{{ is_updateable_node_tgt }}'
     - tgt_type: compound
     - batch: 3
     - sls:
@@ -263,7 +264,7 @@ early-services-setup:
 # Perform migrations after all masters have been updated
 all-masters-post-start-services:
   salt.state:
-    - tgt: '{{ is_master_tgt }}'
+    - tgt: '{{ is_updateable_master_tgt }}'
     - tgt_type: compound
     - batch: 3
     - sls:
