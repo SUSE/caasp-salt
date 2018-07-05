@@ -23,6 +23,16 @@ drain-kubelet:
     - force: True
   {%- endif %}
 
+# Also try to drain the Kubelet old name in case we are about to migrate its name
+drain-old-name-kubelet:
+  cmd.run:
+    - name: |
+        kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} drain {{ grains['machine_id'] + "." + pillar['internal_infra_domain'] }} --force --delete-local-data=true --ignore-daemonsets
+    - check_cmd:
+      - /bin/true
+    - require:
+      - file: {{ pillar['paths']['kubeconfig'] }}
+
 kubelet:
   service.dead:
     - enable: False

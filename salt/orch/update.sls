@@ -28,9 +28,12 @@
 {%- set is_worker_tgt            = is_responsive_node_tgt + ' and G@roles:kube-minion' %}
 {%- set is_updateable_master_tgt = is_updateable_tgt + ' and ' + is_master_tgt %}
 {%- set is_updateable_worker_tgt = is_updateable_tgt + ' and ' + is_worker_tgt %}
+{%- set is_updateable_node_tgt   = '( ' + is_updateable_master_tgt + ' ) or ( ' + is_updateable_worker_tgt + ' )' %}
 
-{%- set all_masters = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set super_master = all_masters|first %}
+{%- set all_masters_    = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound') %}
+{%- set all_masters     = all_masters_.keys() %}
+{%- set super_master    = all_masters|first %}
+{%- set super_master_ip = salt.caasp_net.get_primary_ip(host=super_master) %}
 
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
@@ -116,7 +119,7 @@ admin-setup:
 # with the real update.
 pre-orchestration-migration:
   salt.state:
-    - tgt: '{{ is_regular_node_tgt }}'
+    - tgt: '{{ is_updateable_node_tgt }}'
     - tgt_type: compound
     - batch: 3
     - sls:
@@ -272,7 +275,7 @@ early-services-setup:
 # Perform migrations after all masters have been updated
 all-masters-post-start-services:
   salt.state:
-    - tgt: '{{ is_master_tgt }}'
+    - tgt: '{{ is_updateable_master_tgt }}'
     - tgt_type: compound
     - batch: 3
     - sls:
@@ -283,6 +286,31 @@ all-masters-post-start-services:
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
+
+# NOTE: Remove me for 4.0
+#
+# On 2.0 -> 3.0 we are updating the way kubelets auth against the apiservers.
+# At this point in time all masters have been updated, and all workers are (or
+# will) be in `NotReady` state. This means that any operation that we perform
+# that go through the apiserver down to the kubelets won't work (e.g. draining
+# nodes).
+#
+# To fix this problem we'll add a temporary iptables rule that will avoid
+# each local haproxy on the worker, redirecting all :6443 connections to one
+# of the masters. After that, we restart the kubelets so they start to jump over
+# their local HAProxy.
+all-workers-pre-clean-shutdown:
+  salt.state:
+    - tgt: '{{ is_updateable_worker_tgt }}'
+    - tgt_type: compound
+    - sls:
+        - update.update-pre-reboot
+    - pillar:
+        forward_to:
+          ip: {{ super_master_ip }}
+    - require:
+        - all-masters-post-start-services
+# END NOTE: Remove me for 4.0
 
 {%- set workers = salt.saltutil.runner('mine.get', tgt=is_updateable_worker_tgt, fun='network.interfaces', tgt_type='compound') %}
 {%- for worker_id, ip in workers.items() %}
@@ -296,7 +324,7 @@ all-masters-post-start-services:
     - sls:
       - kubelet.stop
     - require:
-      - all-masters-post-start-services
+      - all-workers-pre-clean-shutdown
       # wait until all the masters have been updated
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
