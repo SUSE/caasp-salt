@@ -5,15 +5,17 @@
 # Use the following command to make these variables visible to
 # etcdctl:
 # set -a; source /etc/sysconfig/etcdctl; set +a
-
-ETCDCTL_ENDPOINT="https://{{ grains['nodename'] }}:2379"
+# Use ETCDCTL_API flag to switch between etcd API version
+# env ETCDCTL_API=3 etcdctl member list
 
 # etcd v2 style flags
+ETCDCTL_ENDPOINT="https://{{ grains['nodename'] }}:2379"
 ETCDCTL_CA_FILE={{ pillar['ssl']['ca_file'] }}
 ETCDCTL_CERT_FILE={{ pillar['ssl']['crt_file'] }}
 ETCDCTL_KEY_FILE={{ pillar['ssl']['key_file'] }}
 
 # etcd v3 style flags
+ETCDCTL_ENDPOINTS="https://{{ grains['nodename'] }}:2379"
 ETCDCTL_CACERT={{ pillar['ssl']['ca_file'] }}
 ETCDCTL_CERT={{ pillar['ssl']['crt_file'] }}
 ETCDCTL_KEY={{ pillar['ssl']['key_file'] }}
