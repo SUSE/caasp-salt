@@ -29,7 +29,7 @@ def get_iface_ip(iface, host=None, ifaces=None):
             if not host or host == get_nodename():
                 ifaces = __salt__['network.interfaces']()
             else:
-                ifaces = __salt__['caasp_grains.get'](host, 'network.interfaces', type='glob')
+                ifaces = __salt__['caasp_grains.get'](host, 'network.interfaces', type='glob')[host]
 
         iface = ifaces.get(iface)
         ipv4addr = iface.get('inet', [{}])
