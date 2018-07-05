@@ -20,6 +20,10 @@ class NoEtcdServersException(Exception):
     pass
 
 
+def api_version():
+    return __salt__['pillar.get']('etcd_version', 'etcd3')
+
+
 def _optimal_etcd_number(num_nodes):
     if num_nodes >= 7:
         return 7
@@ -183,9 +187,14 @@ def get_etcdctl_args(skip_this=False):
     Build the list of args for 'etcdctl'
     '''
     etcdctl_args = []
-    etcdctl_args += ["--ca-file", __salt__['pillar.get']('ssl:ca_file')]
-    etcdctl_args += ["--key-file", __salt__['pillar.get']('ssl:key_file')]
-    etcdctl_args += ["--cert-file", __salt__['pillar.get']('ssl:crt_file')]
+    if api_version() == 'etcd2':
+        etcdctl_args += ["--ca-file", __salt__['pillar.get']('ssl:ca_file')]
+        etcdctl_args += ["--key-file", __salt__['pillar.get']('ssl:key_file')]
+        etcdctl_args += ["--cert-file", __salt__['pillar.get']('ssl:crt_file')]
+    else:
+        etcdctl_args += ["--cacert", __salt__['pillar.get']('ssl:ca_file')]
+        etcdctl_args += ["--key", __salt__['pillar.get']('ssl:key_file')]
+        etcdctl_args += ["--cert", __salt__['pillar.get']('ssl:crt_file')]
 
     etcd_members_lst = get_endpoints(skip_this=skip_this)
 
@@ -211,6 +220,10 @@ def get_member_id(nodename=None):
                   the local node will be used.
     '''
     command = ["etcdctl"] + get_etcdctl_args() + ["member", "list"]
+    if api_version() == 'etcd2':
+        command.insert(0, "ETCDCTL_API=2")
+    else:
+        command.insert(0, "ETCDCTL_API=3")
 
     target_nodename = nodename or __salt__['caasp_net.get_nodename']()
 
