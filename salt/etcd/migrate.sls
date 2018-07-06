@@ -8,6 +8,6 @@
 
 create-or-update-etcd-pillar:
   cmd.run:
-    - name: bash /tmp/create-or-update-etcd-pillar
+    - name: python /tmp/create-or-update-etcd-pillar
     - require:
       - file: /tmp/create-or-update-etcd-pillar

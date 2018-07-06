@@ -14,10 +14,20 @@ update_mine:
     - tgt: '*'
     - name: mine.update
     - require:
-       - salt: update_pillar
-       - salt: update_grains
+      - salt: update_pillar
+      - salt: update_grains
 
-master-stop-services:
+stop-kubelet:
+  salt.state:
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
+    - sls:
+      - kube-proxy.stop
+      - kubelet.stop
+    - require:
+      - salt: update_mine
+
+stop-kubernetes:
   salt.state:
     - tgt: 'roles:kube-master'
     - tgt_type: grain
@@ -25,20 +35,17 @@ master-stop-services:
       - kube-apiserver.stop
       - kube-controller-manager.stop
       - kube-scheduler.stop
-      - etcd.stop
     - require:
-       - salt: update_mine
+      - salt: stop-kubelet
 
-worker-stop-services:
+stop-etcd:
   salt.state:
-    - tgt: 'roles:kube-minion'
-    - tgt_type: grain
+    - tgt: 'roles:kube-(master|minion)'
+    - tgt_type: grain_pcre
     - sls:
-      - kubelet.stop
-      - kube-proxy.stop
       - etcd.stop
     - require:
-       - salt: master-stop-services
+      - salt: stop-kubernetes
 
 backup-etcd:
   salt.function:
@@ -46,9 +53,9 @@ backup-etcd:
     - tgt_type: grain_pcre
     - name: cmd.run
     - arg:
-      - mkdir /tmp/backup; btrfs subvolume snapshot /var/lib/etcd /tmp/backup/etcd
+      - if [ -d /var/lib/etcd/member ] && ! [ -d /tmp/backup ]; then mkdir /tmp/backup; btrfs subvolume snapshot /var/lib/etcd /tmp/backup/etcd; fi
     - require:
-       - salt: worker-stop-services
+      - salt: stop-etcd
 
 migrate-etcd:
   salt.function:
@@ -56,14 +63,14 @@ migrate-etcd:
     - tgt_type: grain_pcre
     - name: cmd.run
     - arg:
-      - if ! [ -d /var/lib/etcd/proxy ]; then set -a; source /etc/sysconfig/etcdctl; env ETCDCTL_API=3 etcdctl migrate --data-dir=/var/lib/etcd; fi
+      - if [ -d /var/lib/etcd/member ]; then set -a; source /etc/sysconfig/etcdctl; env ETCDCTL_API=3 etcdctl migrate --data-dir=/var/lib/etcd; fi
     - require:
       - salt: backup-etcd
 
 create-etcd-pillar:
   salt.state:
     - tgt: 'roles:admin'
-    - tgt_type: grain
+    - tgt_type: grain_pcre
     - sls:
       - etcd.migrate
     - require:
