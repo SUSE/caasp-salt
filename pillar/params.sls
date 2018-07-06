@@ -158,6 +158,9 @@ cloud:
     lb_mon_retries: '3'
     # OpenStack Cinder Block Storage API version
     bs_version:     'v2'
+    # Ignore OpenStack Cinder avability zone when attaching volumes. 
+    # When Nova and Cinder have different availability zones, this should be set to true.
+    ignore_vol_az:  'false'
 
 # Configuration for the reboot manager (https://github.com/SUSE/rebootmgr).
 # notes:
