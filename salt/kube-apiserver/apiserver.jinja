@@ -4,8 +4,12 @@
 # The following values are used to configure the kube-apiserver
 #
 
-{% set cloud_provider = salt.caasp_pillar.get('cloud:provider') %}
-{% set kube_admission_control = ['Initializers', 'NamespaceLifecycle', 'LimitRanger', 'ServiceAccount', 'NodeRestriction', 'PersistentVolumeLabel', 'DefaultStorageClass', 'ResourceQuota', 'DefaultTolerationSeconds'] %}
+{%- set cloud_provider = salt.caasp_pillar.get('cloud:provider') %}
+{%- set admission_control = salt.caasp_pillar.get('kubernetes:admission_control') %}
+{%- if salt.caasp_pillar.get('addons:psp', True) %}
+  {%- do admission_control.append('PodSecurityPolicy') %}
+{%- endif %}
+
 # The address on the local server to listen to.
 KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1 --bind-address=0.0.0.0"
 
@@ -23,11 +27,7 @@ KUBE_ETCD_SERVERS="--etcd-cafile={{ pillar['ssl']['ca_file'] }} \
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}"
 
 # default admission control policies
-{% if salt.caasp_pillar.get('addons:psp', True) %}
-KUBE_ADMISSION_CONTROL="--admission-control={{ (kube_admission_control + ['PodSecurityPolicy'])|join(',') }}"
-{% else %}
-KUBE_ADMISSION_CONTROL="--admission-control={{ kube_admission_control|join(',') }}"
-{% endif %}
+KUBE_ADMISSION_CONTROL="--admission-control={{ admission_control|join(',') }}"
 
 # Add your own!
 KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
@@ -59,7 +59,9 @@ KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --storage-media-type=application/json \
                --service-account-key-file={{ pillar['paths']['service_account_key'] }} \
                --service-account-lookup=true \
-               --runtime-config=admissionregistration.k8s.io/v1alpha1 \
+{%- for cfg in pillar['kubernetes']['runtime_configs'] %}
+               --runtime-config={{ cfg }} \
+{%- endfor %}
                --authorization-mode=Node,RBAC \
                --oidc-issuer-url=https://{{ pillar['api']['server']['external_fqdn'] }}:{{ pillar['dex']['node_port'] }} \
                --oidc-client-id=kubernetes \
