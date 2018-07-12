@@ -29,6 +29,10 @@ get_node_data() {
 	kubectl --request-timeout=1m get node "$OLD_NODE_NAME" --template="{{$template}}"
 }
 
+get_node_labels() {
+  kubectl --request-timeout=1m get node "$OLD_NODE_NAME" --template='{{range $key, $value := .metadata.labels}}    {{$key}}: {{$value}}{{"\n"}}{{end}}'
+}
+
 exit_handler() {
   # Stashing $? MUST be the first command in the handler.
   code=$?
@@ -53,9 +57,7 @@ kind: Node
 metadata:
   name: ${NEW_NODE_NAME}
   labels:
-    kubernetes.io/hostname: '$(get_node_data 'index .metadata.labels "kubernetes.io/hostname"')'
-    beta.kubernetes.io/arch: '$(get_node_data 'index .metadata.labels "beta.kubernetes.io/arch"')'
-    beta.kubernetes.io/os: '$(get_node_data 'index .metadata.labels "beta.kubernetes.io/os"')'
+$(get_node_labels)
   annotations:
     node.alpha.kubernetes.io/ttl: '$(get_node_data 'index .metadata.annotations "node.alpha.kubernetes.io/ttl"')'
     volumes.kubernetes.io/controller-managed-attach-detach: '$(get_node_data 'index .metadata.annotations "volumes.kubernetes.io/controller-managed-attach-detach"')'
