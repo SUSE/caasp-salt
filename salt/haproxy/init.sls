@@ -77,6 +77,7 @@ haproxy-restart:
     - namespace: kube-system
     - timeout: 60
     - onchanges:
+      - file: haproxy
       - file: /etc/caasp/haproxy/haproxy.cfg
 {% if not salt.caasp_nodes.is_admin_node() %}
     - require:

@@ -8,7 +8,7 @@ include:
 # Migrates critical data from the old K8S node, to a new one with updated names
 /tmp/kubelet-update-pre-orchestration.sh:
   file.managed:
-    - source: salt://kubelet/update-pre-orchestration.sh
+    - source: salt://migrations/2-3/kubelet/kubelet-update-pre-orchestration.sh
     - mode: 0755
   cmd.run:
 {% if "kube-master" in salt['grains.get']('roles', []) %}
