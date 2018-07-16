@@ -127,7 +127,6 @@ pre-orchestration-migration:
     - require:
       - admin-setup
 
-
 # Before the real orchestration starts cordon all the worker nodes running 2.0. This way we ensure
 # that no pods will be rescheduled on these machines while we upgrade: all rescheduled workloads
 # will be strictly sent to upgraded nodes (the only ones uncordoned).
@@ -135,6 +134,7 @@ all-workers-2.0-pre-orchestration:
   salt.state:
     - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:2.0'
     - tgt_type: compound
+    - batch: 3
     - sls:
         - migrations.2-3.kubelet.cordon
     - require:
@@ -316,6 +316,7 @@ all-workers-2.0-pre-clean-shutdown:
   salt.state:
     - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:2.0'
     - tgt_type: compound
+    - batch: 3
     - sls:
         - etc-hosts
         - migrations.2-3.haproxy
@@ -332,6 +333,7 @@ all-workers-3.0-pre-clean-shutdown:
   salt.state:
     - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:3.0'
     - tgt_type: compound
+    - batch: 3
     - sls:
         - etc-hosts
         - haproxy
