@@ -20,4 +20,4 @@ ETCDCTL_CACERT={{ pillar['ssl']['ca_file'] }}
 ETCDCTL_CERT={{ pillar['ssl']['crt_file'] }}
 ETCDCTL_KEY={{ pillar['ssl']['key_file'] }}
 
-ETCDCTL_API=3
+ETCDCTL_API={{ pillar['api']['etcd_version'].replace("etcd", "") }}
