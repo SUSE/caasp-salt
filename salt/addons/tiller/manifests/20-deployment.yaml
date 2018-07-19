@@ -30,6 +30,18 @@ spec:
         effect: NoSchedule
       - key: "CriticalAddonsOnly"
         operator: "Exists"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - tiller
       containers:
       - env:
         - name: TILLER_NAMESPACE

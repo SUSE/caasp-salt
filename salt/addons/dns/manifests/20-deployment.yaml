@@ -29,6 +29,18 @@ spec:
         effect: NoSchedule
       - key: "CriticalAddonsOnly"
         operator: "Exists"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchExpressions:
+                - key: k8s-app
+                  operator: In
+                  values:
+                  - kube-dns
       volumes:
       - name: kube-dns-config
         configMap:
