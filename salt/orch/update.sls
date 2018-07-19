@@ -134,6 +134,7 @@ all-workers-2.0-pre-orchestration:
   salt.state:
     - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:2.0'
     - tgt_type: compound
+    - expect_minions: false
     - batch: 3
     - sls:
         - migrations.2-3.kubelet.cordon
@@ -316,6 +317,7 @@ all-workers-2.0-pre-clean-shutdown:
   salt.state:
     - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:2.0'
     - tgt_type: compound
+    - expect_minions: false
     - batch: 3
     - sls:
         - etc-hosts
@@ -333,6 +335,7 @@ all-workers-3.0-pre-clean-shutdown:
   salt.state:
     - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:3.0'
     - tgt_type: compound
+    - expect_minions: false
     - batch: 3
     - sls:
         - etc-hosts
