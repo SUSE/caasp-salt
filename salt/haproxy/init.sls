@@ -1,6 +1,7 @@
 include:
   - ca-cert
   - cert
+  - etc-hosts
 {% if not salt.caasp_nodes.is_admin_node() %}
 # This state is executed also on the admin node. On the admin
 # node we cannot require the kubelet state otherwise the node will
