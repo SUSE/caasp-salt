@@ -13,6 +13,7 @@ domain-id="{{ pillar['cloud']['openstack']['domain_id'] }}"
 domain-name="{{ pillar['cloud']['openstack']['domain'] }}"
 {%- endif %}
 region="{{ pillar['cloud']['openstack']['region'] }}"
+ca-file="/etc/ssl/ca-bundle.pem"
 [LoadBalancer]
 lb-version=v2
 subnet-id="{{ pillar['cloud']['openstack']['subnet'] }}"
