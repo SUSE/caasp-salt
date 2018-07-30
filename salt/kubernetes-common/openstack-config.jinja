@@ -5,6 +5,7 @@ password="{{ pillar['cloud']['openstack']['password'] }}"
 tenant-name="{{ pillar['cloud']['openstack']['project'] }}"
 domain-name="{{ pillar['cloud']['openstack']['domain'] }}"
 region="{{ pillar['cloud']['openstack']['region'] }}"
+ca-file="/etc/ssl/ca-bundle.pem"
 [LoadBalancer]
 lb-version=v2
 subnet-id="{{ pillar['cloud']['openstack']['subnet'] }}"
