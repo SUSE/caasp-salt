@@ -42,7 +42,12 @@ def beacon(config):
               promiscuity:
                 onvalue: 1
     '''
-
     default_interface = __salt__['network.default_route']()[0]['interface']
 
-    return network_settings.beacon({default_interface: config['watch']})
+    config = {default_interface: config['watch']}
+
+    if __salt__['test.version']() >= '2018.3.0':
+        config = [{'interfaces': config}]
+        log.debug("Newer salt version - adjusted config format: {0}".format(config))
+
+    return network_settings.beacon(config)
