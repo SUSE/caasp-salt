@@ -14,6 +14,10 @@ log = logging.getLogger('CaaS')
 _CAAS_PREFIX = '[CaaS]: '
 
 
+def __virtual__():
+    return "caasp_log"
+
+
 class ExecutionAborted(SaltException):
     pass
 

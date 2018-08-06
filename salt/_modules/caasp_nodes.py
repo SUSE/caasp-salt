@@ -22,6 +22,10 @@ IN_PROGRESS_GRAINS = ['bootstrap_in_progress',
 USE_UNASSIGNED = False
 
 
+def __virtual__():
+    return "caasp_nodes"
+
+
 def _get_prio_etcd(unassigned=False):
     '''
     Get the priorities for choosing new nodes for running
