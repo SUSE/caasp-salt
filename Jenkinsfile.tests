@@ -45,12 +45,12 @@ podTemplate(label: label, containers: [
             parallel(
                 'Python 2.7': {
                     container('tox') {
-                        sh 'tox --notest -e tests-salt-2016.11.4-py27'
+                        sh 'tox --notest -e tests-salt-2018.3.0-py27'
                     }
                 },
                 'Python 3.4': {
                     container('tox3') {
-                        sh 'tox --notest -e tests-salt-2016.11.4-py34'
+                        sh 'tox --notest -e tests-salt-2018.3.0-py34'
                     }
                 }
             )
@@ -61,18 +61,18 @@ podTemplate(label: label, containers: [
                 'Python 2.7': {
                     container('tox') {
                         try {
-                            sh 'tox -e tests-salt-2016.11.4-py27 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py27 --xunit-file=tests-salt-2016.11.4-py27.xml'
+                            sh 'tox -e tests-salt-2018.3.0-py27 -- --with-xunit --xunit-testsuite-name=salt-2018.3.0-py27 --xunit-file=tests-salt-2018.3.0-py27.xml'
                         } finally {
-                            junit "tests-salt-2016.11.4-py27.xml"
+                            junit "tests-salt-2018.3.0-py27.xml"
                         }
                     }
                 },
                 'Python 3.4': {
                     container('tox3') {
                         try {
-                            sh 'tox -e tests-salt-2016.11.4-py34 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py34 --xunit-file=tests-salt-2016.11.4-py34.xml'
+                            sh 'tox -e tests-salt-2018.3.0-py34 -- --with-xunit --xunit-testsuite-name=salt-2018.3.0-py34 --xunit-file=tests-salt-2018.3.0-py34.xml'
                         } finally {
-                            junit "tests-salt-2016.11.4-py34.xml"
+                            junit "tests-salt-2018.3.0-py34.xml"
                         }
                     }
                 }
