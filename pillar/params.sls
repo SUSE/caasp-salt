@@ -128,6 +128,8 @@ kubelet:
   eviction-hard: ''
   # example:
   # eviction-hard: memory.available<500M
+  # Drain timeout, in seconds
+  drain-timeout: '600'
 
 proxy:
   http:           ''
