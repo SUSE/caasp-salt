@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: suse.caasp.dns.networkpolicy
+  namespace: kube-system
+spec:
+  podSelector:
+    matchLabels:
+      "k8s-app": "kube-dns"
+  ingress:
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+    from:
+    - namespaceSelector: {}

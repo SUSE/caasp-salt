@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: suse.caasp.dex.networkpolicy
+  namespace: kube-system
+spec:
+  podSelector:
+    matchLabels:
+      "app": "dex"
+  egress:
+  - ports:
+# port for LDAP tcp 10.17.1.0:389
+    - port: 389
+      protocol: TCP
+    - port: 6444
+      protocol: TCP
+# allow DNS query
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
