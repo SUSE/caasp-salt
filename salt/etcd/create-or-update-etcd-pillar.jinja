@@ -22,13 +22,13 @@ def _get_container_id(name, namespace):
     Return ``None`` if no running container matching the expressed criteria is
     found.
     '''
-    output = subprocess.check_output(
+    output = subprocess.check_output([
             'crictl',
             '--runtime-endpoint',
-            _cri_runtime_endpoint(),
+            'unix://' + _cri_runtime_endpoint(),
             'ps',
             '-o',
-            'json')
+            'json'])
 
     ps_data = json.loads(output)
     for container in ps_data['containers']:
@@ -49,7 +49,7 @@ def _container_exec(container_id, cmd):
 
     base_cmd = ['crictl',
                 '--runtime-endpoint',
-                _cri_runtime_endpoint(),
+                'unix://' + _cri_runtime_endpoint(),
                 'exec',
                 '-s',
                 container_id]

@@ -14,6 +14,10 @@ DEFAULT_ATTEMPTS_INTERVAL = 2
 ETCD_PEER_PORT = 2380
 
 
+def api_version():
+    return __salt__['caasp_etcd.api_version']()
+
+
 def etcdctl(name, retry={}, **kwargs):
     '''
     Run an etcdctl command
@@ -34,6 +38,11 @@ def etcdctl(name, retry={}, **kwargs):
 
     args = __salt__['caasp_etcd.get_etcdctl_args_str'](skip_this=skip_this)
     cmd = 'etcdctl {} {}'.format(args, name)
+    if api_version() == 'etcd2':
+        cmd = 'ETCDCTL_API=2 {}'.format(cmd)
+    else:
+        cmd = 'ETCDCTL_API=3 {}'.format(cmd)
+
     log.debug('CaaS: running etcdctl as: %s', cmd)
 
     return __states__['caasp_cmd.run'](name=cmd,
@@ -43,7 +52,10 @@ def etcdctl(name, retry={}, **kwargs):
 
 def healthy(name, **kwargs):
     log.debug('CaaS: checking etcd health')
-    return etcdctl(name='cluster-health', **kwargs)
+    if api_version() == 'etcd2':
+        return etcdctl(name='cluster-health', **kwargs)
+    else:
+        return etcdctl(name='endpoint health', **kwargs)
 
 
 def member_add(name, **kwargs):
@@ -56,7 +68,10 @@ def member_add(name, **kwargs):
     this_nodename = __salt__['caasp_net.get_nodename']()
     this_peer_url = 'https://{}:{}'.format(this_nodename, port)
 
-    name = 'member add {} {}'.format(this_id, this_peer_url)
+    if api_version() == 'etcd2':
+        name = 'member add {} {}'.format(this_id, this_peer_url)
+    else:
+        name = 'member add {} --peer-urls="{}"'.format(this_id, this_peer_url)
     log.debug('CaaS: adding etcd member')
     return etcdctl(name=name, skip_this=True, **kwargs)
 
