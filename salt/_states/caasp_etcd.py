@@ -71,7 +71,7 @@ def member_add(name, **kwargs):
     if api_version() == 'etcd2':
         name = 'member add {} {}'.format(this_id, this_peer_url)
     else:
-        name = 'member add {} --peer-urls="{}"'.format(this_id, this_peer_url)
+        name = 'member add {} --peer-urls={}'.format(this_id, this_peer_url)
     log.debug('CaaS: adding etcd member')
     return etcdctl(name=name, skip_this=True, **kwargs)
 
