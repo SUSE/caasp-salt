@@ -221,9 +221,9 @@ def get_member_id(nodename=None):
     '''
     command = ["etcdctl"] + get_etcdctl_args() + ["member", "list"]
     if api_version() == 'etcd2':
-        command.insert(0, "ETCDCTL_API=2")
+        command_env = {"ETCDCTL_API": "2"}
     else:
-        command.insert(0, "ETCDCTL_API=3")
+        command_env = {"ETCDCTL_API": "3"}
 
     target_nodename = nodename or __salt__['caasp_net.get_nodename']()
 
@@ -231,10 +231,13 @@ def get_member_id(nodename=None):
     members_output = ''
     try:
         target_url = 'https://{}:{}'.format(target_nodename, ETCD_CLIENT_PORT)
-        members_output = subprocess.check_output(command)
+        members_output = subprocess.check_output(command, env=command_env)
         for member_line in members_output.splitlines():
             if target_url in member_line:
-                return member_line.split(':')[0]
+                if api_version() == 'etcd2':
+                    return member_line.split(':')[0]
+                else:
+                    return member_line.split(',')[0]
 
     except Exception as e:
         error('cannot get member ID for "%s": %s', e, target_nodename)
