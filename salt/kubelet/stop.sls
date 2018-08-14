@@ -7,13 +7,10 @@ include:
 {% set should_uncordon = salt['cmd.run']("kubectl --request-timeout=1m --kubeconfig=" + pillar['paths']['kubeconfig'] + " get nodes " + grains['nodename'] + " -o=jsonpath='{.spec.unschedulable}' 2>/dev/null") != "true" %}
 {% set node_removal_in_progress = salt['grains.get']('node_removal_in_progress', False) %}
 
-# If this fails we should ignore it and proceed anyway as Kubernetes will recover
 drain-kubelet:
   cmd.run:
     - name: |
-        kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} drain {{ grains['nodename'] }} --force --delete-local-data=true --ignore-daemonsets
-    - check_cmd:
-      - /bin/true
+        kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} drain {{ grains['nodename'] }} --force --delete-local-data=true --ignore-daemonsets --timeout={{ pillar['kubelet']['drain-timeout'] }}s
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
   {%- if not node_removal_in_progress %}
