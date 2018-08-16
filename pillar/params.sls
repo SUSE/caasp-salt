@@ -174,10 +174,6 @@ reboot:
   group:          'default'
   directory:      'opensuse.org/rebootmgr/locks'
 
-transactional-update:
-  timer:
-    on_calendar: 'daily' # See https://www.freedesktop.org/software/systemd/man/systemd.time.html#Calendar%20Events for syntax
-
 dex:
   node_port: '32000'
   client_secrets:
