@@ -1,4 +1,4 @@
-{%- set default_batch = 5 %}
+{%- set default_batch = salt['pillar.get']('default_batch', 5) %}
 
 {%- set etcd_members = salt.saltutil.runner('mine.get', tgt='G@roles:etcd',        fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set masters      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
