@@ -5,3 +5,6 @@ dashboard:      'dashboard'
 
 # The external FQDN for velum
 dashboard_external_fqdn: ''
+
+# default salt batch number (jobs in parallel)
+default_batch: 5
