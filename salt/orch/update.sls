@@ -29,9 +29,14 @@
 {%- set is_updateable_master_tgt = is_updateable_tgt + ' and ' + is_master_tgt %}
 {%- set is_updateable_worker_tgt = is_updateable_tgt + ' and ' + is_worker_tgt %}
 {%- set is_updateable_node_tgt   = '( ' + is_updateable_master_tgt + ' ) or ( ' + is_updateable_worker_tgt + ' )' %}
-
 {%- set all_masters = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set super_master = all_masters|first %}
+
+{%- set is_migration = salt['pillar.get']('migration', false) %}
+
+{% if is_migration %}
+{%- set migrated_nodes = is_responsive_node_tgt + 'and G@migration_in_progress:true' %}
+{% endif %}
 
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
@@ -555,3 +560,29 @@ remove-update-grain:
         destructive: True
     - require:
       - remove-caasp-fqdn-grain
+
+{% if is_migration %}
+reenable-transactional-update-timer:
+  salt.function:
+    - tgt: '{{ migrated_nodes }}'
+    - tgt_type: compound
+    - batch: 3
+    - name: service.enable
+    - arg:
+        - transactional-update.timer
+
+unset-migration-grains:
+  salt.function:
+    - tgt: '{{ migrated_nodes }}'
+    - tgt_type: compound
+    - name: grains.delval
+    - arg:
+        - tx_update_migration_available
+        - tx_update_migration_notes
+        - tx_update_migration_mirror_synced
+        - migration_in_progress
+    - kwarg:
+        destructive: True
+    - require:
+        - reenable-transactional-update-timer
+{% endif %}
