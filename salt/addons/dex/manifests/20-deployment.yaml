@@ -5,6 +5,8 @@ metadata:
   labels:
     app: dex
     kubernetes.io/cluster-service: "true"
+  annotations:
+    seccomp.security.alpha.kubernetes.io/pod: docker/default
   name: dex
   namespace: kube-system
 spec:

@@ -8,6 +8,7 @@ metadata:
     name: haproxy
   annotations:
     scheduler.alpha.kubernetes.io/critical-pod: ''
+    seccomp.security.alpha.kubernetes.io/pod: docker/default
 spec:
   restartPolicy: Always
   hostNetwork: true
