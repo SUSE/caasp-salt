@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import unittest
 
-from caasp_log import ExecutionAborted
+import caasp_log
 from caasp_nodes import (get_expr_affected_by, get_from_args_or_with_expr,
                          get_replacement_for, get_with_prio)
 
@@ -189,7 +189,7 @@ class TestGetReplacementFor(unittest.TestCase):
 
         # however, we can migrate only the etcd role to another minion
         # (as it is a user provided replacement, it will raise an exception)
-        with self.assertRaises(ExecutionAborted):
+        with self.assertRaises(caasp_log.ExecutionAborted):
             replacement, roles = get_replacement_for(self.minion_1,
                                                      replacement=self.minion_3,
                                                      **kwargs)
@@ -214,7 +214,7 @@ class TestGetReplacementFor(unittest.TestCase):
                       'kube-minion role not found in replacement')
 
         # check we cannot use an excluded node
-        with self.assertRaises(ExecutionAborted):
+        with self.assertRaises(caasp_log.ExecutionAborted):
             replacement, roles = get_replacement_for(self.minion_1,
                                                      replacement=self.minion_3,
                                                      excluded=[self.minion_3],
@@ -226,7 +226,7 @@ class TestGetReplacementFor(unittest.TestCase):
         is not a valid replacement for a master & etcd.
         '''
         # the master role cannot be migrated to a minion
-        with self.assertRaises(ExecutionAborted):
+        with self.assertRaises(caasp_log.ExecutionAborted):
             replacement, roles = get_replacement_for(self.master_2,
                                                      replacement=self.minion_3,
                                                      **self.get_replacement_for_kwargs)
@@ -237,7 +237,7 @@ class TestGetReplacementFor(unittest.TestCase):
         is not a valid replacement.
         '''
         # the master role cannot be migrated to a CA
-        with self.assertRaises(ExecutionAborted):
+        with self.assertRaises(caasp_log.ExecutionAborted):
             replacement, roles = get_replacement_for(self.master_2,
                                                      replacement=self.ca,
                                                      **self.get_replacement_for_kwargs)
@@ -247,7 +247,7 @@ class TestGetReplacementFor(unittest.TestCase):
         Check get_replacement_for() realizes the CA
         cannot be removed
         '''
-        with self.assertRaises(ExecutionAborted):
+        with self.assertRaises(caasp_log.ExecutionAborted):
             replacement, roles = get_replacement_for(self.ca,
                                                      replacement=self.minion_3,
                                                      **self.get_replacement_for_kwargs)
