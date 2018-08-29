@@ -18,6 +18,7 @@ KUBELET_HOSTNAME="--hostname-override={{ grains['nodename'] }}"
 # Add your own!
 KUBELET_ARGS="\
     --cadvisor-port=0 \
+    --read-only-port=0 \
     --cgroups-per-qos \
     --cgroup-driver=cgroupfs \
     --cgroup-root=/ \
