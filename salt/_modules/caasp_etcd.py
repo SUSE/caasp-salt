@@ -170,7 +170,7 @@ def get_endpoints(with_id=False, skip_this=False, skip_removed=False, port=ETCD_
         member_endpoint = 'https://{}:{}'.format(name, port)
         if with_id:
             member_endpoint = "{}={}".format(node_id, member_endpoint)
-            etcd_members_lst.append(member_endpoint)
+        etcd_members_lst.append(member_endpoint)
 
     if len(etcd_members_lst) == 0:
         __utils__['caasp_log.error']('no etcd members available!!')
