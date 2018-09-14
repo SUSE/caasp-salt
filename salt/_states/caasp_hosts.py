@@ -45,7 +45,7 @@ def managed(name,
         if diff:
             ret['changes']['diff'] = '\n'.join(diff)
         else:
-            ret['changes'] = False
+            ret['changes'] = {}
         ret['comment'] = '{name} successfully generated'.format(**locals())
     except Exception as e:
         ret['result'] = False
