@@ -24,9 +24,6 @@
 
 # Initialize the `mutex` key as expected by the reboot manager.
 set_max_holders_mutex:
-  pkg.installed:
-    - name: curl
-    - install_recommends: False
   cmd.run:
     - name: curl -L -X PUT {{ curl_args}} {{ reboot_uri }}/mutex?prevExist=false -d value="0"
     - onlyif: curl {{ curl_args}} {{ reboot_uri }}/mutex?prevExist=false | grep -i "key not found"
@@ -34,9 +31,6 @@ set_max_holders_mutex:
 # Initialize the `data` key, which is JSON data with: the maximum number of
 # holders, and a list of current holders.
 set_max_holders_data:
-  pkg.installed:
-    - name: curl
-    - install_recommends: False
   cmd.run:
     - name:
         curl -L -X PUT {{ curl_args}} {{ reboot_uri }}/data?prevExist=false -d value='{ "max":"{{ max_holders }}", "holders":[] }'

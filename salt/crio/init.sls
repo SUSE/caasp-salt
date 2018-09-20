@@ -5,9 +5,6 @@ include:
   {%- endif %}
 
 crio:
-  pkg.installed:
-    - name: cri-o
-    - install_recommends: False
   file.managed:
     - name: /etc/crio/crio.conf
     - source: salt://crio/crio.conf.jinja
@@ -18,7 +15,6 @@ crio:
     - name: crio
     - reload: True
     - watch:
-      - pkg: crio
       - file: /etc/crio/crio.conf
 
 /etc/systemd/system/kubelet.service.d/kubelet.conf:

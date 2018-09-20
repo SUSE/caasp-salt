@@ -3,10 +3,6 @@ include:
   - kubernetes-common.serviceaccount-key
 
 kube-controller-manager:
-  pkg.installed:
-    - pkgs:
-      - kubernetes-master
-    - install_recommends: False
   file.managed:
     - name:       /etc/kubernetes/controller-manager
     - source:     salt://kube-controller-manager/controller-manager.jinja
@@ -31,7 +27,6 @@ kube-controller-mgr-config:
     - source: salt://kubeconfig/kubeconfig.jinja
     - template: jinja
     - require:
-      - pkg: kubernetes-common
       - caasp_retriable: {{ pillar['ssl']['kube_controller_mgr_crt'] }}
     - defaults:
         user: 'default-admin'

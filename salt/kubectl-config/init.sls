@@ -15,7 +15,6 @@ include:
     - source: salt://kubeconfig/kubeconfig.jinja
     - template: jinja
     - require:
-      - pkg: kubernetes-common
       - /etc/pki/kubectl-client-cert.crt
     - defaults:
         user: 'cluster-admin'

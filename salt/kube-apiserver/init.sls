@@ -13,11 +13,6 @@ include:
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
 kube-apiserver:
-  pkg.installed:
-    - pkgs:
-      - iptables
-      - kubernetes-master
-    - install_recommends: False
   caasp_retriable.retry:
     - name: iptables-kube-apiserver
     - target: iptables.append
@@ -61,8 +56,6 @@ kube-apiserver:
     - group: kube
     - dirmode: 755
     - filemode: 644
-    - require:
-      - pkg: kube-apiserver
 
 /etc/kubernetes/audit-policy.yaml:
   file.managed:

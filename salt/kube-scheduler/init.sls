@@ -3,10 +3,6 @@ include:
   - kubernetes-common
 
 kube-scheduler:
-  pkg.installed:
-    - pkgs:
-      - kubernetes-master
-    - install_recommends: False
   file.managed:
     - name: /etc/kubernetes/scheduler
     - source: salt://kube-scheduler/scheduler.jinja
@@ -29,7 +25,6 @@ kube-scheduler-config:
     - source: salt://kubeconfig/kubeconfig.jinja
     - template: jinja
     - require:
-      - pkg: kubernetes-common
       - caasp_retriable: {{ pillar['ssl']['kube_scheduler_crt'] }}
     - defaults:
         user: 'default-admin'
