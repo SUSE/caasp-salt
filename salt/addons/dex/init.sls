@@ -16,12 +16,21 @@ include:
          cn = 'Dex',
          extra_alt_names = alt_master_names(dex_alt_names)) }}
 
-# This file needs to be explicitly copied over *before*
-# kubectL_apply_dir_templates run. Otherwise one of the templates attempts to
-# access the file, and it does not exist yet, breaking the orchestration.
+# The following files need to be explicitly copied over *before*
+# kubectl_apply_dir_templates runs. Otherwise one of the templates attempts to
+# access the files, and it does not exist yet, breaking the orchestration.
 /etc/kubernetes/addons/dex/15-secret.yaml:
   file.managed:
     - source:   "salt://addons/dex/manifests/15-secret.yaml"
+    - user:     root
+    - group:    root
+    - mode:     0600
+    - template: jinja
+    - makedirs: true
+
+/etc/kubernetes/addons/dex/15-configmap.yaml:
+  file.managed:
+    - source:   "salt://addons/dex/manifests/15-configmap.yaml"
     - user:     root
     - group:    root
     - mode:     0600
