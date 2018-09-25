@@ -12,6 +12,13 @@ include:
          cn = grains['nodename'],
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
+{% from '_macros/certs.jinja' import certs with context %}
+{{ certs("kube-apiserver-aggregator",
+         pillar['ssl']['kube_apiserver_aggregator_crt'],
+         pillar['ssl']['kube_apiserver_aggregator_key'],
+         cn = grains['nodename'],
+         o = pillar['certificate_information']['subject_properties']['O']) }}
+
 kube-apiserver:
   pkg.installed:
     - pkgs:
