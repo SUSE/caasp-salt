@@ -36,8 +36,8 @@ KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --cloud-provider={{ pillar['cloud']['provider'] }} \
   {%- if cloud_provider == 'openstack' %}
                --cloud-config=/etc/kubernetes/openstack-config \
-  {%- endif -%}
-{% endif %}
+  {%- endif %}
+{%- endif %}
 {#- An empty audit policy file would cause kubernetes apiserver to not start at all -#}
 {%- if salt.caasp_pillar.get('api:audit:log:enabled', False) and salt.caasp_pillar.get('api:audit:log:policy') %}
                --audit-policy-file=/etc/kubernetes/audit-policy.yaml \
@@ -45,7 +45,7 @@ KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --audit-log-maxage={{ salt.caasp_pillar.get('api:audit:log:maxage') }} \
                --audit-log-maxsize={{ salt.caasp_pillar.get('api:audit:log:maxsize') }} \
                --audit-log-maxbackup={{ salt.caasp_pillar.get('api:audit:log:maxbackup') }} \
-{%- endif -%}
+{%- endif %}
                --tls-cert-file={{ pillar['ssl']['kube_apiserver_crt'] }} \
                --tls-private-key-file={{ pillar['ssl']['kube_apiserver_key'] }} \
                --cert-dir=/etc/pki \
