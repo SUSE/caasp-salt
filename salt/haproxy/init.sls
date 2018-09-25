@@ -91,11 +91,31 @@ haproxy-restart:
 # The admin node is serving the internal API with the pillars. Wait for it to come back
 # before going on with the orchestration/highstates.
 wait-for-haproxy:
-  caasp_http.wait_for_successful_query:
+  caasp_retriable.retry:
+    - target:     caasp_http.wait_for_successful_query
     - name:       https://localhost:444/_health
     - wait_for:   300
     - status:     200
     - verify_ssl: False
+    - opts:
+        http_request_timeout: 30
+    - onchanges:
+      - haproxy-restart
+{% else %}
+# If we are not on the admin node, still wait for haproxy to be back. We don't know what
+# will be executed afterwards; it could require access to the apiserver, so the safest
+# thing to do is to wait for haproxy to be back and serving requests.
+{%- set api_server = 'api.' + pillar['internal_infra_domain'] %}
+wait-for-haproxy:
+  caasp_retriable.retry:
+    - target:     caasp_http.wait_for_successful_query
+    - name:       {{ 'https://' + api_server + ':' + pillar['api']['ssl_port'] }}/healthz
+    - wait_for:   300
+    # retry just in case the API server returns a transient error
+    - retry:
+        attempts: 3
+    - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
+    - status:     200
     - opts:
         http_request_timeout: 30
     - onchanges:
