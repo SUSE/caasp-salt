@@ -2,9 +2,11 @@ from __future__ import absolute_import
 
 import unittest
 
-import caasp_log
+import caasp_nodes
 from caasp_nodes import (get_expr_affected_by, get_from_args_or_with_expr,
                          get_replacement_for, get_with_prio)
+from _utils import caasp_log
+from . import Utils
 
 try:
     from mock import patch, MagicMock
@@ -12,6 +14,8 @@ except ImportError:
     _mocking_lib_available = False
 else:
     _mocking_lib_available = True
+
+caasp_nodes.__utils__ = Utils()
 
 
 class TestGetFromArgsOrWithExpr(unittest.TestCase):

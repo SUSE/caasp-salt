@@ -35,8 +35,8 @@ def stop_container_and_wait(name, namespace, timeout=60, **kwargs):
 
     if not stopped:
         __utils__['caasp_log.debug']('CaaS: {namespace}.{name} container was not found running'.format(
-              namespace=namespace,
-              name=name))
+            namespace=namespace,
+            name=name))
 
     return wait_for_container(name, namespace, timeout, **kwargs)
 

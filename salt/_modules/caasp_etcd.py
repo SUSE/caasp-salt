@@ -75,7 +75,7 @@ def get_cluster_size(**kwargs):
             member_count = _optimal_etcd_number(increased_member_count)
 
             __utils__['caasp_log.warn']("etcd member count too low (%d), increasing to %d",
-                           num_masters, increased_member_count)
+                                        num_masters, increased_member_count)
 
             # TODO: go deeper and look for candidates in nodes with
             #       no role (as get_replacement_for_member() does)
@@ -86,7 +86,7 @@ def get_cluster_size(**kwargs):
 
         if member_count < MIN_RECOMMENDED_MEMBER_COUNT:
             __utils__['caasp_log.warn']("etcd member count too low (%d), consider increasing "
-                           "to %d", member_count, MIN_RECOMMENDED_MEMBER_COUNT)
+                                        "to %d", member_count, MIN_RECOMMENDED_MEMBER_COUNT)
 
     member_count = max(1, member_count)
     __utils__['caasp_log.debug']("using member count = %d", member_count)
@@ -124,7 +124,7 @@ def get_additional_etcd_members(num_wanted=None, **kwargs):
         return []
 
     __utils__['caasp_log.debug']('get_additional_etcd_members: curr:%d wanted:%d -> %d missing',
-                    num_current_etcd_members, num_wanted_etcd_members, num_additional_etcd_members)
+                                 num_current_etcd_members, num_wanted_etcd_members, num_additional_etcd_members)
 
     # Get a list of `num_additional_etcd_members` nodes that could be used
     # for running etcd. A valid node is a node that:
@@ -144,7 +144,7 @@ def get_additional_etcd_members(num_wanted=None, **kwargs):
 
     if len(new_etcd_members) < num_additional_etcd_members:
         __utils__['caasp_log.error']('get_additional_etcd_members: cannot satisfy the %s members missing',
-                        num_additional_etcd_members)
+                                     num_additional_etcd_members)
 
     return new_etcd_members
 

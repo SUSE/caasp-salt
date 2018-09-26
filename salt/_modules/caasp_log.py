@@ -3,6 +3,8 @@
 #       will break python3. This module only exists so it can be called from
 #       salt-states directly and will forward directly to the utils-module.
 #
+
+
 def abort(msg, *args, **kwargs):
     __utils__['caasp_log.abort'](msg, *args, **kwargs)
 

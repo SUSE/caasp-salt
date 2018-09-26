@@ -201,7 +201,7 @@ def get_with_prio(num, description, prio_rules, **kwargs):
     remaining = num
     for expr in prio_rules:
         __utils__['caasp_log.debug']('trying to find candidates for "%s" with "%s"',
-                        description, expr)
+                                     description, expr)
         # get all the nodes matching the priority expression,
         # but filtering out all the nodes we already have
         candidates = get_with_expr(expr,
@@ -215,7 +215,7 @@ def get_with_prio(num, description, prio_rules, **kwargs):
             new_nodes = new_nodes + new_ids
             remaining -= len(new_ids)
             __utils__['caasp_log.debug']('... %d new candidates (%s) for %s: %d remaining',
-                            len(ids), str(ids), description, remaining, )
+                                         len(ids), str(ids), description, remaining, )
         else:
             __utils__['caasp_log.debug']('... no new candidates found with "%s"', expr)
 
@@ -223,7 +223,7 @@ def get_with_prio(num, description, prio_rules, **kwargs):
             break
 
     __utils__['caasp_log.info']('we were looking for %d candidates for %s and %d found',
-                   num, description, len(new_nodes))
+                                num, description, len(new_nodes))
     return new_nodes[:num]
 
 
@@ -268,13 +268,13 @@ def get_replacement_for(target, replacement='', **kwargs):
         'forbidden', kwargs, 'P@roles:(admin|ca)')
     if target in forbidden:
         __utils__['caasp_log.abort']('%s cannot be removed: it has a "ca" or "admin" role',
-                        target)
+                                     target)
     elif replacement_provided and replacement in forbidden:
         __utils__['caasp_log.abort']('%s cannot be replaced by %s: the replacement has a "ca" or "admin" role',
-                        target, replacement)
+                                     target, replacement)
     elif replacement_provided and replacement in excluded:
         __utils__['caasp_log.abort']('%s cannot be replaced by %s: the replacement is in the list of nodes excluded',
-                        target, replacement)
+                                     target, replacement)
 
     masters = get_from_args_or_with_expr(
         'masters', kwargs, 'G@roles:kube-master')
@@ -308,7 +308,7 @@ def get_replacement_for(target, replacement='', **kwargs):
 
         if etcd_replacement:
             __utils__['caasp_log.debug']('setting %s as the replacement for the etcd member %s',
-                            etcd_replacement, target)
+                                         etcd_replacement, target)
             replacement = etcd_replacement
             replacement_roles.append('etcd')
 
@@ -316,10 +316,10 @@ def get_replacement_for(target, replacement='', **kwargs):
             if len(etcd_members) <= _MIN_ETCD_MEMBERS_AFTER_REMOVAL:
                 # we need at least one etcd server
                 __utils__['caasp_log.abort']('cannot remove etcd member %s: too few etcd members, and no replacement found or provided',
-                                target)
+                                             target)
             else:
                 __utils__['caasp_log.warn']('number of etcd members will be reduced to %d, as no replacement for etcd server in %s has been found (or provided)',
-                               len(etcd_members), target)
+                                            len(etcd_members), target)
 
     #
     # replacement for k8s masters
@@ -363,22 +363,22 @@ def get_replacement_for(target, replacement='', **kwargs):
             assert len(replacement) > 0
             if replacement == master_replacement:
                 __utils__['caasp_log.debug']('setting %s as replacement for the kubernetes master %s',
-                                replacement, target)
+                                             replacement, target)
                 replacement_roles.append('kube-master')
             else:
                 __utils__['caasp_log.warn']('the k8s master replacement (%s) is not the same as the current replacement (%s) ' +
-                               '(it will run %s) so we cannot use it for running the k8s master too',
-                               master_replacement, replacement, ','.join(replacement_roles))
+                                            '(it will run %s) so we cannot use it for running the k8s master too',
+                                            master_replacement, replacement, ','.join(replacement_roles))
 
         if 'kube-master' not in replacement_roles:
             # stability check: check if it is ok not to run the k8s master in the replacement
             if len(masters) <= _MIN_MASTERS_AFTER_REMOVAL:
                 # we need at least one master (for runing the k8s API at all times)
                 __utils__['caasp_log.abort']('cannot remove k8s master %s: too few k8s masters, and no replacement found or provided',
-                                target)
+                                             target)
             else:
                 __utils__['caasp_log.warn']('number of k8s masters will be reduced to %d, as no replacement for the k8s master in %s has been found (or provided)',
-                               len(masters), target)
+                                            len(masters), target)
 
     #
     # replacement for k8s minions
@@ -418,22 +418,22 @@ def get_replacement_for(target, replacement='', **kwargs):
             assert len(replacement) > 0
             if replacement == minion_replacement:
                 __utils__['caasp_log.debug']('setting %s as replacement for the k8s minion %s',
-                                replacement, target)
+                                             replacement, target)
                 replacement_roles.append('kube-minion')
             else:
                 __utils__['caasp_log.warn']('the k8s minion replacement (%s) is not the same as the current replacement (%s) ' +
-                               '(it will run %s) so we cannot use it for running the k8s minion too',
-                               minion_replacement, replacement, ','.join(replacement_roles))
+                                            '(it will run %s) so we cannot use it for running the k8s minion too',
+                                            minion_replacement, replacement, ','.join(replacement_roles))
 
         if 'kube-minion' not in replacement_roles:
             # stability check: check if it is ok not to run the k8s minion in the replacement
             if len(minions) <= _MIN_MINIONS_AFTER_REMOVAL:
                 # we need at least one minion (for running dex, kube-dns, etc..)
                 __utils__['caasp_log.abort']('cannot remove k8s minion %s: too few k8s minions, and no replacement found or provided',
-                                target)
+                                             target)
             else:
                 __utils__['caasp_log.warn']('number of k8s minions will be reduced to %d, as no replacement for the k8s minion in %s has been found (or provided)',
-                               len(masters), target)
+                                            len(masters), target)
 
     # other consistency checks...
     if replacement:

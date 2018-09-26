@@ -4,6 +4,7 @@ import unittest
 
 import caasp_pillar
 from caasp_pillar import get as get_pillar
+from . import Utils
 
 try:
     from mock import patch, MagicMock
@@ -14,6 +15,7 @@ else:
 
 
 caasp_pillar.__salt__ = {}
+caasp_pillar.__utils__ = Utils()
 
 
 class TestGetPillar(unittest.TestCase):

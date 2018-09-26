@@ -4,6 +4,7 @@ import unittest
 
 import caasp_etcd
 from caasp_etcd import ETCD_CLIENT_PORT, get_endpoints
+from . import Utils
 
 try:
     from mock import patch, MagicMock
@@ -14,6 +15,7 @@ else:
 
 
 caasp_etcd.__salt__ = {}
+caasp_etcd.__utils__ = Utils()
 
 
 class TestGetEndpoints(unittest.TestCase):
