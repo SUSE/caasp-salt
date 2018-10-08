@@ -40,8 +40,8 @@ ssl:
   kube_apiserver_key: '/etc/pki/kube-apiserver.key'
   kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
 
-  kube_apiserver_aggregator_key: '/etc/pki/kube-apiserver-aggregator.key'
-  kube_apiserver_aggregator_crt: '/etc/pki/kube-apiserver-aggregator.crt'
+  kube_apiserver_proxy_client_key: '/etc/pki/kube-apiserver-proxy-client.key'
+  kube_apiserver_proxy_client_crt: '/etc/pki/kube-apiserver-proxy-client.crt'
 
   kube_apiserver_proxy_key: '/etc/pki/private/kube-apiserver-proxy.key'
   kube_apiserver_proxy_crt: '/etc/pki/kube-apiserver-proxy.crt'
