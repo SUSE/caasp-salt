@@ -6,7 +6,9 @@ base:
     - match: grain_pcre
     - ca-cert
     - cri
+    {%- if not salt.caasp_registry.use_registry_images() %}
     - container-feeder
+    {%- endif %}
     {% if not salt.caasp_nodes.is_admin_node() %}
       # the admin node uses docker as CRI, requiring its state
       # will cause the docker daemon to be restarted, which will

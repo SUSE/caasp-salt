@@ -20,7 +20,7 @@ spec:
       operator: "Exists"
   containers:
     - name: haproxy
-      image: sles12/haproxy:1.6.0
+      image: {{ salt.caasp_registry.base_image_url() }}/haproxy:1.6.0
       resources:
         requests:
           memory: 128Mi
