@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import platform
 
 import salt.grains.core
