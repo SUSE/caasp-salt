@@ -277,6 +277,7 @@ all-masters-post-start-services:
   salt.state:
     - tgt: '{{ is_updateable_master_tgt }}'
     - tgt_type: compound
+    - expect_minions: false
     - batch: 3
     - sls:
       - migrations.2-3.cni.post-start-services
