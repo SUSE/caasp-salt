@@ -1,8 +1,16 @@
 # Remove our /etc/hosts entries, so that Systemd/Wicked hostname
 # logic doesn't pick up out /etc/hosts entry names.
 /etc/hosts:
-  file.blockreplace:
-    # If markers are changed, also update etc-hosts/init.sls
-    - marker_start: "#-- start Salt-CaaSP managed hosts - DO NOT MODIFY --"
-    - marker_end:   "#-- end Salt-CaaSP managed hosts --"
-    - content:      ""
+  file.managed:
+    - contents: |
+        127.0.0.1	localhost
+
+        # special IPv6 addresses
+        ::1             localhost ipv6-localhost ipv6-loopback
+
+        fe00::0         ipv6-localnet
+
+        ff00::0         ipv6-mcastprefix
+        ff02::1         ipv6-allnodes
+        ff02::2         ipv6-allrouters
+        ff02::3         ipv6-allhosts
