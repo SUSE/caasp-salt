@@ -142,10 +142,10 @@ def run(name,
 
             getpip:
               caasp_cmd.run:
-                - name: /usr/bin/python /usr/local/sbin/get-pip.py
+                - name: /usr/bin/python3 /usr/local/sbin/get-pip.py
                 - unless: which pip
                 - require:
-                  - pkg: python
+                  - pkg: python3
                   - file: /usr/local/sbin/get-pip.py
                 - reload_modules: True
 

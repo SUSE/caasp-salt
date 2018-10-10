@@ -1,58 +1,25 @@
-# note: this module can be directly imported from other
-#       Salt modules. Do not do the same for other modules:
-#       use __salt__['caasp_module.function'](args)
+# note: this module is a simple proxy to the '_utils/caasp_log.py' Utility
+#       module. *All* modules must use the _utils/caasp_log.py' module or it
+#       will break python3. This module only exists so it can be called from
+#       salt-states directly and will forward directly to the utils-module.
 #
-from __future__ import absolute_import
-
-import logging
-
-from salt.exceptions import SaltException
-
-log = logging.getLogger('CaaS')
-
-
-_CAAS_PREFIX = '[CaaS]: '
-
-
-def __virtual__():
-    return "caasp_log"
-
-
-class ExecutionAborted(SaltException):
-    pass
 
 
 def abort(msg, *args, **kwargs):
-    '''
-    Abort the Salt execution with an error
-    '''
-    error(msg, *args, **kwargs)
-    raise ExecutionAborted(msg % args)
+    __utils__['caasp_log.abort'](msg, *args, **kwargs)
 
 
 def error(msg, *args, **kwargs):
-    '''
-    Log a error message
-    '''
-    log.error(_CAAS_PREFIX + msg % args, **kwargs)
+    __utils__['caasp_log.error'](msg, *args, **kwargs)
 
 
 def warn(msg, *args, **kwargs):
-    '''
-    Log a warning message
-    '''
-    log.warn(_CAAS_PREFIX + msg % args, **kwargs)
+    __utils__['caasp_log.warn'](msg, *args, **kwargs)
 
 
 def info(msg, *args, **kwargs):
-    '''
-    Log an info message
-    '''
-    log.info(_CAAS_PREFIX + msg % args, **kwargs)
+    __utils__['caasp_log.info'](msg, *args, **kwargs)
 
 
 def debug(msg, *args, **kwargs):
-    '''
-    Log a debug message
-    '''
-    log.debug(_CAAS_PREFIX + msg % args, **kwargs)
+    __utils__['caasp_log.debug'](msg, *args, **kwargs)

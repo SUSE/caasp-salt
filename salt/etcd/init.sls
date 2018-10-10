@@ -8,9 +8,6 @@ include:
 # add the member to the cluster _before_ `etcd` is started
 # then `etcd` will have to be started with the `existing` flag
 add-etcd-to-cluster:
-  pkg.installed:
-    - name: etcdctl
-    - install_recommends: False
   caasp_etcd.member_add:
     - retry:
         interval: 4
@@ -35,12 +32,6 @@ etcd:
       - etcd
     - require:
       - group: etcd
-  pkg.installed:
-    - pkgs:
-      - iptables
-      - etcdctl
-      - etcd
-    - install_recommends: False
   caasp_retriable.retry:
     - name: iptables-etcd
     - target: iptables.append
@@ -65,7 +56,6 @@ etcd:
     - enable: True
     - require:
       - sls: ca-cert
-      - pkg: etcd
       - caasp_retriable: iptables-etcd
     - watch:
       - {{ pillar['ssl']['crt_file'] }}
@@ -88,7 +78,6 @@ etcd:
     - group: etcd
     - mode: 644
     - require:
-      - pkg: etcd
       - user: etcd
       - group: etcd
 
@@ -101,6 +90,5 @@ etcd:
     - group: etcd
     - mode: 644
     - require:
-      - pkg: etcd
       - user: etcd
       - group: etcd

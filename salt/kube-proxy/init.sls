@@ -12,7 +12,6 @@ include:
     - source: salt://kubeconfig/kubeconfig.jinja
     - template: jinja
     - require:
-      - pkg: kubernetes-common
       - caasp_retriable: {{ pillar['ssl']['kube_proxy_crt'] }}
     - defaults:
         user: 'default-admin'
@@ -20,12 +19,6 @@ include:
         client_key: {{ pillar['ssl']['kube_proxy_key'] }}
 
 kube-proxy:
-  pkg.installed:
-    - pkgs:
-      - iptables
-      - conntrack-tools
-      - kubernetes-node
-    - install_recommends: False
   file.managed:
     - name: /etc/kubernetes/proxy
     - source: salt://kube-proxy/proxy.jinja

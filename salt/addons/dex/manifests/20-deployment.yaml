@@ -51,7 +51,7 @@ spec:
               topologyKey: "kubernetes.io/hostname"
 
       containers:
-      - image: sles12/caasp-dex:2.7.1
+      - image: {{ salt.caasp_registry.base_image_url() }}/caasp-dex:2.7.1
         name: dex
         command: ["/usr/bin/caasp-dex", "serve", "/etc/dex/cfg/config.yaml"]
 

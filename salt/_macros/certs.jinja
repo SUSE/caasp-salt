@@ -65,7 +65,7 @@
 {{ crt }}:
   caasp_retriable.retry:
     - target: x509.certificate_managed
-    - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()[0] }}
+    - ca_server: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').keys()|first }}
     - signing_policy: minion
     - public_key: {{ key }}
   {%- if cn %}

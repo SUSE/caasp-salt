@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 import subprocess
 
-# note: do not import caasp modules other than caasp_log
-from caasp_log import debug, error, warn
 
 # minimum number of etcd masters we recommend
 MIN_RECOMMENDED_MEMBER_COUNT = 3
@@ -76,8 +74,8 @@ def get_cluster_size(**kwargs):
             # (otherwise we could have some leader election problems)
             member_count = _optimal_etcd_number(increased_member_count)
 
-            warn("etcd member count too low (%d), increasing to %d",
-                 num_masters, increased_member_count)
+            __utils__['caasp_log.warn']("etcd member count too low (%d), increasing to %d",
+                                        num_masters, increased_member_count)
 
             # TODO: go deeper and look for candidates in nodes with
             #       no role (as get_replacement_for_member() does)
@@ -87,11 +85,11 @@ def get_cluster_size(**kwargs):
         member_count = int(member_count)
 
         if member_count < MIN_RECOMMENDED_MEMBER_COUNT:
-            warn("etcd member count too low (%d), consider increasing "
-                 "to %d", member_count, MIN_RECOMMENDED_MEMBER_COUNT)
+            __utils__['caasp_log.warn']("etcd member count too low (%d), consider increasing "
+                                        "to %d", member_count, MIN_RECOMMENDED_MEMBER_COUNT)
 
     member_count = max(1, member_count)
-    debug("using member count = %d", member_count)
+    __utils__['caasp_log.debug']("using member count = %d", member_count)
     return member_count
 
 
@@ -122,11 +120,11 @@ def get_additional_etcd_members(num_wanted=None, **kwargs):
     num_additional_etcd_members = num_wanted_etcd_members - num_current_etcd_members
 
     if num_additional_etcd_members <= 0:
-        debug('get_additional_etcd_members: we dont need more etcd members')
+        __utils__['caasp_log.debug']('get_additional_etcd_members: we dont need more etcd members')
         return []
 
-    debug('get_additional_etcd_members: curr:%d wanted:%d -> %d missing',
-          num_current_etcd_members, num_wanted_etcd_members, num_additional_etcd_members)
+    __utils__['caasp_log.debug']('get_additional_etcd_members: curr:%d wanted:%d -> %d missing',
+                                 num_current_etcd_members, num_wanted_etcd_members, num_additional_etcd_members)
 
     # Get a list of `num_additional_etcd_members` nodes that could be used
     # for running etcd. A valid node is a node that:
@@ -145,8 +143,8 @@ def get_additional_etcd_members(num_wanted=None, **kwargs):
         excluded=current_etcd_members + excluded)
 
     if len(new_etcd_members) < num_additional_etcd_members:
-        error('get_additional_etcd_members: cannot satisfy the %s members missing',
-              num_additional_etcd_members)
+        __utils__['caasp_log.error']('get_additional_etcd_members: cannot satisfy the %s members missing',
+                                     num_additional_etcd_members)
 
     return new_etcd_members
 
@@ -175,7 +173,7 @@ def get_endpoints(with_id=False, skip_this=False, skip_removed=False, port=ETCD_
         etcd_members_lst.append(member_endpoint)
 
     if len(etcd_members_lst) == 0:
-        error('no etcd members available!!')
+        __utils__['caasp_log.error']('no etcd members available!!')
         raise NoEtcdServersException()
 
     etcd_members_lst.sort()
@@ -227,7 +225,7 @@ def get_member_id(nodename=None):
 
     target_nodename = nodename or __salt__['caasp_net.get_nodename']()
 
-    debug("getting etcd member ID with: %s", command)
+    __utils__['caasp_log.debug']("getting etcd member ID with: %s", command)
     members_output = ''
     try:
         target_url = 'https://{}:{}'.format(target_nodename, ETCD_CLIENT_PORT)
@@ -240,7 +238,7 @@ def get_member_id(nodename=None):
                     return member_line.split(',')[0]
 
     except Exception as e:
-        error('cannot get member ID for "%s": %s', e, target_nodename)
-        error('output: %s', members_output)
+        __utils__['caasp_log.error']('cannot get member ID for "%s": %s', e, target_nodename)
+        __utils__['caasp_log.error']('output: %s', members_output)
 
     return ''

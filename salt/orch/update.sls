@@ -201,7 +201,9 @@ early-services-setup:
   salt.state:
     - tgt: '{{ master_id }}'
     - sls:
+      {%- if not salt.caasp_registry.use_registry_images() %}
       - container-feeder.stop
+      {%- endif %}
       - kube-apiserver.stop
       - kube-controller-manager.stop
       - kube-scheduler.stop
@@ -368,7 +370,9 @@ all-workers-3.0-pre-clean-shutdown:
   salt.state:
     - tgt: '{{ worker_id }}'
     - sls:
+      {%- if not salt.caasp_registry.use_registry_images() %}
       - container-feeder.stop
+      {%- endif %}
       - kube-proxy.stop
       - cri.stop
       - etcd.stop

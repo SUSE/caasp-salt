@@ -19,15 +19,6 @@ container-feeder:
   service.running:
     - enable: True
     - require:
-      {% if not salt.caasp_nodes.is_admin_node() %}
-      # the admin node uses docker as CRI, requiring its state
-      # will cause the docker daemon to be restarted, which will
-      # lead to the premature termination of the orchestration.
-      # Hence let's not require docker on the admin node.
-      # This is not a big deal because the admin node has already
-      # working since the boot time.
-      - pkg: {{ pillar['cri'][salt.caasp_cri.cri_name()]['package'] }}
-      {% endif %}
       - file: /etc/containers/storage.conf
       - file: /etc/sysconfig/container-feeder
       - file: /etc/container-feeder.json

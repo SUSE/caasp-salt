@@ -1,7 +1,3 @@
-coreutils:
-  pkg:
-    - installed
-
 unmount-swaps:
   cmd.run:
     - name: /sbin/swapoff -a

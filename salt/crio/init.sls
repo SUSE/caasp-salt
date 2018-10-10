@@ -1,11 +1,10 @@
 include:
   - kubelet
+  {%- if not salt.caasp_registry.use_registry_images() %}
   - container-feeder
+  {%- endif %}
 
 crio:
-  pkg.installed:
-    - name: cri-o
-    - install_recommends: False
   file.managed:
     - name: /etc/crio/crio.conf
     - source: salt://crio/crio.conf.jinja
@@ -16,7 +15,6 @@ crio:
     - name: crio
     - reload: True
     - watch:
-      - pkg: crio
       - file: /etc/crio/crio.conf
 
 /etc/systemd/system/kubelet.service.d/kubelet.conf:
@@ -25,8 +23,10 @@ crio:
     - makedirs: True
     - require_in:
       - kubelet
+    {%- if not salt.caasp_registry.use_registry_images() %}
     - require:
       - service: container-feeder
+    {%- endif %}
   module.run:
     - name: service.systemctl_reload
     - onchanges:

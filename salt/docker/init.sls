@@ -60,9 +60,6 @@
     - makedirs: True
 
 docker:
-  pkg.installed:
-    - name: {{ salt.caasp_pillar.get('docker:pkg', 'docker') }}
-    - install_recommends: False
   file.replace:
     # remove any DOCKER_OPTS in the sysconfig file, as we will be
     # using the "daemon.json". In fact, we don't want any DOCKER_OPS
@@ -73,12 +70,9 @@ docker:
     - repl: 'DOCKER_OPTS=""'
     - flags: ['IGNORECASE', 'MULTILINE']
     - append_if_not_found: True
-    - require:
-      - pkg: docker
   service.running:
     - enable: True
     - watch:
-      - pkg: docker
       - file: /etc/sysconfig/docker
 
 docker-proxy-config:

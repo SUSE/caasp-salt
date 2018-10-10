@@ -7,7 +7,7 @@
 # k8s cluster
 ###############
 
-{%- set k8s_nodes = salt.caasp_nodes.get_with_expr('P@roles:(kube-master|kube-minion)', booted=True) %}
+{%- set k8s_nodes = salt.caasp_nodes.get_with_expr('P@roles:(kube-master|kube-minion)', booted=True)|list %}
 {%- if forced or target in k8s_nodes %}
 
 include:
@@ -24,7 +24,7 @@ include:
 # etcd node
 ###############
 
-{%- set etcd_members = salt.caasp_nodes.get_with_expr('G@roles:etcd', booted=True) %}
+{%- set etcd_members = salt.caasp_nodes.get_with_expr('G@roles:etcd', booted=True)|list %}
 {%- if forced or target in etcd_members %}
 
 etcd-remove-member:

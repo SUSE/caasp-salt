@@ -1,6 +1,8 @@
 include:
   - crypto
 
+{%- set ca_crt = salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').values()|first %}
+
 {{ pillar['ssl']['ca_dir'] }}:
   file.directory:
     - makedirs: True
@@ -10,7 +12,7 @@ include:
 
 {{ pillar['ssl']['ca_file'] }}:
   x509.pem_managed:
-    - text: {{ salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').values()[0]['/etc/pki/ca.crt']|replace('\n', '') }}
+    - text: {{ ca_crt['/etc/pki/ca.crt']|replace('\n', '') }}
     - user: root
     - group: root
     - mode: 644

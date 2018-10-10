@@ -31,7 +31,6 @@ kubeconfig:
     - source: salt://kubeconfig/kubeconfig.jinja
     - template: jinja
     - require:
-      - pkg: kubernetes-common
       - caasp_retriable: {{ pillar['ssl']['kubelet_crt'] }}
     - defaults:
         user: 'default-admin'
@@ -62,12 +61,6 @@ kubelet-config:
       - sls:    kubernetes-common
 
 kubelet:
-  pkg.installed:
-    - pkgs:
-      - iptables
-      - kubernetes-client
-      - kubernetes-node
-    - install_recommends: False
   file.managed:
     - name:     /etc/kubernetes/kubelet
     - source:   salt://kubelet/kubelet.jinja

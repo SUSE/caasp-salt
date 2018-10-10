@@ -6,6 +6,7 @@ import random
 import unittest
 
 from salt.utils.odict import OrderedDict
+from . import Utils
 
 try:
     from mock import patch, MagicMock
@@ -13,7 +14,6 @@ except ImportError:
     _mocking_lib_available = False
 else:
     _mocking_lib_available = True
-
 
 log = logging.getLogger()
 log.level = logging.DEBUG
@@ -53,6 +53,7 @@ class TestEtcHosts(unittest.TestCase):
     def _generate(self, etc_hosts_filename, caasp_etc_hosts_filename, role='kube-master'):
         import caasp_hosts
         caasp_hosts.__salt__ = dict()
+        caasp_hosts.__utils__ = Utils()
 
         ips = {
             'admin': '10.10.10.1',
@@ -95,7 +96,7 @@ class TestEtcHosts(unittest.TestCase):
             'caasp_pillar.get': mock_get_pillar,
             'caasp_net.get_primary_ip': mock_get_primary_ip,
             'caasp_net.get_nodename': mock_get_nodename,
-            'caasp_filters.is_ip': MagicMock(return_value=False)
+            'caasp_filters.is_ip': MagicMock(return_value=False),
         }
 
         with patch.dict(caasp_hosts.__salt__, salt_mocks):
@@ -148,6 +149,7 @@ ff02::3         ipv6-allhosts
 
         from tempfile import NamedTemporaryFile as ntf
         import caasp_hosts
+        caasp_hosts.__utils__ = Utils()
 
         with ntf(mode='w+', prefix=TEMP_PREFIX) as etc_hosts:
             try:
