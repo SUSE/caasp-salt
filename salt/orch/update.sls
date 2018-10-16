@@ -119,6 +119,7 @@ pre-orchestration-migration:
   salt.state:
     - tgt: '{{ is_updateable_node_tgt }}'
     - tgt_type: compound
+    - expect_minions: false
     - batch: 3
     - sls:
       - migrations.2-3.cni.pre-orchestration
