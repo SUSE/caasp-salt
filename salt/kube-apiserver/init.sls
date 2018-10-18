@@ -12,6 +12,13 @@ include:
          cn = grains['nodename'],
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
+{% from '_macros/certs.jinja' import certs with context %}
+{{ certs("kube-apiserver-proxy-client",
+         pillar['ssl']['kube_apiserver_proxy_client_crt'],
+         pillar['ssl']['kube_apiserver_proxy_client_key'],
+         cn = grains['nodename'],
+         o = pillar['certificate_information']['subject_properties']['O']) }}
+
 kube-apiserver:
   caasp_retriable.retry:
     - name: iptables-kube-apiserver
