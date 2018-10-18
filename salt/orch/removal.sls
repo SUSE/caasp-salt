@@ -40,7 +40,26 @@
                                                                               etcd_members=etcd_members,
                                                                               excluded=nodes_down) %}
 
-# Ensure we mark all nodes with the "as node is being removed" grain.
+# Detect if we need to shrink the etcd cluster in order to keep etcd's
+# golden ratio: this happens on corner cases (e.g. a 1+2 deployment
+# that gets removed a worker should have one etcd instance, not two). This
+# happens only if there are no replacements for the `etcd` role.
+{%- if target not in etcd_members or (replacement and 'etcd' in replacement_roles) %}
+{%- set surplus_etcd_members = [] %}
+{%- else %}
+# FIXME: use masters|difference([target]) filter -- included in 2017.7.0 version
+{%- set future_masters = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master and not ' + target, fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set future_minions = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion and not ' + target, fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set num_etcd_members = salt.caasp_etcd.get_cluster_size(masters=future_masters,
+                                                            minions=future_minions) %}
+{%- set surplus_etcd_members = salt.caasp_etcd.get_surplus_etcd_members(num_wanted=num_etcd_members,
+                                                                        etcd_members=etcd_members,
+                                                                        targets=[target],
+                                                                        excluded=nodes_down) %}
+{%- endif %}
+{%- set is_etcd_cluster_shrinking = surplus_etcd_members|length > 0 %}
+
+# Ensure we mark all nodes with the "a node is being removed" grain.
 # This will ensure the update-etc-hosts orchestration is not run.
 set-cluster-wide-removal-grain:
   salt.function:
@@ -51,8 +70,35 @@ set-cluster-wide-removal-grain:
       - removal_in_progress
       - true
 
-# make sure we have a solid ground before starting the removal
+update-modules:
+  salt.function:
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - names:
+      - saltutil.refresh_pillar
+      - saltutil.refresh_grains
+      - mine.update
+    - require:
+      - set-cluster-wide-removal-grain
+
+sync-all:
+  salt.function:
+    - tgt: '{{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - name: saltutil.sync_all
+    - kwarg:
+        refresh: True
+    - require:
+      - update-modules
+
+# Make sure we have a solid ground before starting the removal
 # (ie, expired certs produce really funny errors)
+# We could highstate everything, but that would
+# 1) take a significant amount of time
+# 2) restart many services
+# instead of that, we will
+# * update some things, and
+# * do some checks before removing anything
 update-config:
   salt.state:
     - tgt: 'P@roles:(kube-master|kube-minion|etcd) and {{ all_responsive_nodes_tgt }}'
@@ -62,7 +108,55 @@ update-config:
       - ca-cert
       - cert
     - require:
-      - set-cluster-wide-removal-grain
+      - sync-all
+
+pre-removal-checks:
+  salt.state:
+    - tgt: '{{ super_master_tgt }}'
+    - sls:
+      - etcd.remove-pre-orchestration
+      - kube-apiserver.remove-pre-orchestration
+    - pillar:
+        target: {{ target }}
+    - require:
+      - update-config
+
+{% if is_etcd_cluster_shrinking %}
+# Unregister etcd before stopping the service. Very important
+# to make sure `etcd` knows what's coming (specially in corner
+# cases)
+{% for member in surplus_etcd_members %}
+etcd-remove-member-{{ member }}:
+  salt.state:
+    - tgt: '{{ super_master_tgt }}'
+    - pillar:
+        target: {{ member }}
+    - sls:
+      - etcd.remove
+    - require:
+      - pre-removal-checks
+
+etcd-cleanup-member-{{ member }}:
+  salt.state:
+    - tgt: '{{ member }}'
+    - sls:
+        - cleanup.etcd
+    - require:
+      - etcd-remove-member-{{ member }}
+{% endfor %}
+
+enforce-etcd-consistency:
+  salt.state:
+    - tgt: 'P@roles:etcd and {{ all_responsive_nodes_tgt }}'
+    - tgt_type: compound
+    - batch: 1
+    - sls:
+        - etcd
+    - require:
+{% for member in surplus_etcd_members %}
+      - etcd-cleanup-member-{{ member }}
+{% endfor %}
+{% endif %}
 
 {##############################
  # set grains
@@ -76,7 +170,10 @@ assign-removal-grain:
       - node_removal_in_progress
       - true
     - require:
-      - update-config
+      - pre-removal-checks
+{% if is_etcd_cluster_shrinking %}
+      - enforce-etcd-consistency
+{% endif %}
 
 {%- if replacement %}
 
@@ -88,7 +185,7 @@ assign-addition-grain:
       - node_addition_in_progress
       - true
     - require:
-      - update-config
+      - pre-removal-checks
 
   {#- and then we can assign these (new) roles to the replacement #}
   {% for role in replacement_roles %}
@@ -100,49 +197,23 @@ assign-{{ role }}-role-to-replacement:
       - roles
       - {{ role }}
     - require:
-      - update-config
+      - pre-removal-checks
       - assign-addition-grain
   {% endfor %}
-
-{%- endif %} {# replacement #}
-
-sync-all:
-  salt.function:
-    - tgt: '{{ all_responsive_nodes_tgt }}'
-    - tgt_type: compound
-    - names:
-      - saltutil.refresh_pillar
-      - saltutil.refresh_grains
-      - mine.update
-    - require:
-      - update-config
-      - assign-removal-grain
-  {%- for role in replacement_roles %}
-      - assign-{{ role }}-role-to-replacement
-  {%- endfor %}
-
-update-modules:
-  salt.function:
-    - tgt: '{{ all_responsive_nodes_tgt }}'
-    - tgt_type: compound
-    - name: saltutil.sync_all
-    - kwarg:
-        refresh: True
-    - require:
-      - sync-all
 
 {##############################
  # replacement setup
  #############################}
-
-{%- if replacement %}
 
 highstate-replacement:
   salt.state:
     - tgt: '{{ replacement }}'
     - highstate: True
     - require:
-      - update-modules
+      - assign-addition-grain
+  {%- for role in replacement_roles %}
+      - assign-{{ role }}-role-to-replacement
+  {%- endfor %}
 
 kubelet-setup:
   salt.state:
@@ -182,6 +253,35 @@ remove-addition-grain:
  # removal & cleanups
  #############################}
 
+{%- if target in etcd_members %}
+
+# Unregister etcd before stopping the service. Very important
+# to make sure `etcd` knows what's coming (specially in corner
+# cases)
+
+etcd-removal:
+  salt.state:
+    - tgt: '{{ super_master_tgt }}'
+    - pillar:
+        target: {{ target }}
+    - sls:
+      - etcd.remove
+    - require:
+      - update-modules
+  {%- if replacement %}
+      - remove-addition-grain
+  {%- endif %}
+
+etcd-cleanup:
+  salt.state:
+    - tgt: {{ target }}
+    - sls:
+        - cleanup.etcd
+    - require:
+        - etcd-removal
+
+{%- endif %}
+
 # the replacement should be ready at this point:
 # we can remove the old node running in {{ target }}
 
@@ -191,7 +291,10 @@ early-stop-services-in-target:
     - sls:
       - kubelet.stop
     - require:
-      - update-modules
+      - assign-removal-grain
+  {%- if target in etcd_members %}
+      - etcd-cleanup
+  {%- endif %}
   {%- if replacement %}
       - remove-addition-grain
   {%- endif %}
@@ -257,7 +360,7 @@ remove-from-cluster-in-super-master:
     - pillar:
         target: {{ target }}
     - sls:
-      - cleanup.remove-post-orchestration
+      - kubelet.remove-post-orchestration
     - require:
       - shutdown-target
 

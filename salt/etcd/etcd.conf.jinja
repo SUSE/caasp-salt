@@ -25,12 +25,17 @@ ETCD_PEER_CLIENT_CERT_AUTH="true"
 # ETCD_PEER_AUTO_TLS=on
 
 {# note on node removal: we cannot skip nodes with node_removal_in_progress #}
-ETCD_INITIAL_CLUSTER="{{ salt.caasp_etcd.get_endpoints(with_id=True, port=2380) }}"
+{%- if salt.caasp_nodes.is_first_bootstrap() %}
+ETCD_INITIAL_CLUSTER="{{ salt.caasp_etcd.get_endpoints(with_id=True, only_bootstrapped=False, port=2380) }}"
+{%- else %}
+ETCD_INITIAL_CLUSTER="{{ salt.caasp_etcd.get_current_endpoints_with_self(port=2380) }}"
+{%- endif %}
+
 ETCD_INITIAL_CLUSTER_TOKEN="{{ pillar['etcd']['token'] }}"
 ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ this_addr }}:2380"
 
-{#- we will not use "existing" unless we are adding a new node to the cluster  #}
-{%- if salt['grains.get']('node_addition_in_progress', False) %}
+{#- we will use "existing" except for the very first bootstrap #}
+{%- if not salt.caasp_nodes.is_first_bootstrap() %}
 ETCD_INITIAL_CLUSTER_STATE="existing"
 {%- endif %}
 
