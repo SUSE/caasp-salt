@@ -9,29 +9,49 @@ Returns multiple grains related to the images:
 - use_registry_images: True if registry images should be used.
 - base_image_url: prefix for the container-images: <prefix>/<image>:<tag>
 """
-import sys
+import yaml
 
 
 UNKNOWN_VERSION = (0, 0)
+REGISTRY_CONFIGURATION_PATH = "/usr/share/caasp-container-manifests/config/registry/registry-config.yaml"
 
 
 def __virtual__():
     return "caasp_registry"
 
 
+def _registry_config():
+    registry_config = {
+        "use_registry": False,
+        "host": "",
+        "namespace": ""
+    }
+    try:
+        with open(REGISTRY_CONFIGURATION_PATH) as config:
+            try:
+                registry_config = yaml.safe_load(config)
+            except yaml.YAMLError:
+                __utils__['caasp_log.warn']("Could not load registry configuration at %s",
+                                            REGISTRY_CONFIGURATION_PATH)
+    except IOError:
+        __utils__['caasp_log.warn']("Could not read registry configuration file: %s",
+                                    REGISTRY_CONFIGURATION_PATH)
+    return registry_config
+
+
 def _use_registry_images():
     """Return whether registry or packaged images are used."""
-    return False if sys.version_info < (3,) else True
+    return _registry_config()["use_registry"]
 
 
 def _registry():
     """Registry to download images from."""
-    return "registry.suse.de"
+    return _registry_config()["host"]
 
 
 def _namespace():
     """Base namespace the images can be found in the registry"""
-    return "devel/casp/3.0/controllernode/images_container_base/sles12"
+    return _registry_config()["namespace"]
 
 
 def caasp_version():
