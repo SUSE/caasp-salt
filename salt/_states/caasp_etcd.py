@@ -1,9 +1,5 @@
 from __future__ import absolute_import
 
-import logging
-
-log = logging.getLogger(__name__)
-
 # default number of trials for etcdctl
 DEFAULT_ATTEMPTS = 10
 
@@ -43,15 +39,12 @@ def etcdctl(name, retry={}, **kwargs):
     else:
         cmd = 'ETCDCTL_API=3 {}'.format(cmd)
 
-    log.debug('CaaS: running etcdctl as: %s', cmd)
-
     return __states__['caasp_cmd.run'](name=cmd,
                                        retry=retry_,
                                        **kwargs)
 
 
 def healthy(name, **kwargs):
-    log.debug('CaaS: checking etcd health')
     result = {'name': "healthy.{0}".format(name),
               'result': True,
               'comment': "Cluster is healthy",

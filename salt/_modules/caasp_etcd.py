@@ -8,9 +8,6 @@ try:
 except ImportError:
     from urlparse import urlparse
 
-# note: do not import caasp modules other than caasp_log
-from caasp_log import debug, error, warn
-
 # minimum number of etcd members we recommend
 MIN_RECOMMENDED_MEMBER_COUNT = 3
 
@@ -130,11 +127,11 @@ def get_surplus_etcd_members(num_wanted=None, targets=[], **kwargs):
     num_surplus_etcd_members = num_current_etcd_members - num_wanted_etcd_members
 
     if num_surplus_etcd_members <= 0:
-        debug('get_surplus_etcd_members: we dont need to remove etcd members')
+        __utils__['caasp_log.debug']('get_surplus_etcd_members: we dont need to remove etcd members')
         return []
 
-    debug('get_surplus_etcd_members: curr:%d wanted:%d -> %d surplus',
-          num_current_etcd_members, num_wanted_etcd_members, num_surplus_etcd_members)
+    __utils__['caasp_log.debug']('get_surplus_etcd_members: curr:%d wanted:%d -> %d surplus',
+                                 num_current_etcd_members, num_wanted_etcd_members, num_surplus_etcd_members)
 
     result = __salt__['caasp_nodes.get_with_prio_for_role'](
         num_surplus_etcd_members, 'etcd-removal',
@@ -340,7 +337,7 @@ def get_current_endpoints_with_self(port=ETCD_CLIENT_PORT, with_id=True, sep=','
     try:
         current_endpoints = get_current_endpoints_raw(with_id=with_id, port=port)
     except subprocess.CalledProcessError:
-        debug('Could not retrieve endpoints from the etcd cluster, falling back to cached results')
+        __utils__['caasp_log.debug']('Could not retrieve endpoints from the etcd cluster, falling back to cached results')
         try:
             current_endpoints = get_endpoints_raw(with_id=with_id, skip_this=True, skip_removed=True, only_bootstrapped=True, port=port)
         except NoEtcdServersException:
@@ -512,7 +509,7 @@ def member_add(name=None, nodename=None, port=ETCD_PEER_PORT):
     nodename_ = nodename or __salt__['caasp_net.get_nodename']()
     this_peer_url = 'https://{}:{}'.format(nodename_, port)
 
-    debug('CaaS: adding etcd member %s', this_id)
+    __utils__['caasp_log.debug']('CaaS: adding etcd member %s', this_id)
     if api_version() == 'etcd2':
         return etcdctl(['member', 'add', this_id, this_peer_url], skip_this=True)
     else:
@@ -532,7 +529,7 @@ def member_remove(nodename):
     if not target_member_id:
         return False
 
-    debug('CaaS: removing etcd member %s', target_member_id)
+    __utils__['caasp_log.debug']('CaaS: removing etcd member %s', target_member_id)
     return etcdctl(['member', 'remove', target_member_id])
 
 
