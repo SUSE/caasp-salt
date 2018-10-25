@@ -58,7 +58,7 @@ Name:           $NAME
 Version:        $VERSION
 Release:        0
 BuildArch:      noarch
-Summary:        Production-Grade Container Scheduling and Management
+Summary:        Container Scheduling and Management
 License:        Apache-2.0
 Group:          System/Management
 Url:            https://github.com/kubic-project/salt
