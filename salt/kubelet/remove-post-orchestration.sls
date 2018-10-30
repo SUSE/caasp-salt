@@ -18,25 +18,10 @@ include:
 {{ kubectl("remove-node",
            "delete node " + nodename) }}
 
-{% endif %}
+{% else %}
 
-###############
-# etcd node
-###############
-
-{%- set etcd_members = salt.caasp_nodes.get_with_expr('G@roles:etcd', booted=True)|list %}
-{%- if forced or target in etcd_members %}
-
-etcd-remove-member:
-  caasp_etcd.member_remove:
-  - nodename: {{ nodename }}
-
-{%- endif %}
-
-
-{%- if not (forced or target in k8s_nodes + etcd_members) %}
-{# Make suse we do not generate an empty file if target is not a etcd/master #}
 remove-post-orchestration-dummy:
   cmd.run:
     - name: "echo saltstack bug 14553"
-{%- endif %}
+
+{% endif %}
