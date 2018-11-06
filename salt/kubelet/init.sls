@@ -25,7 +25,7 @@ include:
          pillar['ssl']['kubelet_key'],
          o = 'system:nodes') }}
 
-kubelet-config:
+kubeconfig:
   file.managed:
     - name: {{ pillar['paths']['kubelet_config'] }}
     - source: salt://kubeconfig/kubeconfig.jinja
@@ -53,6 +53,14 @@ kubelet-config:
     - dir_mode: 755
     - makedirs: True
 
+kubelet-config:
+  file.managed:
+    - name:     /etc/kubernetes/kubelet-config.yaml
+    - source:   salt://kubelet/kubelet-config.jinja
+    - template: jinja
+    - require:
+      - sls:    kubernetes-common
+
 kubelet:
   pkg.installed:
     - pkgs:
@@ -69,6 +77,7 @@ kubelet:
     - enable:   True
     - watch:
       - file:   /etc/kubernetes/config
+      - kubeconfig
       - kubelet-config
       - file:   kubelet
 {% if salt.caasp_pillar.get('cloud:provider') == 'openstack' %}
@@ -79,6 +88,7 @@ kubelet:
     - require:
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial
+      - kubeconfig
       - kubelet-config
       - cmd: unmount-swaps
   caasp_retriable.retry:

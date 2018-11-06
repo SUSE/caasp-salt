@@ -7,53 +7,46 @@
 # kubernetes kubelet (minion) config
 
 # The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)
-KUBELET_ADDRESS="--address=0.0.0.0"
+# DEPRECATED!!! This option was moved to kubelet-config.yaml
+KUBELET_ADDRESS=""
 
 # The port for the info server to serve on
-KUBELET_PORT="--port={{ pillar['kubelet']['port'] }}"
+# DEPRECATED!!! This option was moved to kubelet-config.yaml
+KUBELET_PORT=""
 
 # Ensure we match the machine hostname
 KUBELET_HOSTNAME="--hostname-override={{ grains['nodename'] }}"
 
 # Add your own!
 KUBELET_ARGS="\
-    --cadvisor-port=0 \
-    --read-only-port=0 \
-    --cgroups-per-qos \
-    --cgroup-driver=cgroupfs \
-    --cgroup-root=/ \
-    --kube-reserved-cgroup=podruntime.slice \
-{% if salt.caasp_pillar.get_kubelet_reserved_resources('kube') -%}
+    --config=/etc/kubernetes/kubelet-config.yaml \
+{%- if salt.caasp_pillar.get_kubelet_reserved_resources('kube') %}
     --kube-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('kube') }} \
-{% endif -%}
-    --system-reserved-cgroup=system \
-{% if salt.caasp_pillar.get_kubelet_reserved_resources('system') -%}
+{%- endif %}
+{%- if salt.caasp_pillar.get_kubelet_reserved_resources('system') %}
     --kube-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('system') }} \
-{% endif -%}
-    --enforce-node-allocatable=pods \
-{% if pillar['kubelet']['eviction-hard'] -%}
+{%- endif %}
+{%- if pillar['kubelet']['eviction-hard'] %}
     --eviction-hard={{ pillar['kubelet']['eviction-hard'] }} \
-{% endif -%}
-    --cluster-dns={{ pillar['dns']['cluster_ip'] }} \
-    --cluster-domain={{ pillar['dns']['domain'] }} \
+{%- endif %}
     --node-ip={{ salt.caasp_net.get_primary_ip() }} \
-{% if grains['lsb_distrib_id'] == "CAASP" -%}
-    --pod-manifest-path=/etc/kubernetes/manifests \
+{%- if grains['lsb_distrib_id'] == "CAASP" %}
     --pod-infra-container-image={{ pillar['pod_infra_container_image'] }} \
-{% endif -%}
-{% if cloud_provider -%}
-               --cloud-provider={{ pillar['cloud']['provider'] }} \
-  {% if cloud_provider == 'openstack' -%}
-               --cloud-config=/etc/kubernetes/openstack-config \
-  {% endif -%}
-{% endif -%}
+{%- endif %}
+{%- if cloud_provider %}
+    --cloud-provider={{ pillar['cloud']['provider'] }} \
+  {%- if cloud_provider == 'openstack' %}
+    --cloud-config=/etc/kubernetes/openstack-config \
+  {%- endif %}
+{%- endif %}
+{%- if pillar['components']['kubelet']['args'] %}
     {{ pillar['components']['kubelet']['args'] }} \
-{% if salt.caasp_cri.cri_name() == 'crio' -%}
+{%- endif %}
+{%- if salt.caasp_cri.cri_name() == 'crio' %}
     --container-runtime=remote \
     --container-runtime-endpoint={{ pillar['cri']['crio']['socket'] }} \
     --runtime-request-timeout=10m \
-{% endif -%}
-    --client-ca-file={{ pillar['ssl']['ca_file'] }} \
+{%- endif %}
     --network-plugin=cni \
     --cni-bin-dir={{ pillar['cni']['dirs']['bin'] }} \
     --cni-conf-dir={{ pillar['cni']['dirs']['conf'] }} \
