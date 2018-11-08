@@ -75,6 +75,17 @@ data:
 
           nameAttr: {{ con['group']['attr_map']['name'] | yaml_dquote }}
     {% endif %}
+    {% if con['type'] == 'oidc' %}
+    - type: oidc
+      id: {{ con['id'] | yaml_dquote }}
+      name: {{ con['name'] | yaml_dquote }}
+      config:
+        issuer: {{ con['provider_url'] | yaml_dquote }}
+        clientID: {{ con['client_id'] | yaml_dquote }}
+        clientSecret: {{ con['client_secret'] | yaml_dquote }}
+        basicAuthUnsupported: {{ 'false' if con.get('basic_auth',false) else 'true' }}
+        redirectURI: {{ con['callback_url'] | yaml_dquote }}
+    {% endif %}
     {% endfor %}
     oauth2:
       skipApprovalScreen: true
