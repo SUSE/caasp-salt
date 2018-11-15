@@ -23,5 +23,10 @@
   ],
   {%- endif %}
   "iptables": {{- docker_daemon_config.get('iptables') -}},   {#- true/false (not quoted) #}
-  "log-level": "{{- docker_daemon_config.get('log_level') -}}"
+  "log-level": "{{- docker_daemon_config.get('log_level') -}}",
+  "log-driver": "{{- docker_daemon_config.get('log_driver') -}}",
+  "log-opts": {
+    "max-size": "{{- docker_daemon_config.get('log_max_size') -}}",
+    "max-file": "{{- docker_daemon_config.get('log_max_file') -}}"
+  }
 }
