@@ -49,6 +49,13 @@ spec:
                   values:
                   - dex
               topologyKey: "kubernetes.io/hostname"
+      # ensure dex pods are running only on master nodes
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
 
       containers:
       - image: {{ salt.caasp_registry.base_image_url() }}/caasp-dex:2.7.1
