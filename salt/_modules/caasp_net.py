@@ -7,7 +7,7 @@ from __future__ import absolute_import
 
 
 # note: do not import caasp modules other than caasp_log
-from caasp_log import error
+from caasp_log import error, debug
 
 
 DEFAULT_INTERFACE = 'eth0'
@@ -17,6 +17,34 @@ NODENAME_GRAIN = 'nodename'
 
 def __virtual__():
     return "caasp_net"
+
+
+def get_hosts():
+    """Wrapper around hosts.list_hosts that strips useless lines.
+
+    hosts.list_hosts includes comments as hosts - this function strips those out.
+
+    :return: Dict(ip_address -> [aliases])
+    """
+    hosts = __salt__['hosts.list_hosts']()  # type: dict
+    for key in hosts.keys():
+        if key.startswith("comment-"):
+            hosts.pop(key)
+    return hosts
+
+
+def get_aliases(hostname):
+    """Return the aliases for the given hostname
+
+    :param nodename:
+    :return: [string]
+    """
+    hosts = get_hosts()
+    for host, aliases in hosts.iteritems():
+        if hostname in aliases:
+            debug('CaaS: retrieved aliases %s for %s', aliases, hostname)
+            return aliases
+    return [hostname]
 
 
 def get_iface_ip(iface, host=None, ifaces=None):
