@@ -27,7 +27,7 @@ class NoEtcdServersException(Exception):
 
 
 def api_version():
-    return __salt__['pillar.get']('etcd_version', 'etcd3')
+    return __salt__['pillar.get']('api:etcd_version', 'etcd3')
 
 
 def _optimal_etcd_number(num_nodes):
