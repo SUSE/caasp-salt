@@ -329,21 +329,6 @@ all-workers-2.0-pre-clean-shutdown:
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
-
-# Sanity check. If an operator manually rebooted a machine when it had the 3.0
-# snapshot ready, we are already in 3.0 but with an unapplied haproxy config.
-# Apply the main haproxy sls to 3.0 workers (if any).
-all-workers-3.0-pre-clean-shutdown:
-  salt.state:
-    - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:3.0'
-    - tgt_type: compound
-    - expect_minions: false
-    - batch: 3
-    - sls:
-        - etc-hosts
-        - haproxy
-    - require:
-        - all-workers-2.0-pre-clean-shutdown
 # END NOTE: Remove me for 4.0
 
 {%- set workers = salt.saltutil.runner('mine.get', tgt=is_updateable_worker_tgt, fun='network.interfaces', tgt_type='compound') %}
@@ -359,7 +344,7 @@ all-workers-3.0-pre-clean-shutdown:
       - migrations.2-3.kubelet.drain
       - kubelet.stop
     - require:
-      - all-workers-3.0-pre-clean-shutdown
+      - all-workers-2.0-pre-clean-shutdown
       # wait until all the masters have been updated
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
