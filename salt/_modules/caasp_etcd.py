@@ -27,7 +27,7 @@ class NoEtcdServersException(Exception):
 
 
 def api_version():
-    return __salt__['pillar.get']('etcd_version', 'etcd3')
+    return __salt__['pillar.get']('api:etcd_version', 'etcd3')
 
 
 def _optimal_etcd_number(num_nodes):
@@ -507,6 +507,10 @@ def member_add(name=None, nodename=None, port=ETCD_PEER_PORT):
     '''
     this_id = name or __salt__['grains.get']('id')
     nodename_ = nodename or __salt__['caasp_net.get_nodename']()
+    aliases = __salt__['caasp_net.get_aliases'](nodename_)
+    if any([get_member_id(alias) for alias in aliases]):
+        # If this node is already registered in the cluster we pretend it was successfully added.
+        return True
     this_peer_url = 'https://{}:{}'.format(nodename_, port)
 
     __utils__['caasp_log.debug']('CaaS: adding etcd member %s', this_id)
