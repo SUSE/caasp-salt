@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import json
 import time
+import subprocess
 from salt.exceptions import CommandExecutionError
 
 try:
@@ -40,6 +41,21 @@ def cri_name():
         return 'docker'
 
     return __salt__['pillar.get']('cri:chosen', 'docker').lower()
+
+
+def cri_version():
+    '''Return the version of the chosen platform.
+    '''
+    output = subprocess.check_output(["{0}".format(cri_name()), "--version"])
+    try:
+        version = output.split()[2]
+        if cri_name() == "docker":
+            # Docker has a comma added to the version in the default line:
+            # Docker version 17.09.1-ce, build f4ffd2511ce9
+            version = version[:-1]
+    except IndexError:
+        version = "UNKNOWN VERSION"
+    return version
 
 
 def get_container_id(name, namespace):

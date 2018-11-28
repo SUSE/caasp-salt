@@ -217,6 +217,14 @@ early-services-setup:
     - tgt: '{{ master_id }}'
     - sls:
       - etc-hosts.update-pre-reboot
+      # If we are running a cri-o based cluster this is a workaround for bsc#1116933
+      # cri-o would consume all CPU and spin up a huge number of pause containers, breaking
+      # the node.
+      # Using caasp_cri.cri_name will not work here, as it would run on the salt-master which
+      # will always return 'docker'.
+      {% if salt['pillar.get']('cri:chosen') == "crio" %}
+      - migrations.cri.pre-update
+      {% endif %}
       - migrations.2-3.cni.pre-reboot
       - migrations.2-3.etcd.pre-reboot
     - require:
@@ -366,6 +374,14 @@ all-workers-2.0-pre-clean-shutdown:
   salt.state:
     - tgt: '{{ worker_id }}'
     - sls:
+      # If we are running a cri-o based cluster this is a workaround for bsc#1116933
+      # cri-o would consume all CPU and spin up a huge number of pause containers, breaking
+      # the node.
+      # Using caasp_cri.cri_name will not work here, as it would run on the salt-master which
+      # will always return 'docker'.
+      {% if salt['pillar.get']('cri:chosen') == "crio" %}
+      - migrations.cri.pre-update
+      {% endif %}
       - etc-hosts.update-pre-reboot
       - migrations.2-3.cni.pre-reboot
     - require:
