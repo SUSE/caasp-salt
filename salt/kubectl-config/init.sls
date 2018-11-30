@@ -21,6 +21,18 @@ include:
         client_certificate: {{ pillar['ssl']['kubectl_crt'] }}
         client_key: {{ pillar['ssl']['kubectl_key'] }}
 
+{{ pillar['paths']['kubeconfig_local'] }}:
+# this kubeconfig file is used by kubectl for administrative functions
+  file.managed:
+    - source: salt://kubeconfig/kubeconfig_local.jinja
+    - template: jinja
+    - require:
+      - /etc/pki/kubectl-client-cert.crt
+    - defaults:
+        user: 'cluster-admin'
+        client_certificate: {{ pillar['ssl']['kubectl_crt'] }}
+        client_key: {{ pillar['ssl']['kubectl_key'] }}
+
 /root/.kube/config:
   # this creates a symlink that sets the default kubeconfig location
   file.symlink:

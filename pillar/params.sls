@@ -78,8 +78,9 @@ addons:
 paths:
   service_account_key: '/etc/pki/sa.key'
 
-  var_kubelet:    '/var/lib/kubelet'
-  kubeconfig:     '/var/lib/kubelet/kubeconfig'
+  var_kubelet:      '/var/lib/kubelet'
+  kubeconfig:       '/var/lib/kubelet/kubeconfig'
+  kubeconfig_local: '/var/lib/kubelet/kubeconfig-local'
 
   kube_scheduler_config: '/var/lib/kubelet/kube-scheduler-config'
 
