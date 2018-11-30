@@ -190,13 +190,32 @@ early-services-setup:
 
 # Kubelet needs other services, e.g. the cri, up + running. This provide a way
 # to ensure kubelet is stopped before any other services.
+#
+# This will only apply on 2.0 machines, as the drain process needs to target
+# the local apiserver in the master, instead of HAProxy.
+{{ master_id }}-early-clean-shutdown-2.0:
+  salt.state:
+    - tgt: '{{ master_id }} and G@osrelease:2.0'
+    - tgt_type: compound
+    - expect_minions: false
+    - sls:
+      - migrations.2-3.kubelet.stop
+    - require:
+      - early-services-setup
+
+# Kubelet needs other services, e.g. the cri, up + running. This provide a way
+# to ensure kubelet is stopped before any other services.
+#
+# This will apply to any non 2.0 case, the general case.
 {{ master_id }}-early-clean-shutdown:
   salt.state:
-    - tgt: '{{ master_id }}'
+    - tgt: '{{ master_id }} and not G@osrelease:2.0'
+    - tgt_type: compound
+    - expect_minions: false
     - sls:
       - kubelet.stop
     - require:
-      - early-services-setup
+      - {{ master_id }}-early-clean-shutdown-2.0
 
 {{ master_id }}-clean-shutdown:
   salt.state:
