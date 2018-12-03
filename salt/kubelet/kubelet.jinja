@@ -19,6 +19,8 @@ KUBELET_HOSTNAME="--hostname-override={{ grains['nodename'] }}"
 
 # Add your own!
 KUBELET_ARGS="\
+    --cadvisor-port=0 \
+    --read-only-port=0 \
     --config=/etc/kubernetes/kubelet-config.yaml \
 {%- if salt.caasp_pillar.get_kubelet_reserved_resources('kube') %}
     --kube-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('kube') }} \
