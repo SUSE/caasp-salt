@@ -29,19 +29,29 @@
 {%- set is_updateable_master_tgt = is_updateable_tgt + ' and ' + is_master_tgt %}
 {%- set is_updateable_worker_tgt = is_updateable_tgt + ' and ' + is_worker_tgt %}
 {%- set is_updateable_node_tgt   = '( ' + is_updateable_master_tgt + ' ) or ( ' + is_updateable_worker_tgt + ' )' %}
-
 {%- set all_masters = salt.saltutil.runner('mine.get', tgt=is_master_tgt, fun='network.interfaces', tgt_type='compound').keys() %}
 {%- set super_master = all_masters|first %}
 
+{%- set is_migration = salt['pillar.get']('migration', false) %}
+{%- if is_migration %}
+  {%- set progress_grain = "migration_in_progress" %}
+{%- else %}
+  {%- set progress_grain = "update_in_progress" %}
+{%- endif %}
+
+{% if is_migration %}
+{%- set migrated_nodes_tgt = is_responsive_node_tgt + ' and G@migration_in_progress:true' %}
+{% endif %}
+
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
-set-update-grain:
+set-progress-grain:
   salt.function:
     - tgt: '( {{ is_regular_node_tgt }} and {{ is_updateable_tgt }} ) or {{ super_master }}'
     - tgt_type: compound
     - name: grains.setval
     - arg:
-      - update_in_progress
+      - {{ progress_grain }}
       - true
 
 # this will load the _pillars/velum.py on the master
@@ -49,7 +59,7 @@ sync-pillar:
   salt.runner:
     - name: saltutil.sync_pillar
     - require:
-      - set-update-grain
+      - set-progress-grain
 
 update-data:
   salt.function:
@@ -462,17 +472,19 @@ all-workers-2.0-pre-clean-shutdown:
     - require:
       - {{ worker_id }}-update-post-start-services
 
+{%- if not is_migration %}
 # Ensure the node is marked as finished upgrading
-{{ worker_id }}-remove-update-grain:
+{{ worker_id }}-remove-progress-grain:
   salt.function:
     - tgt: '{{ worker_id }}'
     - name: grains.delval
     - arg:
-      - update_in_progress
+      - {{ progress_grain }}
     - kwarg:
         destructive: True
     - require:
       - {{ worker_id }}-update-reboot-needed-grain
+{% endif %}
 
 {% endfor %}
 
@@ -497,9 +509,11 @@ kubelet-setup:
       # on masters and minions.
       - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
+{%- if not is_migration %}
 {%- for worker_id in workers.keys() %}
-      - {{ worker_id }}-remove-update-grain
+      - {{ worker_id }}-remove-progress-grain
 {%- endfor %}
+{% endif %}
 
 # (re-)apply all the manifests
 # this will perform a rolling-update for existing daemonsets
@@ -550,13 +564,40 @@ remove-caasp-fqdn-grain:
     - require:
       - admin-wait-for-services
 
+{%- if is_migration %}
+reenable-transactional-update-timer:
+  salt.function:
+    - tgt: '( {{ migrated_nodes_tgt }} ) or P@roles:admin'
+    - tgt_type: compound
+    - batch: 3
+    - name: service.enable
+    - arg:
+        - transactional-update.timer
+    - require:
+      - remove-caasp-fqdn-grain
+
+{%- for grain in ['tx_update_migration_notes', 'tx_update_migration_newversion', 'tx_update_migration_available'] %}
+unset-{{ grain }}-grain:
+  salt.function:
+    - tgt: '{{ migrated_nodes_tgt }}'
+    - tgt_type: compound
+    - name: grains.delval
+    - arg:
+        - {{ grain }}
+    - kwarg:
+        destructive: True
+    - require:
+      - reenable-transactional-update-timer
+{%- endfor %}
+{%- endif %}
+
 remove-update-grain:
   salt.function:
-    - tgt: 'update_in_progress:true'
+    - tgt: '{{ progress_grain }}:true'
     - tgt_type: grain
     - name: grains.delval
     - arg:
-      - update_in_progress
+      - {{ progress_grain }}
     - kwarg:
         destructive: True
     - require:
