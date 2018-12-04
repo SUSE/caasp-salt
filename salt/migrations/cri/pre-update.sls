@@ -14,4 +14,11 @@ Cleanup crio pods:
   cmd.script:
     - source: salt://migrations/cri/clean-up-crio-pods.sh
 
+{% else %}
+
+{# See https://github.com/saltstack/salt/issues/14553 #}
+cni-cleanup-dummy:
+  cmd.run:
+    - name: "echo saltstack bug 14553"
+
 {% endif %}
