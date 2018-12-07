@@ -43,6 +43,18 @@
 {%- set migrated_nodes_tgt = is_responsive_node_tgt + ' and G@migration_in_progress:true' %}
 {% endif %}
 
+# FIXME: remove this once caasp v4 is released
+# until the update-checker service is not yet enabled, we have to set this grain manually
+# otherwise a constant warning will show up in velum that RMT/SMT mirrors are out of sync
+set-mirror-synced-grain:
+  salt.function:
+    - tgt: '{{ is_regular_node_tgt }}'
+    - tgt_type: compound
+    - name: grains.setval
+    - arg:
+      - tx_update_migration_mirror_synced
+      - true
+
 # Ensure all nodes with updates are marked as upgrading. This will reduce the time window in which
 # the update-etc-hosts orchestration can run in between machine restarts.
 set-progress-grain:
