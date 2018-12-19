@@ -6,7 +6,7 @@ ensure-dex-running:
     {% set dex_api_port = pillar['dex']['node_port'] -%}
     - name:       {{ 'https://' + dex_api_server + ':' + dex_api_port }}/.well-known/openid-configuration
     - wait_for:   300
-    - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
+    - ca_bundle:  {{ pillar['ssl']['sys_ca_bundle'] }}
     - status:     200
     - opts:
         http_request_timeout: 30

@@ -31,8 +31,14 @@ spec:
         - name: ca-certificate
           mountPath: /etc/pki/ca.crt
           readOnly: True
+        - mountPath: {{ salt['file.dirname']( pillar['ssl']['sys_ca_bundle'] ) }}
+          name: ca-bundle-dir
+          readOnly: True
         - name: kubernetes-proxy-bundle-certificate
           mountPath: {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }}
+          readOnly: True
+        - name: kubernetes-apiserver-haproxy-client-bundle
+          mountPath: {{ pillar['ssl']['kube_apiserver_haproxy_bundle'] }}
           readOnly: True
 {% if "admin" in salt['grains.get']('roles', []) %}
         - name: etc-hosts
@@ -55,10 +61,17 @@ spec:
         path: {{ pillar['ssl']['ca_file'] }}
 {% endif %}
         type: FileOrCreate
+    - name: ca-bundle-dir
+      hostPath:
+        path: {{ salt['file.dirname']( pillar['ssl']['sys_ca_bundle'] ) }}
     - name: kubernetes-proxy-bundle-certificate
       hostPath:
         path: {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }}
         type: FileOrCreate
+    - name: kubernetes-apiserver-haproxy-client-bundle
+      hostPath:
+        path: {{ pillar['ssl']['kube_apiserver_haproxy_bundle'] }}
+        type: File
 {% if "admin" in salt['grains.get']('roles', []) %}
     - name: etc-hosts
       hostPath:

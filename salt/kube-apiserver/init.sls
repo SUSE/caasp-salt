@@ -12,14 +12,12 @@ include:
          cn = grains['nodename'],
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
-{% from '_macros/certs.jinja' import certs with context %}
 {{ certs("kube-apiserver-proxy-client",
          pillar['ssl']['kube_apiserver_proxy_client_crt'],
          pillar['ssl']['kube_apiserver_proxy_client_key'],
          cn = grains['nodename'],
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
-{% from '_macros/certs.jinja' import certs with context %}
 {{ certs("kube-apiserver-kubelet-client",
          pillar['ssl']['kube_apiserver_kubelet_client_crt'],
          pillar['ssl']['kube_apiserver_kubelet_client_key'],
@@ -135,7 +133,7 @@ kube-apiserver-wait-port-{{ port }}:
     # retry just in case the API server returns a transient error
     - retry:
         attempts: 3
-    - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
+    - ca_bundle:  {{ pillar['ssl']['sys_ca_bundle'] }}
     - status:     200
     - opts:
         http_request_timeout: 30
