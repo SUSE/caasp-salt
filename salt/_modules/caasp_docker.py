@@ -27,10 +27,10 @@ def _get_hostname_and_port(url, default_port=None):
 
 def get_registries_certs(lst, default_port=5000):
     '''
-    Given a list of "valid" items, return a dictionay of
+    Given a list of "valid" items, return a dictionary of
     "<HOST>[:<PORT>]" -> <CERT>
     "valid" items must be get'able objects, with attributes
-    "url", "cert" and (optional) "mirrors"
+    "url", "cert" and (optionally) "mirrors"
     "url"s can be [<PROTO>://]<HOST>[:<PORT>]
     '''
     certs = {}
@@ -38,6 +38,7 @@ def get_registries_certs(lst, default_port=5000):
     __utils__['caasp_log.debug']('Finding certificates in: %s', lst)
     for registry in lst:
         try:
+            name = registry.get('name')
             url = registry.get('url')
 
             cert = registry.get('cert', '')
@@ -50,28 +51,7 @@ def get_registries_certs(lst, default_port=5000):
                     host_port += ":" + str(port)
 
                 __utils__['caasp_log.debug']('Adding certificate for: %s', host_port)
-                certs[host_port] = cert
-
-                if port:
-                    if port == default_port:
-                        # When using the standar port (5000), if the user introduces
-                        # "my-registry:5000" as a trusted registry, he/she will be able
-                        # to do "docker pull my-registry:5000/some/image" but not
-                        # "docker pull my-registry/some/image".
-                        # So we must also create the "ca.crt" for "my-registry"
-                        # as he/she could just access "docker pull my-registry/some/image",
-                        # and Docker would fail to find "my-registry/ca.crt"
-                        name = hostname
-                        __utils__['caasp_log.debug'](
-                            'Using default port: adding certificate for "%s" too', name)
-                        certs[name] = cert
-                else:
-                    # the same happens if the user introduced a certificate for
-                    # "my-registry": we must fix the "docker pull my-registry:5000/some/image" case...
-                    name = hostname + ':' + str(default_port)
-                    __utils__['caasp_log.debug'](
-                        'Adding certificate for default port, "%s", too', name)
-                    certs[name] = cert
+                certs[host_port] = {'name': name, 'cert': cert}
 
         except Exception as e:
             __utils__['caasp_log.error']('Could not parse certificate: %s', e)
@@ -87,3 +67,12 @@ def get_registries_certs(lst, default_port=5000):
             __utils__['caasp_log.error']('Could not parse mirrors: %s', e)
 
     return certs
+
+
+def get_certs(lst):
+    '''
+    Given a list of "valid" items, return a list of all the different
+    certificates.
+    '''
+    registries_certs = get_registries_certs(lst)
+    return list(set(list('%s' % value['cert'] for (key, value) in registries_certs.items())))

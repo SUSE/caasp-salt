@@ -222,6 +222,7 @@ services-setup:
       - addons.dns
       - addons.tiller
       - addons.dex
+      - addons.registries-operator
     - require:
       - reboot-setup
 

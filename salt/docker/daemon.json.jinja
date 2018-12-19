@@ -1,27 +1,6 @@
 {%- set docker_daemon_config = salt.caasp_pillar.get('docker:daemon') -%}
-{%- set registries           = salt.caasp_pillar.get('registries') -%}
 
 {
-  {% if registries|length > 0 -%}
-  "registries": [
-  {%- for registry in registries %}
-    {
-      {%- set mirrors = registry.get('mirrors', []) -%}
-      {% if mirrors|length > 0 %}
-      "Mirrors": [
-        {%- for mirror in mirrors %}
-        {
-          "URL": "{{- mirror.get('url') -}}"
-        }{{- "," if not loop.last else ""}}
-        {%- endfor %}
-      ],
-      {%- endif %}
-      {#- prefix must be [http[s]://]<HOST>[:<PORT>][/<PATH>] #}
-      "Prefix": "{{- registry.get('url') -}}"
-    }{{- "," if not loop.last else ""}}
-  {%- endfor %}
-  ],
-  {%- endif %}
   "iptables": {{- docker_daemon_config.get('iptables') -}},   {#- true/false (not quoted) #}
   "log-level": "{{- docker_daemon_config.get('log_level') -}}",
   "log-driver": "{{- docker_daemon_config.get('log_driver') -}}",
