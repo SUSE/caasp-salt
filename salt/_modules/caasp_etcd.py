@@ -471,11 +471,11 @@ def member_list():
     result = {'active': [], 'unstarted': []}
     etcdctl_output = etcdctl(["member", "list"])
     if api_version() == 'etcd2':
-        etcdctl_output_active_matcher = re.compile('([^:]+):\s+name=([^\s]+)\s+peerURLs=([^\s]+)\s+clientURLs=([^\s]+)')
-        etcdctl_output_unstarted_matcher = re.compile('([^\[]+)\[unstarted\]:\s+peerURLs=([^\s]+)')
+        etcdctl_output_active_matcher = re.compile(r'([^:]+):\s+name=([^\s]+)\s+peerURLs=([^\s]+)\s+clientURLs=([^\s]+)')
+        etcdctl_output_unstarted_matcher = re.compile(r'([^\[]+)\[unstarted\]:\s+peerURLs=([^\s]+)')
     else:
-        etcdctl_output_active_matcher = re.compile('([^,]+), started,\s+([^,]+),\s+([^,]+),\s+([^,]+)')
-        etcdctl_output_unstarted_matcher = re.compile('([^,]+), unstarted,[^,]+,([^,]+)')
+        etcdctl_output_active_matcher = re.compile(r'([^,]+), started,\s+([^,]+),\s+([^,]+),\s+([^,]+)')
+        etcdctl_output_unstarted_matcher = re.compile(r'([^,]+), unstarted,[^,]+,([^,]+)')
     for member_line in etcdctl_output.splitlines():
         matches = etcdctl_output_active_matcher.match(member_line)
         if matches:
