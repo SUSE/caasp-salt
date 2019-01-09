@@ -47,7 +47,7 @@ def managed(name,
         else:
             ret['changes'] = {}
         ret['comment'] = '{name} successfully generated'.format(**locals())
-    except Exception as e:
+    except Exception as e:  # noqa: F841
         ret['result'] = False
         ret['changes'] = {}
         ret['comment'] = '{name} was not generated successfully: {e}'.format(
