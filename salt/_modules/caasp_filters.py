@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import socket
 
 # TODO: in Python 3 there is an ipaddress module which works out of the box. In
@@ -47,3 +48,11 @@ def get_max(seq):
     # (https://docs.saltstack.com/en/latest/topics/jinja/index.html#max)
     #       once we Salt>2017.7.0
     return max(seq)
+
+
+def basename(filename):
+    '''
+    Wrapper around os.path.basename for use in jinja templates.
+    '''
+    # Return the last path segment
+    return os.path.basename(filename)
