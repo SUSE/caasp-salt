@@ -41,5 +41,19 @@ class TestIsIP(unittest.TestCase):
         self.assertFalse(caasp_filters.is_ipv6("::."))
 
 
+class TestCaaspFilters(unittest.TestCase):
+    '''
+    Some basic tests for caasp_pillar.get()
+    '''
+
+    def test_basename(self):
+        self.assertEqual("hello", caasp_filters.basename("../hello"))
+        self.assertEqual("world", caasp_filters.basename("../hello/world"))
+        self.assertEqual("", caasp_filters.basename("./"))
+        self.assertEqual("", caasp_filters.basename("../"))
+        self.assertEqual("", caasp_filters.basename("/"))
+        self.assertEqual(".", caasp_filters.basename("."))
+
+
 if __name__ == '__main__':
     unittest.main()
