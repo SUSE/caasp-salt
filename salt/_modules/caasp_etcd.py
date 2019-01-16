@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from salt.ext import six
+
 import re
 import subprocess
 
@@ -553,4 +555,8 @@ def etcdctl(command, skip_this=False):
         etcdctl_version = {"ETCDCTL_API": "2"}
     else:
         etcdctl_version = {"ETCDCTL_API": "3"}
-    return subprocess.check_output(["etcdctl"] + get_etcdctl_args(skip_this) + command, env=etcdctl_version)
+    output = subprocess.check_output(["etcdctl"] + get_etcdctl_args(skip_this) + command, env=etcdctl_version)
+    if isinstance(output, six.binary_type):
+        return output.decode('utf-8')
+    else:
+        return output
