@@ -7,7 +7,6 @@ metadata:
   labels:
     name: haproxy
   annotations:
-    scheduler.alpha.kubernetes.io/critical-pod: ''
     seccomp.security.alpha.kubernetes.io/pod: docker/default
 spec:
   restartPolicy: Always
@@ -16,8 +15,8 @@ spec:
     - key: node-role.kubernetes.io/master
       operator: Exists
       effect: NoSchedule
-    - key: "CriticalAddonsOnly"
-      operator: "Exists"
+  # prevent evictions
+  priorityClassName: system-node-critical
   containers:
     - name: haproxy
       image: {{ salt.caasp_registry.base_image_url() }}/haproxy:1.6.0

@@ -156,9 +156,8 @@ spec:
         # the master to communicate with pods.
         - operator: Exists
           effect: NoSchedule
-        # Mark the pod as a critical add-on for rescheduling.
-        - key: "CriticalAddonsOnly"
-          operator: "Exists"
+      # prevent evictions
+      priorityClassName: system-node-critical
       volumes:
         - name: run
           hostPath:
