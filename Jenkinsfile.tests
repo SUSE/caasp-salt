@@ -26,7 +26,7 @@ podTemplate(label: label, containers: [
         ),
         containerTemplate(
             name: 'tox3',
-            image: 'registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox3-container:latest',
+            image: 'registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox-container:latest',
             alwaysPullImage: true,
             ttyEnabled: true,
             command: 'cat',
