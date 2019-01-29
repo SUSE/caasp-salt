@@ -47,6 +47,8 @@ evictionHard:
   nodefs.inodesFree: 5%
 evictionPressureTransitionPeriod: 5m0s
 enableControllerAttachDetach: true
+featureGates:
+  ExperimentalCriticalPodAnnotation: true
 makeIPTablesUtilChains: true
 iptablesMasqueradeBit: 14
 iptablesDropBit: 15
