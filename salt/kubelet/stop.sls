@@ -10,7 +10,12 @@ include:
 drain-kubelet:
   cmd.run:
     - name: |
+        # give some time to drain the node, if it times out continue to ensure the update will continue
+        # this can cause downtime of applications, so ideally an application is drainable within the drain-timeout
+        # bsc#1116049
         kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} drain {{ grains['nodename'] }} --force --delete-local-data=true --ignore-daemonsets --timeout={{ pillar['kubelet']['drain-timeout'] }}s
+    - check_cmd:
+      - /bin/true
     - require:
       - file: {{ pillar['paths']['kubeconfig'] }}
   {%- if not node_removal_in_progress %}
