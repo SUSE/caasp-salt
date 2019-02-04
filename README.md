@@ -5,12 +5,21 @@ in the context of CaaSP/MicroOS.
 
 # Running Tests
 
-## Style Checks:
+First of all, you have to install tox:
 
-Install tox, and run the style checks:
+    % zypper in python-tox
 
-    zypper in python-tox
-    tox -e flake8
+After that, from the root of the project you can run style checks:
+
+    $ tox -e flake8
+
+And unit tests:
+
+    $ tox -e tests-salt-2018.3.0-py27
+
+If you want to run everything simply perform:
+
+    $ tox
 
 # Salt states and CaaSP architecture
 
