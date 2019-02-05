@@ -1,28 +1,28 @@
 [Global]
-auth-url="{{ pillar['cloud']['openstack']['auth_url'] }}"
-username="{{ pillar['cloud']['openstack']['username'] }}"
-password="{{ pillar['cloud']['openstack']['password'] }}"
-{%- if pillar['cloud']['openstack']['project_id'] %}
-tenant-id="{{ pillar['cloud']['openstack']['project_id'] }}"
+auth-url="{{ salt.caasp_pillar.get('cloud:openstack:auth_url', '') }}"
+username="{{ salt.caasp_pillar.get('cloud:openstack:username', '') }}"
+password="{{ salt.caasp_pillar.get('cloud:openstack:password', '') }}"
+{%- if salt.caasp_pillar.get('cloud:openstack:project_id', '') %}
+tenant-id="{{ salt.caasp_pillar.get('cloud:openstack:project_id', '') }}"
 {%- else %}
-tenant-name="{{ pillar['cloud']['openstack']['project'] }}"
+tenant-name="{{ salt.caasp_pillar.get('cloud:openstack:project', '') }}"
 {%- endif %}
-{%- if pillar['cloud']['openstack']['domain_id'] %}
-domain-id="{{ pillar['cloud']['openstack']['domain_id'] }}"
+{%- if salt.caasp_pillar.get('cloud:openstack:domain_id', '') %}
+domain-id="{{ salt.caasp_pillar.get('cloud:openstack:domain_id', '') }}"
 {%- else %}
-domain-name="{{ pillar['cloud']['openstack']['domain'] }}"
+domain-name="{{ salt.caasp_pillar.get('cloud:openstack:domain', '') }}"
 {%- endif %}
-region="{{ pillar['cloud']['openstack']['region'] }}"
+region="{{ salt.caasp_pillar.get('cloud:openstack:region', '') }}"
 ca-file="/etc/ssl/ca-bundle.pem"
 [LoadBalancer]
 lb-version=v2
-subnet-id="{{ pillar['cloud']['openstack']['subnet'] }}"
-floating-network-id="{{ pillar['cloud']['openstack']['floating'] }}"
+subnet-id="{{ salt.caasp_pillar.get('cloud:openstack:subnet', '') }}"
+floating-network-id="{{ salt.caasp_pillar.get('cloud:openstack:floating', '') }}"
 create-monitor=yes
 monitor-delay=1m
 monitor-timeout=30s
-monitor-max-retries={{ pillar['cloud']['openstack']['lb_mon_retries'] }}
+monitor-max-retries={{ salt.caasp_pillar.get('cloud:openstack:lb_mon_retries', '') }}
 [BlockStorage]
 trust-device-path=false
-bs-version={{ pillar['cloud']['openstack']['bs_version'] }}
-ignore-volume-az={{ pillar['cloud']['openstack']['ignore_vol_az'] }}
+bs-version={{ salt.caasp_pillar.get('cloud:openstack:bs_version', '') }}
+ignore-volume-az={{ salt.caasp_pillar.get('cloud:openstack:ignore_vol_az', '') }}
