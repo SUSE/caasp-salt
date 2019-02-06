@@ -55,6 +55,9 @@ KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
                --requestheader-group-headers=X-Remote-Group \
                --requestheader-extra-headers-prefix=X-Remote-Extra \
                --requestheader-client-ca-file={{ pillar['ssl']['ca_file'] }} \
+               --kubelet-certificate-authority={{ pillar['ssl']['ca_file'] }} \
+               --kubelet-client-certificate={{ pillar['ssl']['kube_apiserver_kubelet_client_crt'] }} \
+               --kubelet-client-key={{ pillar['ssl']['kube_apiserver_kubelet_client_key'] }} \
                --proxy-client-cert-file={{ pillar['ssl']['kube_apiserver_proxy_client_crt'] }} \
                --proxy-client-key-file={{ pillar['ssl']['kube_apiserver_proxy_client_key'] }} \
                --storage-backend={{ pillar['api']['etcd_version'] }} \
