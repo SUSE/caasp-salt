@@ -82,7 +82,9 @@ listen velum
         bind 0.0.0.0:80
         bind 0.0.0.0:443 ssl crt {{ pillar['ssl']['velum_bundle'] }} ca-file /etc/pki/ca.crt
         acl path_autoyast path_reg ^/autoyast$
+        acl path_internal_api path_beg /internal-api
         option forwardfor
+        http-request deny if path_internal_api
         http-request set-header X-Forwarded-Proto https
         redirect scheme https code 302 if !{ ssl_fc } !path_autoyast
         server velum unix@/var/run/puma/dashboard.sock
