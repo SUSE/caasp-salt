@@ -10,32 +10,17 @@ githubCollaboratorCheck(
     user: env.CHANGE_AUTHOR,
     credentialsId: 'github-token')
 
-def label = "salt-flake8-${UUID.randomUUID().toString()}"
+node("leap15.0&&caasp-pr-worker") {
+    stage('Retrieve Code') {
+        checkout scm
+    }
 
-podTemplate(label: label, containers: [
-        containerTemplate(
-            name: 'tox',
-            image: 'registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox-container:latest',
-            ttyEnabled: true,
-            command: 'cat',
-            envVars: [
-                envVar(key: 'http_proxy', value: env.http_proxy),
-                envVar(key: 'https_proxy', value: env.http_proxy),
-            ],
-        ),
-]) {
-    node(label) {
-        stage('Retrieve Code') {
-            checkout scm
-        }
-
+    docker.image('registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox-container:latest').inside('-v ${WORKSPACE}:/salt') {
         stage('Style Checks') {
-            container('tox') {
-                try {
-                    sh 'tox -e flake8 -- --format=junit-xml --output-file junit.xml'
-                } finally {
-                    junit "junit.xml"
-                }
+            try {
+                sh(script: 'tox -e flake8 -- --format=junit-xml --output-file junit.xml')
+            } finally {
+                junit "junit.xml"
             }
         }
     }
