@@ -18,10 +18,13 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
     --allocate-node-cidrs=true \
     --node-cidr-mask-size={{ pillar['cluster_cidr_len'] }} \
     --root-ca-file={{ pillar['ssl']['ca_file'] }} \
+{% if pillar['volume']['dirs']['bin'] -%}
+    --flex-volume-plugin-dir={{ pillar['volume']['dirs']['bin'] }} \
+{% endif -%}
 {% if cloud_provider -%}
-               --cloud-provider={{ cloud_provider }} \
+    --cloud-provider={{ cloud_provider }} \
   {% if cloud_provider == 'openstack' -%}
-               --cloud-config=/etc/kubernetes/openstack-config \
+    --cloud-config=/etc/kubernetes/openstack-config \
   {% endif -%}
 {% endif -%}
     {{ managr_args }}"

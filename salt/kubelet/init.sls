@@ -52,6 +52,13 @@ kubeconfig:
     - dir_mode: 755
     - makedirs: True
 
+{{ pillar['volume']['dirs']['bin'] }}:
+  file.directory:
+    - user:     root
+    - group:    root
+    - dir_mode: 755
+    - makedirs: True
+
 kubelet-config:
   file.managed:
     - name:     /etc/kubernetes/kubelet-config.yaml
@@ -79,6 +86,7 @@ kubelet:
 {% endif %}
       - file:   {{ pillar['cni']['dirs']['bin'] }}
       - file:   {{ pillar['cni']['dirs']['conf'] }}
+      - file:   {{ pillar['volume']['dirs']['bin'] }}
     - require:
       - file:   /etc/kubernetes/manifests
       - file:   /etc/kubernetes/kubelet-initial
