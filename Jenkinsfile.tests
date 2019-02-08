@@ -19,10 +19,10 @@ node("leap15.0&&caasp-pr-worker") {
         stage('Create Test Virtualenv') {
             parallel(
                 'Python 2.7': {
-                    sh(script: 'tox --notest -e tests-salt-2018.3.0-py27')
+                    sh(script: 'tox --notest -e tests-salt-2016.11.4-py27')
                 },
                 'Python 3.4': {
-                    sh(script: 'tox --notest -e tests-salt-2018.3.0-py34')
+                    sh(script: 'tox --notest -e tests-salt-2016.11.4-py34')
                 }
             )
         }
@@ -31,16 +31,16 @@ node("leap15.0&&caasp-pr-worker") {
             parallel(
                 'Python 2.7': {
                     try {
-                        sh(script: 'tox -e tests-salt-2018.3.0-py27 -- --with-xunit --xunit-testsuite-name=salt-2018.3.0-py27 --xunit-file=tests-salt-2018.3.0-py27.xml')
+                        sh(script: 'tox -e tests-salt-2016.11.4-py27 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py27 --xunit-file=tests-salt-2016.11.4-py27.xml')
                     } finally {
-                        junit "tests-salt-2018.3.0-py27.xml"
+                        junit "tests-salt-2016.11.4-py27.xml"
                     }
                 },
                 'Python 3.4': {
                     try {
-                        sh(script: 'tox -e tests-salt-2018.3.0-py34 -- --with-xunit --xunit-testsuite-name=salt-2018.3.0-py34 --xunit-file=tests-salt-2018.3.0-py34.xml')
+                        sh(script: 'tox -e tests-salt-2016.11.4-py34 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py34 --xunit-file=tests-salt-2016.11.4-py34.xml')
                     } finally {
-                        junit "tests-salt-2018.3.0-py34.xml"
+                        junit "tests-salt-2016.11.4-py34.xml"
                     }
                 }
             )
