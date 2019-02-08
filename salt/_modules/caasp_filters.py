@@ -47,3 +47,11 @@ def get_max(seq):
     # (https://docs.saltstack.com/en/latest/topics/jinja/index.html#max)
     #       once we Salt>2017.7.0
     return max(seq)
+
+
+def basename(filename):
+    '''
+    Wrapper around os.path.basename for use in jinja templates.
+    '''
+    # Return the last path segment
+    return os.path.basename(filename)
