@@ -10,6 +10,7 @@ base:
     - docker
     - registries
     - schedule
+    - volume
   'roles:ca':
     - match: grain
     - ca
