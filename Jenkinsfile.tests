@@ -1,43 +1,28 @@
-def label = "salt-tests-${UUID.randomUUID().toString()}"
+def targetBranch = env.getEnvironment().get('CHANGE_TARGET', env.BRANCH_NAME)
 
-podTemplate(label: label, containers: [
-        containerTemplate(
-            name: 'tox',
-            image: 'registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox-container:latest',
-            ttyEnabled: true,
-            command: 'cat',
-            envVars: [
-                envVar(key: 'http_proxy', value: env.http_proxy),
-                envVar(key: 'https_proxy', value: env.http_proxy),
-            ],
-        ),
-        containerTemplate(
-            name: 'tox3',
-            image: 'registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox3-container:latest',
-            ttyEnabled: true,
-            command: 'cat',
-            envVars: [
-                envVar(key: 'http_proxy', value: env.http_proxy),
-                envVar(key: 'https_proxy', value: env.http_proxy),
-            ],
-        ),
-]) {
-    node(label) {
-        stage('Retrieve Code') {
-            checkout scm
-        }
+library "kubic-jenkins-library@${targetBranch}"
 
+// TODO: Don't hardcode salt repo name, find the right place
+// to lookup this information dynamically.
+githubCollaboratorCheck(
+    org: 'kubic-project',
+    repo: 'salt',
+    user: env.CHANGE_AUTHOR,
+    credentialsId: 'github-token')
+
+node("leap15.0&&caasp-pr-worker") {
+    stage('Retrieve Code') {
+        checkout scm
+    }
+    
+    docker.image('registry.suse.de/devel/casp/ci/opensuse_leap_42.3_containers/jenkins-tox-container:latest').inside('-v ${WORKSPACE}:/salt') {
         stage('Create Test Virtualenv') {
             parallel(
                 'Python 2.7': {
-                    container('tox') {
-                        sh 'tox --notest -e tests-salt-2016.11.4-py27'
-                    }
+                    sh(script: 'tox --notest -e tests-salt-2018.3.0-py27')
                 },
                 'Python 3.4': {
-                    container('tox3') {
-                        sh 'tox --notest -e tests-salt-2016.11.4-py34'
-                    }
+                    sh(script: 'tox --notest -e tests-salt-2018.3.0-py34')
                 }
             )
         }
@@ -45,21 +30,17 @@ podTemplate(label: label, containers: [
         stage('Run Tests') {
             parallel(
                 'Python 2.7': {
-                    container('tox') {
-                        try {
-                            sh 'tox -e tests-salt-2016.11.4-py27 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py27 --xunit-file=tests-salt-2016.11.4-py27.xml'
-                        } finally {
-                            junit "tests-salt-2016.11.4-py27.xml"
-                        }
+                    try {
+                        sh(script: 'tox -e tests-salt-2018.3.0-py27 -- --with-xunit --xunit-testsuite-name=salt-2018.3.0-py27 --xunit-file=tests-salt-2018.3.0-py27.xml')
+                    } finally {
+                        junit "tests-salt-2018.3.0-py27.xml"
                     }
                 },
                 'Python 3.4': {
-                    container('tox3') {
-                        try {
-                            sh 'tox -e tests-salt-2016.11.4-py34 -- --with-xunit --xunit-testsuite-name=salt-2016.11.4-py34 --xunit-file=tests-salt-2016.11.4-py34.xml'
-                        } finally {
-                            junit "tests-salt-2016.11.4-py34.xml"
-                        }
+                    try {
+                        sh(script: 'tox -e tests-salt-2018.3.0-py34 -- --with-xunit --xunit-testsuite-name=salt-2018.3.0-py34 --xunit-file=tests-salt-2018.3.0-py34.xml')
+                    } finally {
+                        junit "tests-salt-2018.3.0-py34.xml"
                     }
                 }
             )
