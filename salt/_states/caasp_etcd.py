@@ -47,13 +47,13 @@ def etcdctl(name, retry={}, **kwargs):
 def healthy(name, **kwargs):
     result = {'name': "healthy.{0}".format(name),
               'result': True,
-              'comment': "Cluster is healthy",
+              'comment': "etcd cluster is healthy",
               'changes': {}}
 
     if not __salt__['caasp_etcd.healthy'](**kwargs):
         result.update({
             'result': False,
-            'comment': "Cluster is not healthy"
+            'comment': "etcd cluster is not healthy"
         })
 
     return result
