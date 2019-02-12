@@ -71,10 +71,22 @@ def __virtual__():
     return "caasp_hosts"
 
 
-def _concat(lst1, lst2):
+# returns a list resulting of appending `lst2` to `lst1`, removing duplicates on
+# both lists (not preserving order on any of them) and removing empty elements on
+# the result. The result will be sorted as well
+def _sorted_append(lst1, lst2):
     res = list(set(lst1) | set(lst2))  # join both lists (without dups)
     res = [x for x in res if x]  # remove empty strings
     res.sort()  # sort the result (for determinism)
+    return res
+
+
+# returns a list resulting of prepending `lst2` to `lst1`, not removing
+# duplicates on any of both lists (preserving order on both of them) and
+# removing empty elements on the result
+def _unsorted_prepend(lst1, lst2):
+    res = lst2 + lst1  # unsorted prepend of lst2 in lst1
+    res = [x for x in res if x]  # remove empty strings
     return res
 
 
@@ -144,7 +156,7 @@ def _load_hosts_file(hosts, filename, marker_start=None, marker_end=None):
 
 # add a (list of) name(s) to a (maybe existing) IP
 # it will remove duplicates, sort names, etc...
-def _add_names(hosts, ips, names):
+def _add_names(hosts, ips, names, insert_fun=_sorted_append):
     if not isinstance(names, list):
         names = [names]
     if not isinstance(ips, list):
@@ -153,20 +165,25 @@ def _add_names(hosts, ips, names):
     for ip in ips:
         debug('hosts: adding %s -> %s', ip, names)
         if ip not in hosts:
-            hosts[ip] = _concat([], names)
+            hosts[ip] = insert_fun([], names)
         else:
-            hosts[ip] = _concat(hosts[ip], names)
+            hosts[ip] = insert_fun(hosts[ip], names)
 
 
-def _add_names_for(hosts, nodes_dict, infra_domain):
+def _add_names_for(hosts, nodes_dict, infra_domain, insert_fun=_sorted_append):
     for id, ifaces in nodes_dict.items():
         ip = __salt__['caasp_net.get_primary_ip'](host=id, ifaces=ifaces)
         if ip:
-            _add_names(hosts, ip, [id, id + '.' + infra_domain])
+            _add_names(hosts, ip, [id, id + '.' + infra_domain], insert_fun)
 
+
+def _add_nodenames_for(hosts, nodes_dict, infra_domain):
+    for id, ifaces in nodes_dict.items():
+        ip = __salt__['caasp_net.get_primary_ip'](host=id, ifaces=ifaces)
+        if ip:
             nodename = __salt__['caasp_net.get_nodename'](host=id)
             if nodename:
-                _add_names(hosts, ip, [nodename, nodename + '.' + infra_domain])
+                _add_names(hosts, ip, [nodename, nodename + '.' + infra_domain], _unsorted_prepend)
 
 
 # note regarding node removals:
@@ -274,12 +291,15 @@ def managed(name=HOSTS_FILE,
     def get_with_expr(expr):
         return __salt__['caasp_nodes.get_with_expr'](expr, grain='network.interfaces')
 
+    admin_nodes = admin_nodes or get_with_expr(ADMIN_EXPR)
+    master_nodes = master_nodes or get_with_expr(MASTER_EXPR)
+    worker_nodes = worker_nodes or get_with_expr(WORKER_EXPR)
+    other_nodes = other_nodes or get_with_expr(OTHER_EXPR)
+
     # add all the entries
     try:
-        _add_names_for(hosts, admin_nodes or get_with_expr(ADMIN_EXPR), infra_domain)
-        _add_names_for(hosts, master_nodes or get_with_expr(MASTER_EXPR), infra_domain)
-        _add_names_for(hosts, worker_nodes or get_with_expr(WORKER_EXPR), infra_domain)
-        _add_names_for(hosts, other_nodes or get_with_expr(OTHER_EXPR), infra_domain)
+        for nodes in [admin_nodes, master_nodes, worker_nodes, other_nodes]:
+            _add_names_for(hosts, nodes, infra_domain)
     except Exception as e:
         raise EtcHostsRuntimeException(
             'Could not add entries for roles in /etc/hosts: {}'.format(e))
@@ -311,19 +331,30 @@ def managed(name=HOSTS_FILE,
         raise EtcHostsRuntimeException(
             'Could not add special entries in /etc/hosts: {}'.format(e))
 
+    # sort the names for determinism
+    for ip, names in hosts.items():
+        names.sort()
+
+    # prepend the nodenames at the beginning of each entry
+    try:
+        for nodes in [admin_nodes, master_nodes, worker_nodes, other_nodes]:
+            _add_nodenames_for(hosts, nodes, infra_domain)
+    except Exception as e:
+        raise EtcHostsRuntimeException(
+            'Could not add nodenames entries in /etc/hosts: {}'.format(e))
+
     # (over)write the /etc/hosts
     try:
         preface = PREFACE.format(file=caasp_hosts_file).splitlines()
         new_etc_hosts_contents = []
         for ip, names in hosts.items():
-            names.sort()
             line = '{0}        {1}'.format(ip, ' '.join(names))
             new_etc_hosts_contents.append(line.strip().replace('\n', ''))
 
         new_etc_hosts_contents.sort()
         new_etc_hosts_contents = preface + new_etc_hosts_contents
 
-        info('hosts: writting new content to %s', orig_etc_hosts)
+        info('hosts: writing new content to %s', orig_etc_hosts)
         _write_lines(orig_etc_hosts, new_etc_hosts_contents)
 
     except Exception as e:
