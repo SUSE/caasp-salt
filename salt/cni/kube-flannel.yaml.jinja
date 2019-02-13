@@ -108,7 +108,9 @@ spec:
           - "--healthz-ip=$(POD_IP)"
           - "--healthz-port={{ pillar['flannel']['healthz_port'] }}"
         securityContext:
-          privileged: true
+          privileged: false
+          capabilities:
+            add: ["NET_ADMIN"]
         ports:
         - name: healthz
           containerPort: {{ pillar['flannel']['healthz_port'] }}
@@ -141,7 +143,7 @@ spec:
               fieldPath: spec.nodeName
         volumeMounts:
         - name: run
-          mountPath: /run
+          mountPath: /run/flannel
         - name: host-cni-conf
           mountPath: /etc/cni/net.d
         - name: flannel-plugin-config
@@ -160,7 +162,7 @@ spec:
       volumes:
         - name: run
           hostPath:
-            path: /run
+            path: /run/flannel
         - name: host-cni-conf
           hostPath:
             path: {{ pillar['cni']['dirs']['conf'] }}
