@@ -268,8 +268,11 @@ def managed(name=HOSTS_FILE,
                                               backup=False)
             except Exception as e:
                 __utils__['caasp_log.warn']('could not remove old blocks in {}: {}'.format(caasp_hosts_file, e))
+        try:
+            os.path.exists(caasp_hosts_file)
+        except Exception as e:
+            raise EtcHostsRuntimeException("caasp_hosts_file {0} doesn't exist  {1}".format(caasp_hosts_file, e))
 
-        assert os.path.exists(caasp_hosts_file)
 
         __utils__['caasp_log.info']('hosts: loading entries in "%s" file', caasp_hosts_file)
         if not os.path.isfile(caasp_hosts_file):
