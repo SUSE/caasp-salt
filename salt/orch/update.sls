@@ -151,38 +151,6 @@ all-workers-2.0-pre-orchestration:
     - require:
       - pre-orchestration-migration
 
-# NOTE: Remove me for 4.0
-#
-# During an upgrade from 2.0 to 3.0, as we go master by master first, the first master will not
-# succeed on the orchestration if it doesn't have an etcd member. Assume M{1,2,3}, W{1,2}. Assume
-# etcd members are running on M2, W1 and W2.
-#
-# M1 updates its configurations on highstate and refers to the etcd nodes with the new names
-# (hostnames) instead of machine-ids, but M2, W1 and W2 still didn't run anything to refresh their
-# certificates and their etcd instances, what will make M1 fail because it cannot connect to any
-# etcd instance (as all certificates look invalid at this point for M2.hostname, W1.hostname and
-# W2.hostname). This makes the apiserver on M1 fail restarting itself until the orchestration reaches
-# M2 [there's no hard dependency on states between masters], but the orchestration already failed on
-# M1, so the global result will be failure nevertheless.
-#
-# Let's force etcd to refresh certificates on all machines, restarting the etcd service so we can
-# continue with the upgrade, as certificates will be valid for the old and the new SAN.
-#
-# We run the etc-hosts sls to make the machines refresh their references first (including old CaaSP
-# 2.0 and 3.0 naming). This way, etcd will be able to work with both namings during the upgrade
-# process.
-etcd-setup:
-  salt.state:
-    - tgt: '{{ is_etcd_tgt }}'
-    - tgt_type: compound
-    - sls:
-      - etc-hosts
-      - etcd
-    - batch: 1
-    - require:
-      - all-workers-2.0-pre-orchestration
-# END NOTE
-
 early-services-setup:
   salt.state:
     - tgt: '{{ super_master }}'
@@ -190,8 +158,6 @@ early-services-setup:
       - addons
       - addons.psp
       - cni
-    - require:
-      - etcd-setup
 
 # Get list of masters needing reboot
 {%- set masters = salt.saltutil.runner('mine.get', tgt=is_updateable_master_tgt, fun='network.interfaces', tgt_type='compound') %}
@@ -247,7 +213,7 @@ early-services-setup:
     - tgt: '{{ master_id }}'
     - name: cmd.run
     - arg:
-      - sleep 15; systemctl reboot
+      - sleep 30; systemctl reboot
     - kwarg:
         bg: True
     - require:
@@ -324,32 +290,6 @@ all-masters-post-start-services:
       - all-masters-post-start-services
 {%- endfor %}
 
-# NOTE: Remove me for 4.0
-#
-# On 2.0 -> 3.0 we are updating the way kubelets auth against the apiservers.
-# At this point in time all masters have been updated, and all workers are (or
-# will) be in `NotReady` state. This means that any operation that we perform
-# that go through the apiserver down to the kubelets won't work (e.g. draining
-# nodes).
-#
-# To fix this problem we'll apply the haproxy sls to all worker nodes, so they
-# can rejoin the cluster and we can operate on them normally.
-all-workers-2.0-pre-clean-shutdown:
-  salt.state:
-    - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:2.0'
-    - tgt_type: compound
-    - expect_minions: false
-    - batch: 3
-    - sls:
-        - etc-hosts
-        - migrations.2-3.haproxy
-    - require:
-      - all-masters-post-start-services
-{%- for master_id in masters.keys() %}
-      - {{ master_id }}-reboot-needed-grain
-{%- endfor %}
-# END NOTE: Remove me for 4.0
-
 {%- set workers = salt.saltutil.runner('mine.get', tgt=is_updateable_worker_tgt, fun='network.interfaces', tgt_type='compound') %}
 {%- for worker_id, ip in workers.items() %}
 
@@ -362,9 +302,6 @@ all-workers-2.0-pre-clean-shutdown:
     - sls:
       - migrations.2-3.kubelet.drain
       - kubelet.stop
-    - require:
-      - all-workers-2.0-pre-clean-shutdown
-      # wait until all the masters have been updated
 {%- for master_id in masters.keys() %}
       - {{ master_id }}-reboot-needed-grain
 {%- endfor %}
@@ -406,7 +343,7 @@ all-workers-2.0-pre-clean-shutdown:
     - tgt: '{{ worker_id }}'
     - name: cmd.run
     - arg:
-      - sleep 15; systemctl reboot
+      - sleep 30; systemctl reboot
     - kwarg:
         bg: True
     - require:
@@ -551,19 +488,6 @@ admin-wait-for-services:
     - require:
       - super-master-wait-for-services
 
-# Remove the now defuct caasp_fqdn grain (Remove for 4.0).
-remove-caasp-fqdn-grain:
-  salt.function:
-    - tgt: '{{ is_responsive_node_tgt }}'
-    - tgt_type: compound
-    - name: grains.delval
-    - arg:
-      - caasp_fqdn
-    - kwarg:
-        destructive: True
-    - require:
-      - admin-wait-for-services
-
 {%- if is_migration %}
 reenable-transactional-update-timer:
   salt.function:
@@ -573,8 +497,6 @@ reenable-transactional-update-timer:
     - name: service.enable
     - arg:
         - transactional-update.timer
-    - require:
-      - remove-caasp-fqdn-grain
 
 {%- for grain in ['tx_update_migration_notes', 'tx_update_migration_newversion', 'tx_update_migration_available'] %}
 unset-{{ grain }}-grain:
@@ -600,5 +522,3 @@ remove-update-grain:
       - {{ progress_grain }}
     - kwarg:
         destructive: True
-    - require:
-      - remove-caasp-fqdn-grain
