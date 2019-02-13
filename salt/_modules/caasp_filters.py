@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import socket
+import os
 
 # TODO: in Python 3 there is an ipaddress module which works out of the box. In
 # fact, Salt is using this module when running in Python 3. For Python 2 Salt
