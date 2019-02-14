@@ -52,4 +52,7 @@ KUBELET_ARGS="\
     --cni-bin-dir={{ pillar['cni']['dirs']['bin'] }} \
     --cni-conf-dir={{ pillar['cni']['dirs']['conf'] }} \
     --kubeconfig={{ pillar['paths']['kubelet_config'] }} \
-    --volume-plugin-dir=/usr/lib/kubernetes/kubelet-plugins"
+{%- if pillar['volume']['dirs']['bin'] %}
+    --volume-plugin-dir={{ pillar['volume']['dirs']['bin'] }} \
+{%- endif %}
+    "
