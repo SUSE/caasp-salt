@@ -21,7 +21,7 @@ include:
 
 kube-apiserver:
   caasp_retriable.retry:
-    - name: iptables-kube-apiserver
+    - name:   iptables-kube-apiserver
     - target: iptables.append
     - retry:
         attempts: 2
@@ -40,8 +40,12 @@ kube-apiserver:
     - name:       /etc/kubernetes/apiserver
     - source:     salt://kube-apiserver/apiserver.jinja
     - template:   jinja
-  service.running:
-    - enable:     True
+  caasp_service.running_stable:
+    - name:                        kube-apiserver
+    - successful_retries_in_a_row: 10
+    - max_retries:                 30
+    - delay_between_retries:       2
+    - enable:                      True
     - require:
       - caasp_retriable: iptables-kube-apiserver
       - sls:             ca-cert
@@ -59,9 +63,9 @@ kube-apiserver:
 
 /var/log/kube-apiserver:
   file.directory:
-    - user: kube
-    - group: kube
-    - dirmode: 755
+    - user:     kube
+    - group:    kube
+    - dirmode:  755
     - filemode: 644
 
 /etc/kubernetes/audit-policy.yaml:
@@ -92,6 +96,6 @@ kube-apiserver-wait-port-{{ port }}:
     - opts:
         http_request_timeout: 30
     - watch:
-      - service: kube-apiserver
+      - caasp_service: kube-apiserver
 
 {% endfor %}
