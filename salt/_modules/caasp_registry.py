@@ -72,4 +72,4 @@ def base_image_url():
     if _use_registry_images():
         return "{0}/{1}".format(_registry(), _namespace())
     else:
-        return "sles12"
+        return "caasp/v4"
