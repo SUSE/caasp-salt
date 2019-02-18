@@ -4,6 +4,7 @@
 #
 
 from __future__ import absolute_import
+from salt.ext.six import iteritems
 
 
 DEFAULT_INTERFACE = 'eth0'
@@ -25,7 +26,7 @@ def get_hosts():
     hosts = __salt__['hosts.list_hosts']()  # type: dict
     # Python3 (correctly) prevents modifying a dictionary we are iterating
     # over, so we have to copy it first, so we can remove comment entries.
-    return {k:v for k,v in hosts.items() if not k.startswith("comment-")}
+    return {k: v for k, v in hosts.items() if not k.startswith("comment-")}
 
 
 def get_aliases(hostname):
@@ -35,7 +36,7 @@ def get_aliases(hostname):
     :return: [string]
     """
     hosts = get_hosts()
-    for host, aliases in hosts.iteritems():
+    for host, aliases in iteritems(hosts):
         if hostname in aliases:
             __utils__['caasp_log.debug']('CaaS: retrieved aliases %s for %s', aliases, hostname)
             return aliases
