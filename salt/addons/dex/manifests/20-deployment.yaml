@@ -19,7 +19,6 @@ spec:
       labels:
         app: dex
       annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
         # Kubernetes will not restart dex when the configmap or secret changes, and
         # dex will not notice anything has been changed either. By storing the checksum
         # within an annotation, we force Kubernetes to perform the rolling restart
@@ -33,8 +32,9 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: NoSchedule
-      - key: "CriticalAddonsOnly"
-        operator: "Exists"
+
+      # prevent evictions
+      priorityClassName: system-node-critical
 
       # ensure dex pods are running on different hosts
       affinity:

@@ -21,15 +21,11 @@ spec:
       labels:
         app: helm
         name: tiller
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: NoSchedule
-      - key: "CriticalAddonsOnly"
-        operator: "Exists"
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -42,6 +38,8 @@ spec:
                   operator: In
                   values:
                   - tiller
+      # prevent evictions
+      priorityClassName: system-node-critical
       containers:
       - env:
         - name: TILLER_NAMESPACE
