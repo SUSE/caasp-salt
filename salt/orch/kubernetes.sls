@@ -100,6 +100,7 @@ ca-setup:
     - tgt: 'roles:ca'
     - tgt_type: grain
     - highstate: True
+    - timeout: 120
     - require:
       - etc-hosts-setup
 
@@ -109,6 +110,7 @@ generate-sa-key:
     - tgt_type: grain
     - sls:
       - kubernetes-common.generate-serviceaccount-key
+    - timeout: 120
     - require:
       - ca-setup
 
