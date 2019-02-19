@@ -17,7 +17,7 @@ include:
 
 {% set system_certs = salt.caasp_pillar.get('system_certificates', []) %}
 {% for cert in system_certs %}
-  {% set name, cert = cert['name'], cert['cert'] %}
+  {% set name, cert = salt.caasp_filters.basename(cert['name']), cert['cert'] %}
 
 /etc/pki/trust/anchors/{{ name }}.crt:
   file.managed:
