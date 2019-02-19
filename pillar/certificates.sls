@@ -40,6 +40,9 @@ ssl:
   kube_apiserver_key: '/etc/pki/kube-apiserver.key'
   kube_apiserver_crt: '/etc/pki/kube-apiserver.crt'
 
+  kube_apiserver_kubelet_client_key: '/etc/pki/kube-apiserver-kubelet-client.key'
+  kube_apiserver_kubelet_client_crt: '/etc/pki/kube-apiserver-kubelet-client.crt'
+
   kube_apiserver_proxy_client_key: '/etc/pki/kube-apiserver-proxy-client.key'
   kube_apiserver_proxy_client_crt: '/etc/pki/kube-apiserver-proxy-client.crt'
 
