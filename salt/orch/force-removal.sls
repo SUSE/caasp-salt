@@ -1,4 +1,7 @@
-# must provide the node (id) to be removed in the 'target' pillar
+{#- Make sure we start with an updated mine #}
+{%- set _ = salt.caasp_orch.sync_all() %}
+
+{#- must provide the node (id) to be removed in the 'target' pillar #}
 {%- set target = salt['pillar.get']('target') %}
 
 {%- set super_master = salt.saltutil.runner('manage.up', tgt='G@roles:kube-master and not ' + target, expr_form='compound')|first %}

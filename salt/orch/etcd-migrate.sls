@@ -1,3 +1,6 @@
+{#- Make sure we start with an updated mine #}
+{%- set _ = salt.caasp_orch.sync_all() %}
+
 # Generic Updates
 update_pillar:
   salt.function:

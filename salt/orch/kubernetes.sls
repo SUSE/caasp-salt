@@ -1,8 +1,11 @@
+{#- Make sure we start with an updated mine #}
+{%- set _ = salt.caasp_orch.sync_all() %}
+
 {%- set default_batch = salt['pillar.get']('default_batch', 5) %}
 
-{%- set etcd_members = salt.saltutil.runner('mine.get', tgt='G@roles:etcd',        fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set masters      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set minions      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set etcd_members = salt.caasp_nodes.get_with_expr('G@roles:etcd') %}
+{%- set masters      = salt.caasp_nodes.get_with_expr('G@roles:kube-master') %}
+{%- set minions      = salt.caasp_nodes.get_with_expr('G@roles:kube-minion') %}
 
 {%- set super_master = masters|first %}
 
