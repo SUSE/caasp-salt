@@ -70,6 +70,12 @@ etcd:
   caasp_etcd.healthy:
     - watch:
       - caasp_service: etcd
+  # New in version 2017.7.0.
+    - retry:
+        attempts: 10
+        until:    True
+        interval: 15
+        splay:    10
 
 /etc/sysconfig/etcd:
   file.managed:
