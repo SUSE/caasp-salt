@@ -16,6 +16,9 @@ flannel:
 # 7 - Display HTTP request headers.
 # 8 - Display HTTP request contents.
   log_level:      '2'
+# cilium configuration
+cilium:
+  image:          'cilium:1.2.1'
 
 # CNI network configuration
 cni:
