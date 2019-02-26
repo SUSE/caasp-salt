@@ -30,8 +30,14 @@ KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ pillar['services_cidr'] }}
 KUBE_ADMISSION_CONTROL="--admission-control={{ admission_control|join(',') }}"
 
 # Add your own!
+# We add the reconciler to update the endpoint should one of the additional apiserver go down.
+# In newer version of kubernetes (1.11) the `lease` option has become the default and this can be removed.
+{%- set num_apiservers = salt['mine.get']('roles:kube-master', 'nodename', expr_form='grain').values()|length %}
 KUBE_API_ARGS="--advertise-address={{ salt.caasp_net.get_primary_ip() }} \
-               --apiserver-count={{ salt['mine.get']('roles:kube-master', 'nodename', expr_form='grain').values()|length }} \
+               --apiserver-count={{ num_apiservers }} \
+{%- if num_apiservers > 1 %}
+               --endpoint-reconciler-type='lease' \
+{%- endif -%}
 {%- if cloud_provider %}
                --cloud-provider={{ pillar['cloud']['provider'] }} \
   {%- if cloud_provider == 'openstack' %}
