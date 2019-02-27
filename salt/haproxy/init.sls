@@ -11,9 +11,6 @@ include:
 # failing orchestrations.
   - kubelet
   - {{ salt['pillar.get']('cri:chosen', 'docker') }}
-  {%- if not salt.caasp_registry.use_registry_images() %}
-  - container-feeder
-  {%- endif %}
 {% endif %}
 
 /etc/caasp/haproxy:
@@ -86,9 +83,6 @@ haproxy-restart:
 {% if not salt.caasp_nodes.is_admin_node() %}
     - require:
       - service: kubelet
-      {%- if not salt.caasp_registry.use_registry_images() %}
-      - service: container-feeder
-      {%- endif %}
 {% endif %}
 
 
