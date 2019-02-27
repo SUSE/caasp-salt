@@ -44,7 +44,7 @@ spec:
       - env:
         - name: TILLER_NAMESPACE
           value: kube-system
-        image: {{ salt.caasp_registry.base_image_url() }}/tiller:2.8.2
+        image: registry.suse.com/caasp/v4/tiller:2.8.2
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
