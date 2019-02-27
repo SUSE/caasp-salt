@@ -1,3 +1,6 @@
+{#- Make sure we start with an updated mine #}
+{%- set _ = salt.caasp_orch.sync_all() %}
+
 {#- Get a list of nodes seem to be down or unresponsive #}
 {#- This sends a "are you still there?" message to all #}
 {#- the nodes and wait for a response, so it takes some time. #}

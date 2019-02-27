@@ -1,3 +1,6 @@
+{#- Make sure we start with an updated mine #}
+{%- set _ = salt.caasp_orch.sync_all() %}
+
 {#- must provide the node (id) to be removed in the 'target' pillar #}
 {%- set target = salt['pillar.get']('target') %}
 
@@ -22,9 +25,9 @@
   {%- endif %}
 {%- endif %}
 
-{%- set etcd_members = salt.saltutil.runner('mine.get', tgt='G@roles:etcd',        fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set masters      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-master', fun='network.interfaces', tgt_type='compound').keys() %}
-{%- set minions      = salt.saltutil.runner('mine.get', tgt='G@roles:kube-minion', fun='network.interfaces', tgt_type='compound').keys() %}
+{%- set etcd_members = salt.caasp_nodes.get_with_expr('G@roles:etcd') %}
+{%- set masters      = salt.caasp_nodes.get_with_expr('G@roles:kube-master') %}
+{%- set minions      = salt.caasp_nodes.get_with_expr('G@roles:kube-minion') %}
 
 {%- set super_master_tgt = salt.caasp_nodes.get_super_master(masters=masters,
                                                              excluded=[target] + nodes_down) %}
