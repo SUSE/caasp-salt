@@ -58,7 +58,7 @@ spec:
                 operator: Exists
 
       containers:
-      - image: {{ salt.caasp_registry.base_image_url() }}/caasp-dex:2.7.1
+      - image: registry.suse.com/caasp/v4/caasp-dex:2.7.1
         name: dex
         command: ["/usr/bin/caasp-dex", "serve", "/etc/dex/cfg/config.yaml"]
 

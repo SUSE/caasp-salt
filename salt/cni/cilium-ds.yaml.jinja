@@ -27,7 +27,7 @@ spec:
       serviceAccountName: cilium
       initContainers:
       - name: install-cni-conf
-        image: {{ salt.caasp_registry.base_image_url() }}/{{ pillar['cilium']['image'] }}
+        image: registry.suse.com/caasp/v4/{{ pillar['cilium']['image'] }}
         command:
           - /bin/sh
           - "-c"
@@ -36,7 +36,7 @@ spec:
         - name: host-cni-conf
           mountPath: /host/etc/cni/net.d
       - name: install-cni-bin
-        image: {{ salt.caasp_registry.base_image_url() }}/{{ pillar['cilium']['image'] }}
+        image: registry.suse.com/caasp/v4/{{ pillar['cilium']['image'] }}
         command:
           - /bin/sh
           - "-c"
@@ -49,7 +49,7 @@ spec:
       priorityClassName: system-node-critical
 
       containers:
-      - image: {{ salt.caasp_registry.base_image_url() }}/{{ pillar['cilium']['image'] }}
+      - image: registry.suse.com/caasp/v4/{{ pillar['cilium']['image'] }}
         imagePullPolicy: IfNotPresent
         name: cilium-agent
         command: [ "cilium-agent" ]

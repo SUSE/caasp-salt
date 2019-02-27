@@ -19,7 +19,7 @@ spec:
   priorityClassName: system-node-critical
   containers:
     - name: haproxy
-      image: {{ salt.caasp_registry.base_image_url() }}/haproxy:1.6.11
+      image: registry.suse.com/caasp/v4/haproxy:1.6.11
       resources:
         requests:
           memory: 128Mi
