@@ -1,8 +1,5 @@
 include:
   - kubelet
-  {%- if not salt.caasp_registry.use_registry_images() %}
-  - container-feeder
-  {%- endif %}
 
 crio:
   file.managed:
@@ -23,10 +20,6 @@ crio:
     - makedirs: True
     - require_in:
       - kubelet
-    {%- if not salt.caasp_registry.use_registry_images() %}
-    - require:
-      - service: container-feeder
-    {%- endif %}
   module.run:
     - name: service.systemctl_reload
     - onchanges:

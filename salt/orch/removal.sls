@@ -306,9 +306,6 @@ stop-services-in-target:
   salt.state:
     - tgt: '{{ target }}'
     - sls:
-  {%- if not salt.caasp_registry.use_registry_images() %}
-      - container-feeder.stop
-  {%- endif %}
   {%- if target in masters %}
       - kube-apiserver.stop
       - kube-controller-manager.stop
