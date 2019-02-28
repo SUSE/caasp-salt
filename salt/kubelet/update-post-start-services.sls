@@ -7,7 +7,7 @@ include:
 {% if salt['grains.get']('kubelet:should_uncordon', false) %}
 
 uncordon-node:
-  caasp_cmd.run:
+  cmd.run:
     - name: |
         kubectl --request-timeout=1m uncordon {{ grains['nodename'] }}
     - retry:
