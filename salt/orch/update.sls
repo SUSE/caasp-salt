@@ -88,11 +88,11 @@ update-mine:
 
 update-modules:
   salt.function:
-    - name: saltutil.sync_all
+    - name: saltutil.refresh_modules
     - tgt: '{{ is_responsive_node_tgt }}'
     - tgt_type: compound
     - kwarg:
-        refresh: True
+        async: False
     - require:
       - update-mine
 
