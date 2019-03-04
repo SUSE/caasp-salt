@@ -1,6 +1,6 @@
 ensure-dex-running:
   # Wait until the Dex API is actually up and running
-  caasp_http.wait_for_successful_query:
+  http.wait_for_successful_query:
     {% set dex_api_server = "api." + pillar['internal_infra_domain']  -%}
     {% set dex_api_server_ext = pillar['api']['server']['external_fqdn'] -%}
     {% set dex_api_port = pillar['dex']['node_port'] -%}

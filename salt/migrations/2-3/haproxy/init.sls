@@ -80,7 +80,7 @@ kubelet_start:
 {%- set api_server = 'api.' + pillar['internal_infra_domain'] %}
 wait-for-haproxy:
   caasp_retriable.retry:
-    - target:     caasp_http.wait_for_successful_query
+    - target:     http.wait_for_successful_query
     - name:       {{ 'https://' + api_server + ':' + pillar['api']['ssl_port'] }}/healthz
     - wait_for:   300
     # retry just in case the API server returns a transient error
