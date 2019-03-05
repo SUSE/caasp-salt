@@ -12,7 +12,7 @@ authentication:
   x509:
     clientCAFile: "{{ pillar['ssl']['ca_file'] }}"
   webhook:
-    enabled: false
+    enabled: true
     cacheTTL: 2m0s
   anonymous:
     enabled: false
