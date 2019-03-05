@@ -55,22 +55,22 @@ class TestEtcHosts(unittest.TestCase):
         caasp_hosts.__salt__ = dict()
 
         ips = {
-            'admin': '10.10.10.1',
-            'master0': '10.10.10.2',
-            'minion1': '10.10.10.3',
-            'other0': '10.10.10.4'
+            'admin-minion-id': '10.10.10.1',
+            'master0-minion-id': '10.10.10.2',
+            'minion1-minion-id': '10.10.10.3',
+            'other0-minion-id': '10.10.10.4'
         }
 
-        admin_nodes = {'admin': 'eth0'}
-        master_nodes = {'master0': 'eth0'}
-        worker_nodes = {'minion1': 'eth0'}
-        other_nodes = {'other0': 'eth0'}
+        admin_nodes = {'admin-minion-id': 'eth0'}
+        master_nodes = {'master0-minion-id': 'eth0'}
+        worker_nodes = {'minion1-minion-id': 'eth0'}
+        other_nodes = {'other0-minion-id': 'eth0'}
 
         def mock_get_primary_ip(host, ifaces):
             return ips[host]
 
         def mock_get_nodename(host):
-            return host
+            return "nodename-{}".format(host)
 
         def mock_get_pillar(s, default=None):
             return {
@@ -183,13 +183,17 @@ ff02::3         ipv6-allhosts
                 caasp_hosts._load_hosts_file(new_etc_hosts_contents,
                                              etc_hosts.name)
 
+                def check_entry_strict(ip, names):
+                    self.assertIn(ip, new_etc_hosts_contents)
+                    self.assertEqual(names, new_etc_hosts_contents[ip])
+
                 def check_entry(ip, names):
                     self.assertIn(ip, new_etc_hosts_contents)
                     for name in names:
                         self.assertIn(name, new_etc_hosts_contents[ip])
 
                 # check the Admin node has the right entries
-                check_entry('10.10.10.1', ['admin',
+                check_entry('10.10.10.1', ['admin-minion-id',
                                            'some-other-name-for-admin'])
 
                 # check we are setting the right things in 127.0.0.1
@@ -204,6 +208,15 @@ ff02::3         ipv6-allhosts
                 # check the old entries atre not present
                 for ip in ['10.10.9.1', '10.10.9.2', '10.10.9.3', '10.10.9.4']:
                     self.assertNotIn(ip, new_etc_hosts_contents)
+
+                #
+                # story: nodenames are appended at the beginning of the line
+                #
+
+                check_entry_strict('10.10.10.2', ['nodename-master0-minion-id',
+                                                  'nodename-master0-minion-id.infra.caasp.local',
+                                                  'master0-minion-id',
+                                                  'master0-minion-id.infra.caasp.local'])
 
                 #
                 # story: this host is highstated again
@@ -254,7 +267,7 @@ ff02::3         ipv6-allhosts
                 check_entry('10.10.23.8', ['bar.server.com'])
 
                 # repeat previous checks
-                check_entry('10.10.10.1', ['admin',
+                check_entry('10.10.10.1', ['admin-minion-id',
                                            'some-other-name-for-admin'])
                 check_entry('127.0.0.1', ['api', 'api.infra.caasp.local',
                                           EXTERNAL_MASTER_NAME,
