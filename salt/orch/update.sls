@@ -86,16 +86,6 @@ update-mine:
     - require:
       - update-data
 
-update-modules:
-  salt.function:
-    - name: saltutil.sync_all
-    - tgt: '{{ is_responsive_node_tgt }}'
-    - tgt_type: compound
-    - kwarg:
-        refresh: True
-    - require:
-      - update-mine
-
 # Generate sa key (we should refactor this as part of the ca highstate along with its counterpart
 # in orch/kubernetes.sls)
 generate-sa-key:
@@ -105,7 +95,7 @@ generate-sa-key:
     - sls:
       - kubernetes-common.generate-serviceaccount-key
     - require:
-      - update-modules
+      - update-mine
 
 admin-apply-haproxy:
   salt.state:
