@@ -36,11 +36,12 @@ def get_aliases(hostname):
     :return: [string]
     """
     hosts = get_hosts()
+    found_aliases = set([hostname])
     for host, aliases in iteritems(hosts):
         if hostname in aliases:
-            __utils__['caasp_log.debug']('CaaS: retrieved aliases %s for %s', aliases, hostname)
-            return aliases
-    return [hostname]
+            found_aliases.update(set(aliases))
+    __utils__['caasp_log.debug']('CaaS: retrieved aliases %s for %s', aliases, hostname)
+    return found_aliases
 
 
 def get_iface_ip(iface, host=None, ifaces=None):

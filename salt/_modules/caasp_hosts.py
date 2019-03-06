@@ -78,6 +78,19 @@ def _sorted_append(lst1, lst2):
     return res
 
 
+def _makedirs(path):
+    try:
+        # Python3 allows to pass exist_ok=True to not throw an error
+        # Python2 does not have this parameters, so we have to catch the OSError
+        os.makedirs(path)
+    except OSError as e:
+        # Error 17 = file exists, so nothing for us to do
+        if e.errno == 17:
+            pass
+        else:
+            raise
+
+
 # returns a list resulting of prepending `lst2` to `lst1`, not removing
 # duplicates on any of both lists (preserving order on both of them) and
 # removing empty elements on the result
@@ -254,6 +267,8 @@ def managed(name=HOSTS_FILE,
 
     # copy the /etc/hosts to caasp_hosts_file the first time we run this
     if caasp_hosts_file:
+        caasp_hosts_dir = os.path.dirname(caasp_hosts_file)
+        _makedirs(caasp_hosts_dir)
         if not os.path.exists(caasp_hosts_file):
             __utils__['caasp_log.info']('hosts: saving %s in %s', orig_etc_hosts, caasp_hosts_file)
             _write_lines(caasp_hosts_file, orig_etc_hosts_contents)
