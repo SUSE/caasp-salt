@@ -158,9 +158,10 @@ spec:
             path: /etc/pki
       restartPolicy: Always
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
-      - effect: NoSchedule
-        key: node.cloudprovider.kubernetes.io/uninitialized
-        value: "true"
+        # Allow the pod to run on the master.  This is required for
+        # the master to communicate with pods.
+        - operator: Exists
+          effect: NoSchedule
+      # prevent evictions
+      priorityClassName: system-node-critical
 
