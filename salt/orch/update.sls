@@ -126,67 +126,6 @@ admin-setup:
     - require:
       - admin-apply-haproxy
 
-# Perform any necessary migrations before starting the update orchestration. All services and
-# machines should be running and we can migrate some data on the whole cluster and then proceed
-# with the real update.
-pre-orchestration-migration:
-  salt.state:
-    - tgt: '{{ is_updateable_node_tgt }}'
-    - tgt_type: compound
-    - batch: 3
-    - sls:
-      - migrations.2-3.cni.pre-orchestration
-      - migrations.2-3.kubelet.pre-orchestration
-      - migrations.2-3.etcd.pre-orchestration
-    - require:
-      - admin-setup
-
-# Before the real orchestration starts cordon all the worker nodes running 2.0. This way we ensure
-# that no pods will be rescheduled on these machines while we upgrade: all rescheduled workloads
-# will be strictly sent to upgraded nodes (the only ones uncordoned).
-all-workers-2.0-pre-orchestration:
-  salt.state:
-    - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:2.0'
-    - tgt_type: compound
-    - expect_minions: false
-    - batch: 3
-    - sls:
-        - migrations.2-3.kubelet.cordon
-    - require:
-      - pre-orchestration-migration
-
-# NOTE: Remove me for 4.0
-#
-# During an upgrade from 2.0 to 3.0, as we go master by master first, the first master will not
-# succeed on the orchestration if it doesn't have an etcd member. Assume M{1,2,3}, W{1,2}. Assume
-# etcd members are running on M2, W1 and W2.
-#
-# M1 updates its configurations on highstate and refers to the etcd nodes with the new names
-# (hostnames) instead of machine-ids, but M2, W1 and W2 still didn't run anything to refresh their
-# certificates and their etcd instances, what will make M1 fail because it cannot connect to any
-# etcd instance (as all certificates look invalid at this point for M2.hostname, W1.hostname and
-# W2.hostname). This makes the apiserver on M1 fail restarting itself until the orchestration reaches
-# M2 [there's no hard dependency on states between masters], but the orchestration already failed on
-# M1, so the global result will be failure nevertheless.
-#
-# Let's force etcd to refresh certificates on all machines, restarting the etcd service so we can
-# continue with the upgrade, as certificates will be valid for the old and the new SAN.
-#
-# We run the etc-hosts sls to make the machines refresh their references first (including old CaaSP
-# 2.0 and 3.0 naming). This way, etcd will be able to work with both namings during the upgrade
-# process.
-etcd-setup:
-  salt.state:
-    - tgt: '{{ is_etcd_tgt }}'
-    - tgt_type: compound
-    - sls:
-      - etc-hosts
-      - etcd
-    - batch: 1
-    - require:
-      - all-workers-2.0-pre-orchestration
-# END NOTE
-
 early-services-setup:
   salt.state:
     - tgt: '{{ super_master }}'
@@ -195,7 +134,7 @@ early-services-setup:
       - addons.psp
       - cni
     - require:
-      - etcd-setup
+      - admin-setup
 
 # Get list of masters needing reboot
 {%- set masters = salt.caasp_nodes.get_with_expr(is_updateable_master_tgt) %}
@@ -237,8 +176,6 @@ early-services-setup:
       {% if salt['pillar.get']('cri:chosen') == "crio" %}
       - migrations.cri.pre-update
       {% endif %}
-      - migrations.2-3.cni.pre-reboot
-      - migrations.2-3.etcd.pre-reboot
     - require:
       - {{ master_id }}-clean-shutdown
 
@@ -301,8 +238,6 @@ all-masters-post-start-services:
     - expect_minions: false
     - batch: 3
     - sls:
-      - migrations.2-3.cni.post-start-services
-      - migrations.2-3.kubelet.post-start-services
       - kubelet.update-post-start-services
     - require:
       - early-services-setup
@@ -325,32 +260,6 @@ all-masters-post-start-services:
       - all-masters-post-start-services
 {%- endfor %}
 
-# NOTE: Remove me for 4.0
-#
-# On 2.0 -> 3.0 we are updating the way kubelets auth against the apiservers.
-# At this point in time all masters have been updated, and all workers are (or
-# will) be in `NotReady` state. This means that any operation that we perform
-# that go through the apiserver down to the kubelets won't work (e.g. draining
-# nodes).
-#
-# To fix this problem we'll apply the haproxy sls to all worker nodes, so they
-# can rejoin the cluster and we can operate on them normally.
-all-workers-2.0-pre-clean-shutdown:
-  salt.state:
-    - tgt: '( {{ is_updateable_worker_tgt }} ) and G@osrelease:2.0'
-    - tgt_type: compound
-    - expect_minions: false
-    - batch: 3
-    - sls:
-        - etc-hosts
-        - migrations.2-3.haproxy
-    - require:
-      - all-masters-post-start-services
-{%- for master_id in masters %}
-      - {{ master_id }}-reboot-needed-grain
-{%- endfor %}
-# END NOTE: Remove me for 4.0
-
 {%- set workers = salt.caasp_nodes.get_with_expr(is_updateable_worker_tgt) %}
 {%- for worker_id in workers %}
 
@@ -361,10 +270,8 @@ all-workers-2.0-pre-clean-shutdown:
   salt.state:
     - tgt: '{{ worker_id }}'
     - sls:
-      - migrations.2-3.kubelet.drain
       - kubelet.stop
     - require:
-      - all-workers-2.0-pre-clean-shutdown
       # wait until all the masters have been updated
 {%- for master_id in masters %}
       - {{ master_id }}-reboot-needed-grain
@@ -394,7 +301,6 @@ all-workers-2.0-pre-clean-shutdown:
       - migrations.cri.pre-update
       {% endif %}
       - etc-hosts.update-pre-reboot
-      - migrations.2-3.cni.pre-reboot
     - require:
       - {{ worker_id }}-clean-shutdown
 
@@ -453,8 +359,6 @@ all-workers-2.0-pre-clean-shutdown:
   salt.state:
     - tgt: '{{ worker_id }}'
     - sls:
-      - migrations.2-3.cni.post-start-services
-      - migrations.2-3.kubelet.post-start-services
       - kubelet.update-post-start-services
     - require:
       - {{ worker_id }}-start-services
