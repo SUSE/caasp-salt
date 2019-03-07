@@ -17,4 +17,4 @@ def get(expr, grain=DEFAULT_GRAIN, type='compound'):
                                            tgt=expr,
                                            fun=grain, tgt_type=type)
     else:
-        return __salt__['mine.get'](expr, grain, expr_form=type)
+        return __salt__['mine.get'](expr, grain, tgt_type=type)

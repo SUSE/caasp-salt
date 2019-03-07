@@ -4,7 +4,7 @@
 {#- must provide the node (id) to be removed in the 'target' pillar #}
 {%- set target = salt['pillar.get']('target') %}
 
-{%- set super_master = salt.saltutil.runner('manage.up', tgt='G@roles:kube-master and not ' + target, expr_form='compound')|first %}
+{%- set super_master = salt.saltutil.runner('manage.up', tgt='G@roles:kube-master and not ' + target, tgt_type='compound')|first %}
 
 set-cluster-wide-removal-grain:
   salt.function:

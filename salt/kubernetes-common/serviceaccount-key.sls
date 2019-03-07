@@ -1,4 +1,4 @@
-{%- set ca_crt = salt['mine.get']('roles:ca', 'sa.key', expr_form='grain').values()|first %}
+{%- set ca_crt = salt['mine.get']('roles:ca', 'sa.key', tgt_type='grain').values()|first %}
 
 {{ pillar['paths']['service_account_key'] }}:
   x509.pem_managed:
