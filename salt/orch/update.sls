@@ -459,7 +459,7 @@ services-setup:
 # Wait for deployments to have the expected number of pods running.
 super-master-wait-for-services:
   salt.state:
-    - tgt: {{ super_master }}
+    - tgt: '{{ super_master }}'
     - sls:
       - addons.dns.deployment-wait
       - addons.tiller.deployment-wait
@@ -533,8 +533,8 @@ reenable-transactional-update-timer:
 
 remove-update-grain:
   salt.function:
-    - tgt: '{{ progress_grain }}:true'
-    - tgt_type: grain
+    - tgt: '{{ is_responsive_node_tgt }} and G@{{ progress_grain }}:true'
+    - tgt_type: compound
     - name: grains.delval
     - arg:
       - {{ progress_grain }}
