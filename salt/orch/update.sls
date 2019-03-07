@@ -71,16 +71,26 @@ disable-transactional-update-timer:
     - batch: 3
     - name: service.disable
     - arg:
-        - transactional-update.timer
+      - transactional-update.timer
     - require:
       - set-progress-grain
+
+remove-uncordon-grain:
+  salt.function:
+    - tgt: '{{ is_responsive_node_tgt }}'
+    - tgt_type: compound
+    - name: grains.remove
+    - arg:
+      - kubelet:should_uncordon
+    - require:
+      - disable-transactional-update-timer
 
 # this will load the _pillars/velum.py on the master
 sync-pillar:
   salt.runner:
     - name: saltutil.sync_pillar
     - require:
-      - disable-transactional-update-timer
+      - remove-uncordon-grain
 
 update-data:
   salt.function:
