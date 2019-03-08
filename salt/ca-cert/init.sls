@@ -1,7 +1,7 @@
 include:
   - crypto
 
-{%- set ca_crt = salt['mine.get']('roles:ca', 'ca.crt', expr_form='grain').values()|first %}
+{%- set ca_crt = salt['mine.get']('roles:ca', 'ca.crt', tgt_type='grain').values()|first %}
 
 {{ pillar['ssl']['ca_dir'] }}:
   file.directory:
