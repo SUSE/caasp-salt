@@ -16,7 +16,6 @@ REVISION=$(git rev-list HEAD | wc -l)
 COMMIT=$(git rev-parse --short HEAD)
 VERSION="${VERSION%+*}+git_r${REVISION}_${COMMIT}"
 NAME=$1
-GITREPONAME=$(basename `git rev-parse --show-toplevel`)
 BRANCH=${2:-master}
 SAFE_BRANCH=${BRANCH//\//-}
 
@@ -52,8 +51,10 @@ cat <<EOF > ${NAME}.spec
 
 %{!?tmpfiles_create:%global tmpfiles_create systemd-tmpfiles --create}
 
+%define packagename $NAME
+%define branch $SAFE_BRANCH
+
 Name:           $NAME
-%define gitrepo $GITREPONAME
 Version:        $VERSION
 Release:        0
 BuildArch:      noarch
@@ -61,7 +62,7 @@ Summary:        Production-Grade Container Scheduling and Management
 License:        Apache-2.0
 Group:          System/Management
 Url:            https://github.com/kubic-project/salt
-Source:         ${SAFE_BRANCH}.tar.gz
+Source:         %{packagename}-%{branch}.tar.gz
 BuildRequires:  systemd-rpm-macros
 Requires:       salt
 %if 0%{?suse_version} >= 1500
@@ -80,14 +81,14 @@ Requires:       python-pyroute2
 Salt scripts for deploying a Kubernetes cluster
 
 %prep
-%setup -q -n %{gitrepo}-${SAFE_BRANCH}
+%setup -q -n %{packagename}-%{branch}
 
 %build
 
 %install
 rm -rf %{buildroot}%{_datadir}
 mkdir -p %{buildroot}%{_datadir}/salt/kubernetes
-cp -R %{_builddir}/%{gitrepo}-${SAFE_BRANCH}/*  %{buildroot}%{_datadir}/salt/kubernetes/
+cp -R %{_builddir}/%{packagename}-%{branch}/*  %{buildroot}%{_datadir}/salt/kubernetes/
 
 # fix image name
 dir_name=%{buildroot}/%{_datadir}/salt/kubernetes
