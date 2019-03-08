@@ -71,16 +71,26 @@ disable-transactional-update-timer:
     - batch: 3
     - name: service.disable
     - arg:
-        - transactional-update.timer
+      - transactional-update.timer
     - require:
       - set-progress-grain
+
+remove-uncordon-grain:
+  salt.function:
+    - tgt: '{{ is_responsive_node_tgt }}'
+    - tgt_type: compound
+    - name: grains.remove
+    - arg:
+      - kubelet:should_uncordon
+    - require:
+      - disable-transactional-update-timer
 
 # this will load the _pillars/velum.py on the master
 sync-pillar:
   salt.runner:
     - name: saltutil.sync_pillar
     - require:
-      - disable-transactional-update-timer
+      - remove-uncordon-grain
 
 update-data:
   salt.function:
@@ -449,7 +459,7 @@ services-setup:
 # Wait for deployments to have the expected number of pods running.
 super-master-wait-for-services:
   salt.state:
-    - tgt: {{ super_master }}
+    - tgt: '{{ super_master }}'
     - sls:
       - addons.dns.deployment-wait
       - addons.tiller.deployment-wait
@@ -523,8 +533,8 @@ reenable-transactional-update-timer:
 
 remove-update-grain:
   salt.function:
-    - tgt: '{{ progress_grain }}:true'
-    - tgt_type: grain
+    - tgt: '{{ is_responsive_node_tgt }} and G@{{ progress_grain }}:true'
+    - tgt_type: compound
     - name: grains.delval
     - arg:
       - {{ progress_grain }}
