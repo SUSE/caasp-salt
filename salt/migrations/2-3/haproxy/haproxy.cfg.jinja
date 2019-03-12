@@ -84,6 +84,7 @@ listen velum
         acl path_autoyast path_reg ^/autoyast$
         option forwardfor
         http-request set-header X-Forwarded-Proto https
+        http-response set-header X-Frame-Options DENY
         redirect scheme https code 302 if !{ ssl_fc } !path_autoyast
         server velum unix@/var/run/puma/dashboard.sock
 
