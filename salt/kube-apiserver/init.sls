@@ -26,10 +26,10 @@ include:
          cn = grains['nodename'],
          o = pillar['certificate_information']['subject_properties']['O']) }}
 
-kube-apiserver:
+iptables-kube-apiserver-clean:
   caasp_retriable.retry:
-    - name:   iptables-kube-apiserver
-    - target: iptables.append
+    - name:       iptables-clean-kube-apiserver
+    - target:     iptables.delete
     - retry:
         attempts: 2
     - table:      filter
@@ -38,15 +38,52 @@ kube-apiserver:
     - jump:       ACCEPT
     - match:      state
     - connstate:  NEW
+    - proto:      tcp
     - dports:
       - {{ pillar['api']['int_ssl_port'] }}
+
+iptables-kube-apiserver-accept:
+  caasp_retriable.retry:
+    - name:       iptables-accept-kube-apiserver
+    - target:     iptables.append
+    - retry:
+        attempts: 2
+    - table:      filter
+    - family:     ipv4
+    - chain:      INPUT
+    - jump:       ACCEPT
+    - match:      state
+    - connstate:  NEW
     - proto:      tcp
+    - source:     '127.0.0.1,{{ salt.caasp_net.get_primary_net() }},{{ salt.caasp_pillar.get('cluster_cidr') }}'
+    - dport:      {{ pillar['api']['int_ssl_port'] }}
     - require:
-      - sls:      kubernetes-common
+      - caasp_retriable: iptables-clean-kube-apiserver
+
+iptables-kube-apiserver-drop:
+  caasp_retriable.retry:
+    - name:       iptables-drop-kube-apiserver
+    - target:     iptables.append
+    - retry:
+        attempts: 2
+    - table:      filter
+    - family:     ipv4
+    - chain:      INPUT
+    - jump:       DROP
+    - match:      state
+    - connstate:  NEW
+    - proto:      tcp
+    - dport:      {{ pillar['api']['int_ssl_port'] }}
+    - require:
+      - caasp_retriable: iptables-accept-kube-apiserver
+
+kube-apiserver:
   file.managed:
     - name:       /etc/kubernetes/apiserver
     - source:     salt://kube-apiserver/apiserver.jinja
     - template:   jinja
+    - require:
+      - sls:      kubernetes-common
   caasp_service.running_stable:
     - name:                        kube-apiserver
     - successful_retries_in_a_row: 10
@@ -54,7 +91,7 @@ kube-apiserver:
     - delay_between_retries:       2
     - enable:                      True
     - require:
-      - caasp_retriable: iptables-kube-apiserver
+      - caasp_retriable: iptables-drop-kube-apiserver
       - sls:             ca-cert
       - caasp_retriable: {{ pillar['ssl']['kube_apiserver_crt'] }}
       - x509:            {{ pillar['paths']['service_account_key'] }}

@@ -102,6 +102,15 @@ def get_primary_ips_for(compound, **kwargs):
         return []
 
 
+def get_primary_net(host=None):
+    '''
+    (given some optional 'host')
+    return the primary network
+    '''
+    primary_net = __salt__['network.subnets'](get_primary_iface(host=host))
+    return primary_net[0]
+
+
 def get_nodename(host=None, **kwargs):
     '''
     (given some optional 'host')
