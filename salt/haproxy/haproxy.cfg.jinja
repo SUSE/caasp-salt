@@ -50,7 +50,7 @@ backend default-backend
         option forwardfor
         option httpchk GET /healthz
 {% for id, nodename in masters.items() %}
-        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }} ca-file /etc/pki/ca.crt check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify required
+        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_haproxy_bundle'] }} ca-file {{ pillar['ssl']['sys_ca_bundle'] }} check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify required
 {%- endfor %}
 
 backend no-timeout-backend
@@ -61,7 +61,7 @@ backend no-timeout-backend
         timeout server 0
         timeout tunnel 0
 {% for id, nodename in masters.items() %}
-        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }} ca-file /etc/pki/ca.crt check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify required
+        server master-{{ nodename }} {{ nodename }}.{{ pillar['internal_infra_domain'] }}:{{ pillar['api']['int_ssl_port'] }} ssl crt {{ pillar['ssl']['kube_apiserver_haproxy_bundle'] }} ca-file {{ pillar['ssl']['sys_ca_bundle'] }} check check-ssl port {{ pillar['api']['int_ssl_port'] }} verify required
 {%- endfor %}
 
 

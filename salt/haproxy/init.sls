@@ -2,7 +2,9 @@ include:
   - ca-cert
   - cert
   - etc-hosts
-{% if not salt.caasp_nodes.is_admin_node() %}
+{% if salt.caasp_nodes.is_admin_node() %}
+  - velum
+{% else %}
 # This state is executed also on the admin node. On the admin
 # node we cannot require the kubelet state otherwise the node will
 # join the kubernetes cluster and some system workloads might be
@@ -12,6 +14,8 @@ include:
   - kubelet
   - {{ salt['pillar.get']('cri:chosen', 'docker') }}
 {% endif %}
+
+{% from '_macros/certs.jinja' import certs, alt_master_names with context %}
 
 /etc/caasp/haproxy:
   file.directory:
@@ -31,13 +35,39 @@ include:
     - makedirs: True
     - dir_mode: 755
 
-{% from '_macros/certs.jinja' import certs, alt_master_names with context %}
+{% if salt.caasp_pillar.get('external_cert:kube_api:cert', False)
+  and salt.caasp_pillar.get('external_cert:kube_api:key',  False)
+%}
+
+{% from '_macros/certs.jinja' import external_pillar_certs with context %}
+
+{{ external_pillar_certs(
+      pillar['ssl']['kube_apiserver_proxy_crt'],
+      'external_cert:kube_api:cert',
+      pillar['ssl']['kube_apiserver_proxy_key'],
+      'external_cert:kube_api:key',
+      bundle=pillar['ssl']['kube_apiserver_proxy_bundle']
+) }}
+
+{% else %}
+
 {{ certs("kube-apiserver-proxy",
          pillar['ssl']['kube_apiserver_proxy_crt'],
          pillar['ssl']['kube_apiserver_proxy_key'],
          cn = grains['nodename'] + '-proxy',
          o = pillar['certificate_information']['subject_properties']['O'],
-         extra_alt_names = alt_master_names()) }}
+         extra_alt_names = alt_master_names(),
+         bundle=pillar['ssl']['kube_apiserver_proxy_bundle']) }}
+
+{% endif %}
+
+# HAproxy client auth cert
+{{ certs("kube-apiserver-haproxy",
+         pillar['ssl']['kube_apiserver_haproxy_crt'],
+         pillar['ssl']['kube_apiserver_haproxy_key'],
+         cn = grains['nodename'] + '-haproxy',
+         o = pillar['certificate_information']['subject_properties']['O'],
+         bundle=pillar['ssl']['kube_apiserver_haproxy_bundle']) }}
 
 haproxy:
   caasp_file.managed:
@@ -80,7 +110,11 @@ haproxy-restart:
     - onchanges:
       - caasp_file: haproxy
       - file: /etc/caasp/haproxy/haproxy.cfg
-{% if not salt.caasp_nodes.is_admin_node() %}
+{% if salt.caasp_nodes.is_admin_node() %}
+      - file: {{ pillar['ssl']['velum_bundle'] }}
+{% else %}
+      - file: {{ pillar['ssl']['kube_apiserver_proxy_bundle'] }}
+      - file: {{ pillar['ssl']['kube_apiserver_haproxy_bundle'] }}
     - require:
       - service: kubelet
 {% endif %}
@@ -113,7 +147,7 @@ wait-for-haproxy:
     # retry just in case the API server returns a transient error
     - retry:
         attempts: 3
-    - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
+    - ca_bundle:  {{ pillar['ssl']['sys_ca_bundle'] }}
     - status:     200
     - opts:
         http_request_timeout: 30

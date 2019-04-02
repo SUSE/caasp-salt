@@ -19,7 +19,7 @@ check-kube-apiserver-wait-port-{{ port }}:
     # retry just in case the API server returns a transient error
     - retry:
         attempts: 3
-    - ca_bundle:  {{ pillar['ssl']['ca_file'] }}
+    - ca_bundle:  {{ pillar['ssl']['sys_ca_bundle'] }}
     - status:     200
     - opts:
         http_request_timeout: 30

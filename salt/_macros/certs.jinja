@@ -41,7 +41,7 @@
 
 #####################################################################
 
-{% macro certs(name, crt, key, cn='', o='', extra_alt_names=None) -%}
+{% macro certs(name, crt, key, cn='', o='', extra_alt_names=None, bundle=False) -%}
 
 {%- if extra_alt_names == None -%}
   {#- calculate automatically the altNames depending on the role -#}
@@ -77,7 +77,7 @@
     - Email: {{ pillar['certificate_information']['subject_properties']['Email']|yaml_dquote }}
     - GN: {{ pillar['certificate_information']['subject_properties']['GN']|yaml_dquote }}
     - L: {{ pillar['certificate_information']['subject_properties']['L']|yaml_dquote }}
-    {# "system:{{ name }}" is a kubernetes specific role identifying a {{ name }} in th system #}
+    {# "system:{{ name }}" is a kubernetes specific role identifying a {{ name }} in the system #}
   {%- if o %}
     - O: {{ o|yaml_dquote }}
   {%- else -%}
@@ -103,9 +103,13 @@
       - sls: crypto
       - x509: {{ key }}
 
-{{ crt }}-bundle:
+{{ bundle or crt + '-bundle' }}:
   file.managed:
+{% if bundle %}
+    - name: {{ bundle }}
+{% else %}
     - name: /etc/pki/private/{{ name }}-bundle.pem
+{% endif %}
     - source: salt://cert/cert-bundle.jinja
     - template: jinja
     - user: root
@@ -120,3 +124,38 @@
         - x509: {{ key }}
 
 {%- endmacro %}
+
+# externally-sourced certs; content in a pillar
+{% macro external_pillar_certs(crt, crt_pillar, key, key_pillar, bundle=False) -%}
+{{ crt }}:
+  file.managed:
+    - user:  root
+    - group: root
+    - mode: 0644
+    - contents_pillar: {{ crt_pillar }}
+
+{{ key }}:
+  file.managed:
+    - user:  root
+    - group: root
+    - mode: 0444
+    - contents_pillar: {{ key_pillar }}
+
+{% if bundle %}
+# TODO: move this out to a macro so it's not repeated in here?
+{{ bundle }}:
+  file.managed:
+    - source: salt://cert/cert-bundle.jinja
+    - template: jinja
+    - user: root
+    - group: root
+    - mode: 600
+    - makedirs: True
+    - context:
+        certificate: {{ crt }}
+        key:         {{ key }}
+    - require: # always verify -- in case this file was deleted/altered
+        - file: {{ crt }}
+        - file: {{ key }}
+{% endif %}
+{% endmacro %}
