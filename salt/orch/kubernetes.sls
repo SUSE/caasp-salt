@@ -135,6 +135,40 @@ cert-setup:
     - require:
       - update-mine-again
 
+# restart salt minions if cert changes
+{%- set nodes_down = salt.saltutil.runner('manage.down') %}
+{%- if nodes_down|length >= 1 %}
+  {%- set is_responsive_node_tgt = 'not L@' + nodes_down|join(',') %}
+{%- else %}
+  {%- set is_responsive_node_tgt = '*' %}
+{%- endif %}
+{%- set is_salt_tgt = is_responsive_node_tgt + ' and not ca' %}
+{%- set salts = salt.caasp_nodes.get_with_expr(is_salt_tgt) %}
+
+salt-minion-restart:
+  salt.function:
+    - tgt: '{{ is_salt_tgt }}'
+    - tgt_type: compound
+    - name: service.restart
+    - arg:
+      - 'salt-minion'
+    - onchanges:
+      - cert-setup
+
+salt-minion-wait-for-start:
+  salt.wait_for_event:
+    # TODO: should this specify node_id instead of '*'?
+    - name: salt/minion/*/start
+    - timeout: 1200
+    - id_list:
+{%- for node_id in salts %}
+      - {{ node_id }}
+{%- endfor %}
+    - onchanges:
+      - salt-minion-restart
+
+# end salt restart
+
 # setup {{ num_etcd_members }} etcd masters
 etcd-setup:
   salt.state:
@@ -214,6 +248,27 @@ reboot-setup:
       - reboot
     - require:
       - kubelet-setup
+
+# restart kubelets on cert changes, but put that after the reboot
+{#
+{%- set is_kube_tgt = is_responsive_node_tgt + ' and G@roles:kube-(master|minion)' %}
+{%- set kubes = salt.caasp_nodes.get_with_expr(is_kube_tgt) %}
+#}
+{%- set kubes = masters|list + minions|list %}
+{%- for node_id in kubes %}
+# as long as the kublets restart inside the heartbeat window (default to 5
+#  minutes), there's no need to drain first; just restart the process. If
+#  they were working before, they should quickly start back up just fine.
+{{ node_id }}-kubelet-restart:
+  salt.function:
+    - tgt: '{{ node_id }}'
+    - name: service.restart
+    - arg:
+      - 'kubelet'
+    - onchanges:
+      - cert-setup
+{% endfor %}
+
 
 # we must start CNI before any other pods, as nodes will be NotReady until
 # the CNI DaemonSet is loaded and running...
