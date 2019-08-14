@@ -524,9 +524,10 @@ reenable-transactional-update-timer:
     - tgt: '{{ enabled_timer_nodes_list|join(",") }}'
     - tgt_type: list
     - batch: 3
-    - name: service.enable
+    - name: service.running
     - arg:
         - transactional-update.timer
+        - enable: true
     - require:
       - remove-caasp-fqdn-grain
 {%- endif %}
