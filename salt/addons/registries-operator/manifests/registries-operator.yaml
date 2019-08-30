@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: regs-controller
+  namespace: kube-system
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: registries.kubic.opensuse.org
+spec:
+  group: kubic.opensuse.org
+  names:
+    kind: Registry
+    plural: registries
+  scope: Cluster
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            certificate:
+              type: object
+            hostPort:
+              type: string
+          type: object
+        status:
+          type: object
+  version: v1beta1
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  creationTimestamp: null
+  name: registries-operator:controller-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: regs-controller
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    control-plane: registries-operator-manager
+    controller-tools.k8s.io: "1.0"
+  name: registries-operator-service
+  namespace: kube-system
+spec:
+  clusterIP: None
+  ports:
+  - port: 443
+  selector:
+    control-plane: registries-operator-manager
+    controller-tools.k8s.io: "1.0"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    control-plane: registries-operator-manager
+    controller-tools.k8s.io: "1.0"
+  name: registries-operator-manager
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      control-plane: registries-operator-manager
+      controller-tools.k8s.io: "1.0"
+  serviceName: registries-operator-service
+  template:
+    metadata:
+      labels:
+        control-plane: registries-operator-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - registries-operator
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      containers:
+      - command:
+        - /usr/local/bin/registries-operator
+        - manager
+        - -v=5
+        image: opensuse/registries-operator
+        imagePullPolicy: IfNotPresent
+        name: registries-operator
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      serviceAccountName: regs-controller
+      terminationGracePeriodSeconds: 10
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
