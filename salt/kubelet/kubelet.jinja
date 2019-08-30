@@ -25,7 +25,7 @@ KUBELET_ARGS="\
     --kube-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('kube') }} \
 {%- endif %}
 {%- if salt.caasp_pillar.get_kubelet_reserved_resources('system') %}
-    --kube-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('system') }} \
+    --system-reserved={{ salt.caasp_pillar.get_kubelet_reserved_resources('system') }} \
 {%- endif %}
 {%- if pillar['kubelet']['eviction-hard'] %}
     --eviction-hard={{ pillar['kubelet']['eviction-hard'] }} \
