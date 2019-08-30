@@ -10,11 +10,11 @@
 # right dependencies...
 
 {% macro _kubectl_run(args) -%}
-  caasp_cmd.run:
+  cmd.run:
     - name: kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} {{ args }}
     - retry:
-        attempts: 10
-        interval: 1
+        attempts: 60
+        interval: 2
     - require:
       - {{ pillar['paths']['kubeconfig'] }}
 {%- if 'require' in kwargs %}
@@ -89,7 +89,7 @@
 
 {% macro kubectl_wait_for_deployment(deployment, namespace = 'kube-system', timeout = 600) -%}
 wait-for-{{ deployment }}-deployment:
-  caasp_cmd.run:
+  cmd.run:
     - name: |-
         desiredReplicas=$(kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.spec.replicas}}' }})
         readyReplicas=$(kubectl --request-timeout=1m --kubeconfig={{ pillar['paths']['kubeconfig'] }} get deployment {{ deployment }} --namespace={{ namespace }} --template {{ '{{.status.readyReplicas}}' }})
